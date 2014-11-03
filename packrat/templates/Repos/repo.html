@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Repo {{ repo.description }}{% endblock %}
+
+{% block content %}
+<pre>
+description: {{ repo.description }}
+manager_type: {{ repo.manager_type }}
+release_type: {{ repo.release_type }}
+distro: {{ repo.distro }}
+version: {{ repo.version }}
+created: {{ repo.created }}
+updated: {{ repo.updated }}
+</pre>
+{% if package_list %}
+<h3>Package List</h3>
+<ul>
+  {% for package in package_list %}
+  <li><a href="{% url 'repos:package' package.pk %}">{{ package.name }}</a></li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No Packages</p>
+{% endif %}
+{% endblock %}

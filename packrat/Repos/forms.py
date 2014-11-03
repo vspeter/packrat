@@ -1,6 +1,6 @@
 from django import forms
 
-from packrat.repos.models import PackageFile
+from packrat.Repos.models import PackageFile
 
 
 class PackageFileForm(forms.ModelForm):

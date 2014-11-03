@@ -1,8 +1,9 @@
 from django.contrib import admin
-from packrat.repos import models
+from packrat.Repos.models import DistroVersion, Repo
+from packrat.Repos.models import Package, PackageFile, Mirror
 
-admin.site.register(models.Version)
-admin.site.register(models.Repo)
-admin.site.register(models.Mirror)
-admin.site.register(models.Package)
-admin.site.register(models.PackageFile)
+admin.site.register(DistroVersion)
+admin.site.register(Repo)
+admin.site.register(Mirror)
+admin.site.register(Package)
+admin.site.register(PackageFile)
