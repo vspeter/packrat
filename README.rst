@@ -2,32 +2,24 @@
 packrat
 =============================
 
-.. image:: https://badge.fury.io/py/packrat.png
-    :target: https://badge.fury.io/py/packrat
 
-.. image:: https://travis-ci.org/gonzas4/packrat.png?branch=master
-    :target: https://travis-ci.org/gonzas4/packrat
-
-.. image:: https://coveralls.io/repos/gonzas4/packrat/badge.png?branch=master
-    :target: https://coveralls.io/r/gonzas4/packrat?branch=master
-
-ASingle interface for managing apt, yum, and zypper repos
+A single interface for managing apt, yum, and zypper repos.
 
 Documentation
 -------------
 
-The full documentation is at https://packrat.readthedocs.org.
+The full documentation is at https://github.emcrubicon.com/packrat/packrat/wiki.
 
 Quickstart
 ----------
 
-Install packrat::
+Setup Database::
 
-    pip install packrat
+    python manage.py migrate
 
-Then use it in a project::
+Run the project locally for debugging::
 
-    import packrat
+    python manage.py runserver
 
 Features
 --------
