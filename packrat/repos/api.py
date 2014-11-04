@@ -1,11 +1,12 @@
 from tastypie.resources import ModelResource
-from packrat.repos import models
+
+from packrat.Repos import models
 
 
-class VersionResource(ModelResource):
+class DistroVersionResource(ModelResource):
     class Meta:
-        queryset = models.Repo.objects.all()
-        resource_name = 'version'
+        queryset = models.DistroVersion.objects.all()
+        resource_name = 'distroversion'
 
 
 class RepoResource(ModelResource):
