@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a href="{% url 'repos:packagefile_add' %}">Add new File/Version</a>
+{% if package_list %}
+<h3>Packages</h3>
+<ul>
+  {% for package in package_list %}
+  <li><a href="{% url 'repos:package' package.pk %}">{{ package.name }}</a></li>
+  {% endfor %}
+</ul>
+{% else %}
+<h4>No Packages</h4>
+{% endif %}
+{% if repo_list %}
+<h3>Repos</h3>
+<ul>
+  {% for repo in repo_list %}
+  <li><a href="{% url 'repos:repo' repo.pk %}">{{ repo.description }}</a></li>
+  {% endfor %}
+</ul>
+{% else %}
+<h4>No Repos</h4>
+{% endif %}
+{% if mirror_list %}
+<h3>Mirrors</h3>
+<ul>
+  {% for mirror in mirror_list %}
+  <li><a href="{% url 'repos:mirror' mirror.pk %}">{{ mirror.description }}</a></li>
+  {% endfor %}
+</ul>
+{% else %}
+<h4>No Mirrors</h4>
+{% endif %}
+{% endblock %}

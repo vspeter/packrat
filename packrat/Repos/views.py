@@ -7,8 +7,8 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.timezone import utc
 from django.views.decorators.csrf import csrf_exempt
 
-from packrat.repos.forms import PackageFileForm
-from packrat.repos.models import Repo, Package, PackageFile, Mirror
+from packrat.Repos.forms import PackageFileForm
+from packrat.Repos.models import Repo, Package, PackageFile, Mirror
 
 
 def index(request):
@@ -17,7 +17,7 @@ def index(request):
     package_list = Package.objects.all()
 
     return render(
-        request, 'index.html',
+        request, 'Repos/index.html',
         {
             'package_list': package_list,
             'repo_list': repo_list,
@@ -31,7 +31,7 @@ def repo(request, repo_id):
     package_list = repo.package_list.all()
 
     return render(
-        request, 'repo.html',
+        request, 'Repos/repo.html',
         {
             'repo': repo,
             'package_list': package_list
@@ -44,7 +44,7 @@ def mirror(request, mirror_id):
     repo_list = mirror.repo_list.all()
 
     return render(
-        request, 'mirror.html',
+        request, 'Repos/mirror.html',
         {
             'mirror': mirror,
             'repo_list': repo_list
@@ -57,7 +57,7 @@ def package(request, package_id):
     file_list = package.packagefile_set.all()
 
     return render(
-        request, 'package.html',
+        request, 'Repos/package.html',
         {
             'package': package,
             'file_list': file_list
@@ -65,18 +65,18 @@ def package(request, package_id):
     )
 
 
-def file(request, file_id):
-    file = get_object_or_404(PackageFile, pk=file_id)
+def packagefile(request, packagefile_id):
+    file = get_object_or_404(PackageFile, pk=packagefile_id)
 
     return render(
-        request, 'file.html',
+        request, 'Repos/packagefile.html',
         {
             'file': file
         }
     )
 
 
-def file_add(request):
+def packagefile_add(request):
     if request.method == u'POST':
         form = PackageFileForm(request.POST, request.FILES)
         if form.is_valid():
@@ -89,15 +89,15 @@ def file_add(request):
         form = PackageFileForm()
 
     return render(
-        request, 'file_add.html',
+        request, 'Repos/packagefile_add.html',
         {
             'form': form
         }
     )
 
 
-def file_promote(request, file_id):
-    file = get_object_or_404(PackageFile, pk=file_id)
+def packagefile_promote(request, packagefile_id):
+    file = get_object_or_404(PackageFile, pk=packagefile_id)
     if file.release == 'new':
         file.ci_at = datetime.utcnow().replace(tzinfo=utc)
     elif file.release == 'ci':
@@ -108,7 +108,7 @@ def file_promote(request, file_id):
         file.prod_at = datetime.utcnow().replace(tzinfo=utc)
     file.save()
 
-    return HttpResponseRedirect(reverse('repos:file', args=(file.pk,)))
+    return HttpResponseRedirect(reverse('repos:packagefile', args=(file.pk,)))
 
 
 @csrf_exempt
