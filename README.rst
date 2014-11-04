@@ -24,9 +24,8 @@ Setup Database::
     python manage.py addsuperuser
     < follow the prompts >
 
-    or, load the example data:
+    If you would like some example data, run this following the migrate and addsuperuser
     python manage.py loaddata example_data.json
-    ( Note the admin u/p is root/root )
 
 Setup File Store location::
 
