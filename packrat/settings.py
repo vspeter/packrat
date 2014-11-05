@@ -14,7 +14,6 @@ DEBUG = True
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = []
 
 TEMPLATE_DIRS = [os.path.join(BASE_DIR, 'packrat/templates')]
 
@@ -27,7 +26,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'packrat.Repos'
+    'tastypie',
+    'packrat.Repos',
 )
 
 MIDDLEWARE_CLASSES = (
