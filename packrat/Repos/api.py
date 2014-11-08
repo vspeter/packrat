@@ -1,5 +1,5 @@
 from tastypie.resources import ModelResource
-from packrat.repos import models
+from packrat.Repos import models
 
 
 class VersionResource(ModelResource):

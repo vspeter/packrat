@@ -4,7 +4,7 @@ from django.contrib import admin
 from tastypie.api import Api
 
 from packrat import views
-from packrat.repos import api
+from packrat.Repos import api
 
 v1_api = Api(api_name='v1')
 v1_api.register(api.VersionResource())
