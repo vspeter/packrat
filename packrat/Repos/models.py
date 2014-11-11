@@ -172,29 +172,29 @@ class PackageFile(models.Model):
                 try:
                     (package, version, arch) = name.split('_')
                 except ValueError:
-                    raise ValidationError('Unreconised deb file name Format')
+                    raise ValidationError('Unrecognized deb file name Format')
 
                 if arch == 'amd64':
                     arch = 'x86_64'
                 elif arch not in ('i386', 'all'):
-                    raise ValidationError('Unreconised deb Arch')
+                    raise ValidationError('Unrecognized deb Arch')
 
             elif extension == 'rpm':
                 try:
                     (package, version, release, arch) = re.match(
                         '(.+)-([^-]+)-([^-]+)\.(\w+)', name).groups()
                 except ValueError:
-                    raise ValidationError('Unreconised rpm file name Format')
+                    raise ValidationError('Unrecognized rpm file name Format')
 
                 if arch == 'noarch':
                     arch = 'all'
                 elif arch not in ('i386', 'x86_64'):
-                    raise ValidationError('Unreconised rpm Arch')
+                    raise ValidationError('Unrecognized rpm Arch')
 
                 version = '%s-%s' % (version, release)
 
             else:
-                raise ValidationError('Unreconised file Extension')
+                raise ValidationError('Unrecognized file Extension')
 
             try:
                 package = Package.objects.get(pk=package)
@@ -210,7 +210,7 @@ class PackageFile(models.Model):
                                 'RPM v3.0 bin i386/x86_64'):
                 package_type = 'rpm'
             else:
-                raise ValidationError('Unreconised file Format')
+                raise ValidationError('Unrecognized file Format')
 
             distroversion = None
             distroversion_list = []
