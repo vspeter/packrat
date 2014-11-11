@@ -3,4 +3,6 @@ include CONTRIBUTING.rst
 include HISTORY.rst
 include LICENSE
 include README.rst
+include requirements.txt
+include requirements-test.txt
 recursive-include packrat *.html *.png *.gif *js *.css *jpg *jpeg *svg *py
