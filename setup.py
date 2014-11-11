@@ -20,6 +20,14 @@ if sys.argv[-1] == 'publish':
     print("  git push --tags")
     sys.exit()
 
+def read(relative):
+    """
+    Read file contents and return a list of lines.
+    ie, read the VERSION file.
+    """
+    contents = open(relative, 'r').read()
+    return [l for l in contents.split('\n') if l != '']
+
 readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
@@ -35,8 +43,8 @@ setup(
         'packrat',
     ],
     include_package_data=True,
-    install_requires=[
-    ],
+    tests_require=read('./requirements-test.txt'),
+    install_requires=read('./requirements.txt'),
     license="BSD",
     zip_safe=False,
     keywords='packrat',
