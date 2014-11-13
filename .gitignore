@@ -45,3 +45,7 @@ docs/_build
 .idea
 *.iml
 db.*
+
+# pyenv
+.python-env
+.python-version
