@@ -23,13 +23,13 @@ class PackageResource(ModelResource):
         resource_name = 'package'
 
     def build_filters(self, filters=None):
-        wrk = super(PackageResource, self).build_filters(filters=filters)
+        result = super(PackageResource, self).build_filters(filters=filters)
         try:
-            wrk.update(filters['__repo__packages__'].package_queryset_parms)
+            result.update(filters['__repo__packages__'].package_queryset_parms)
         except (KeyError, TypeError):
             pass
 
-        return wrk
+        return result
 
 
 class PackageFileResource(ModelResource):
@@ -42,16 +42,16 @@ class PackageFileResource(ModelResource):
         resource_name = 'packagefile'
 
     def build_filters(self, filters=None):
-        wrk = super(PackageFileResource, self).build_filters(filters=filters)
+        result = super(PackageFileResource, self).build_filters(filters=filters)
         try:
-            wrk['package_id'] = filters['__repo__files_package__']
+            result['package_id'] = filters['__repo__files_package__']
             parms = filters['__repo__files__'].package_queryset_parms
             for key in parms:
-                wrk[key.replace('packagefile__', '')] = parms[key]
+                result[key.replace('packagefile__', '')] = parms[key]
         except (KeyError, TypeError):
             pass
 
-        return wrk
+        return result
 
     def dehydrate(self, bundle):
         bundle.data['release'] = bundle.obj.release
