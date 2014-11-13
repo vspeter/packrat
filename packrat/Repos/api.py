@@ -24,8 +24,10 @@ class PackageResource(ModelResource):
 
     def build_filters(self, filters=None):
         wrk = super(PackageResource, self).build_filters(filters=filters)
-        if '__repo__packages__' in filters:
+        try:
             wrk.update(filters['__repo__packages__'].package_queryset_parms)
+        except (KeyError, TypeError):
+            pass
 
         return wrk
 
@@ -41,11 +43,13 @@ class PackageFileResource(ModelResource):
 
     def build_filters(self, filters=None):
         wrk = super(PackageFileResource, self).build_filters(filters=filters)
-        if '__repo__files__' in filters:
-            tmp = filters['__repo__files__'].package_queryset_parms
-            for key in tmp:
-                wrk[key.replace('packagefile__', '')] = tmp[key]
+        try:
             wrk['package_id'] = filters['__repo__files_package__']
+            parms = filters['__repo__files__'].package_queryset_parms
+            for key in parms:
+                wrk[key.replace('packagefile__', '')] = parms[key]
+        except (KeyError, TypeError):
+            pass
 
         return wrk
 
