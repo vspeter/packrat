@@ -28,7 +28,7 @@ def index(request):
 
 def repo(request, repo_id):
     repo = get_object_or_404(Repo, pk=repo_id)
-    package_list = repo.package_list.all()
+    package_list = repo.package_queryset.all()
 
     return render(
         request, 'Repos/repo.html',
@@ -176,7 +176,7 @@ def sync(request):
             'version': repo.version,
             'created': repo.created.strftime('%Y-%m-%d %H:%M:%S'),
             'updated': repo.updated.strftime('%Y-%m-%d %H:%M:%S'),
-            'package_list': [i.pk for i in repo.package_list.all()]
+            'package_list': [i.pk for i in repo.package_queryset.all()]
         }
 
     elif function == 'package.get':

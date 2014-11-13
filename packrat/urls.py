@@ -7,7 +7,7 @@ from packrat import views
 from packrat.Repos import api
 
 v1_api = Api(api_name='v1')
-v1_api.register(api.VersionResource())
+v1_api.register(api.DistroVersionResource())
 v1_api.register(api.RepoResource())
 v1_api.register(api.MirrorResource())
 v1_api.register(api.PackageResource())
