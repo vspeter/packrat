@@ -54,33 +54,41 @@ class Repo(models.Model):
     created = models.DateTimeField(editable=False, auto_now_add=True)
     updated = models.DateTimeField(editable=False, auto_now=True)
 
-    def __getattr__(self, name):
-        if name == 'package_list':
-            qs = Package.objects.filter(
-                packagefile__distroversion__in=self.distroversion_list.all())
+    @property
+    def package_queryset_parms(self):
+        qs = {'packagefile__distroversion__in':
+              [i.pk for i in self.distroversion_list.all()]}
 
-            if self.release_type == 'ci':
-                qs = qs.filter(
-                    packagefile__ci_at__isnull=False,
-                    packagefile__dev_at__isnull=True,
-                    packagefile__stage_at__isnull=True,
-                    packagefile__prod_at__isnull=True).distinct()
+        if self.release_type == 'ci':
+            qs['packagefile__ci_at__isnull'] = False
+            qs['packagefile__dev_at__isnull'] = True
+            qs['packagefile__stage_at__isnull'] = True
+            qs['packagefile__prod_at__isnull'] = True
 
-            elif self.release_type == 'dev':
-                qs = qs.filter(packagefile__dev_at__isnull=False,
-                               packagefile__stage_at__isnull=True,
-                               packagefile__prod_at__isnull=True).distinct()
+        elif self.release_type == 'dev':
+            qs['packagefile__ci_at__isnull'] = False
+            qs['packagefile__dev_at__isnull'] = False
+            qs['packagefile__stage_at__isnull'] = True
+            qs['packagefile__prod_at__isnull'] = True
 
-            elif self.release_type == 'stage':
-                qs = qs.filter(packagefile__stage_at__isnull=False,
-                               packagefile__prod_at__isnull=True).distinct()
+        elif self.release_type == 'stage':
+            qs['packagefile__ci_at__isnull'] = False
+            qs['packagefile__dev_at__isnull'] = False
+            qs['packagefile__stage_at__isnull'] = False
+            qs['packagefile__prod_at__isnull'] = True
 
-            elif self.release_type == 'prod':
-                qs = qs.filter(packagefile__prod_at__isnull=False).distinct()
+        elif self.release_type == 'prod':
+            qs['packagefile__ci_at__isnull'] = False
+            qs['packagefile__dev_at__isnull'] = False
+            qs['packagefile__stage_at__isnull'] = False
+            qs['packagefile__prod_at__isnull'] = False
 
-            return qs
+        return qs
 
-        raise AttributeError(name)
+    @property
+    def package_queryset(self):
+        qs = Package.objects.filter(**self.package_queryset_parms)
+        return qs.distinct()
 
     def __unicode__(self):
         return 'Repo "%s"' % self.description
@@ -132,24 +140,22 @@ class PackageFile(models.Model):
     created = models.DateTimeField(editable=False, auto_now_add=True)
     updated = models.DateTimeField(editable=False, auto_now=True)
 
-    def __getattr__(self, name):
-        if name == 'release':
-            if self.prod_at:
-                return 'prod'
+    @property
+    def release(self):
+        if self.prod_at and self.stage_at and self.dev_at and self.ci_at:
+            return 'prod'
 
-            elif self.stage_at:
-                return 'stage'
+        elif self.stage_at and self.dev_at and self.ci_at:
+            return 'stage'
 
-            elif self.dev_at:
-                return 'dev'
+        elif self.dev_at and self.ci_at:
+            return 'dev'
 
-            elif self.ci_at:
-                return 'ci'
+        elif self.ci_at:
+            return 'ci'
 
-            else:
-                return 'new'
-
-        raise AttributeError(name)
+        else:
+            return 'new'
 
     # NOTE this does not save, make sure you .save() or something after,
     # otherwise the supporting info will no be set
