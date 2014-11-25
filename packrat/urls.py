@@ -1,4 +1,5 @@
 from django.conf.urls import patterns, include, url
+from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib import admin
 from tastypie.api import Api
@@ -22,14 +23,12 @@ urlpatterns = patterns(
     '',
     url(r'^$', views.index, name='index'),
     url(r'^repos/', include('packrat.Repos.urls', namespace='repos')),
+    url(r'^gui/', include('packrat.GUI.urls', namespace='gui')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^auth/', include(auth_api.urls)),
     url(r'^api/', include(repo_api_v1.urls)),
 )
 
 if settings.DEBUG:
-    # static files (images, css, javascript, etc.)
-    urlpatterns += patterns(
-        '', (r'^' + settings.MEDIA_URL[1:] + '(?P<path>.*)$',
-             'django.views.static.serve',
-             {'document_root': settings.MEDIA_ROOT}))
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
