@@ -2,24 +2,9 @@
 {
   var app = angular.module( 'gui', [ 'ui.bootstrap' ] );
 
-  app.controller( 'MenuController', [function()
+  app.controller( 'DetailController', [ '$http', '$location', function( $http, $location )
   {
-    this.mode = 'mirror';
-
-    this.select = function( mode )
-    {
-      this.mode = mode;
-    };
-
-    this.isSelected = function( value )
-    {
-      return this.mode == value;
-    };
-
-  } ] );
-
-  app.controller( 'DetailController', [ '$http', function( $http )
-  {
+    this.menu_tab = 'mirror';
     this.mode = '';
     this.detail_uri = '';
     this.data = Object;{}
@@ -35,8 +20,19 @@
       }
       else if( trail_action === true )
       {
-        this.trail_list_mode.push( mode );
-        this.trail_list_uri.push( uri );
+        var index = this.trail_list_uri.indexOf( uri );
+        if( index != -1 )
+        {
+          mode = this.trail_list_mode[ index ];
+          uri = this.trail_list_uri[ index ];
+          this.trail_list_mode = this.trail_list_mode.slice( 0, ( index + 1 ) );
+          this.trail_list_uri = this.trail_list_uri.slice( 0, ( index + 1 ) );
+        }
+        else
+        {
+          this.trail_list_mode.push( mode );
+          this.trail_list_uri.push( uri );
+        }
       }
       else if( trail_action === 0 )
       {
@@ -44,7 +40,6 @@
         this.detail_uri = '';
         this.trail_list_mode = [ 'Top' ];
         this.trail_list_uri = [ null ];
-        return;
       }
       else if( ( typeof trail_action === 'number' ) && ( trail_action % 1 === 0 ) && ( trail_action >= 1 ) && ( trail_action < this.trail_list_mode.length ) )
       {
@@ -55,6 +50,15 @@
       }
       else // confused, just ignore
         return;
+
+      $location.search( 'mode', btoa( JSON.stringify( this.trail_list_mode ) ) );
+      $location.search( 'uri', btoa( JSON.stringify( this.trail_list_uri ) ) );
+      $location.replace();
+
+      if( !mode )
+      {
+        return;
+      }
 
       this.mode = 'loading';
       this.detail_uri = uri;
@@ -86,6 +90,25 @@
     {
       return this.detail_uri == value;
     };
+
+    this.menuSelect = function( mode )
+    {
+      this.menu_tab = mode;
+    };
+
+    this.isMenuSelected = function( value )
+    {
+      return this.menu_tab == value;
+    };
+
+    var search = $location.search();
+
+    if( search.mode && search.uri )
+    {
+      this.trail_list_mode = JSON.parse( atob( search.mode ) );
+      this.trail_list_uri = JSON.parse( atob( search.uri ) );
+      this.select( null, null, ( this.trail_list_uri.length - 1 ) );
+    }
 
   } ] );
 

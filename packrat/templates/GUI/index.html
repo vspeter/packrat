@@ -18,14 +18,14 @@
     <div class="page-header">
       <h1>Packrat <small>The Repo and Package manager</small></h1>
     </div>
-    <div class="col-md-4" ng-controller="MenuController as menuCntr">
+    <div class="col-md-4">
 
       <ul class="nav nav-tabs">
-        <li ng-class="{ active: menuCntr.isSelected( 'mirror' ) }"><a href ng-click="menuCntr.select( 'mirror' )">Mirrors</a></li>
-        <li ng-class="{ active: menuCntr.isSelected( 'package' ) }"><a href ng-click="menuCntr.select( 'package' )">Packages</a></li>
+        <li ng-class="{ active: detailCntr.isMenuSelected( 'mirror' ) }"><a href ng-click="detailCntr.menuSelect( 'mirror' )">Mirrors</a></li>
+        <li ng-class="{ active: detailCntr.isMenuSelected( 'package' ) }"><a href ng-click="detailCntr.menuSelect( 'package' )">Packages</a></li>
       </ul>
 
-      <div class="panel" ng-show="menuCntr.isSelected( 'mirror' )"  ng-controller="MirrorController">
+      <div class="panel" ng-show="detailCntr.isMenuSelected( 'mirror' )"  ng-controller="MirrorController">
         <accordion close-others="true">
           <accordion-group is-open="top_accordion.open" ng-repeat="mirror in mirror_list">
             <accordion-heading>
@@ -39,7 +39,7 @@
         </accordion>
       </div>
 
-      <div ng-show="menuCntr.isSelected( 'package' )" ng-controller="PackageController">
+      <div ng-show="detailCntr.isMenuSelected( 'package' )" ng-controller="PackageController">
         <ul class="list-group">
           <li class="list-group-item" ng-repeat="package in package_list" ng-class="{ active: detailCntr.isDetailSelected( package.resource_uri ) }" ng-click="detailCntr.select( 'package', package.resource_uri, false )">{{ package.name }}</li>
         </ul>
