@@ -28,6 +28,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'tastypie',
     'packrat.Repos',
+    'packrat.GUI',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -71,6 +72,7 @@ USE_TZ = True
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'files/')
 MEDIA_URL = '/files/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'files/')
