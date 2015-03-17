@@ -61,6 +61,7 @@ class Migration(migrations.Migration):
                 ('justification', models.TextField()),
                 ('provenance', models.TextField()),
                 ('file', models.FileField(upload_to=b'')),
+                ('prod_changecontrol_id', models.CharField(max_length=20)),
                 ('ci_at', models.DateTimeField(null=True, editable=False, blank=True)),
                 ('dev_at', models.DateTimeField(null=True, editable=False, blank=True)),
                 ('stage_at', models.DateTimeField(null=True, editable=False, blank=True)),
