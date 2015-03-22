@@ -6,11 +6,11 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import utc
 
-DISTRO_CHOICES = ( ( 'debian', 'debian' ), ( 'centos', 'centos' ), ( 'rhel', 'rhel' ), ( 'sles', 'sles' ) ) # there is no ubuntu, it shares the same version space as debian
+DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'centos', 'Centos' ), ( 'rhel', 'RHEL' ), ( 'sles', 'SLES' ) ) # there is no ubuntu, it shares the same version space as debian
 MANAGER_TYPE_CHOICES = ( ( 'apt', 'apt' ), ( 'yum', 'yum' ), ( 'zypper', 'zypper' ) )
 FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'rpm' ) )
-FILE_ARCH_CHOICES = ( ( 'x86_64', 'x86_64' ), ( 'i386', 'i386' ), ( 'all', 'all' ) )
-RELEASE_TYPE_CHOICES = ( ( 'ci', 'ci' ), ( 'dev', 'dev' ), ( 'stage', 'stage' ), ( 'prod', 'prod' ) )
+FILE_ARCH_CHOICES = ( ( 'x86_64', 'x86_64' ), ( 'i386', 'i386' ), ( 'all', 'All' ) )
+RELEASE_TYPE_CHOICES = ( ( 'ci', 'CI' ), ( 'dev', 'Development' ), ( 'stage', 'Staging' ), ( 'prod', 'Production' ), ( 'depr', 'Deprocated' ) )
 
 MANAGER_TYPE_LENGTH = 6
 FILE_TYPE_LENGTH = 3
@@ -85,6 +85,9 @@ This is a Collection of PackageFiles that meant certian requrements, ie: distro,
       qs[ 'packagefile__stage_at__isnull' ] = False
       qs[ 'packagefile__prod_at__isnull' ] = False
 
+    elif self.release_type == 'depr':
+      raise Exception( 'Not implemented' )
+
     return qs
 
   @property
@@ -138,7 +141,7 @@ class PackageFile( models.Model ): # TODO: add delete to cleanup the file, djang
   """
 This is the Individual package "file", they can indivdually belong to any type, arch, package, this is the thing that is actually sent to the remote repos
   """
-  RELEASE_LEVELS = ( 'new', 'ci', 'dev', 'stage', 'prod' )
+  RELEASE_LEVELS = ( 'new', 'ci', 'dev', 'stage', 'prod', 'depr' )
   FILE_TYPES = FILE_TYPE_CHOICES
   FILE_ARCHS = FILE_ARCH_CHOICES
   package = models.ForeignKey( Package, editable=False )
@@ -154,12 +157,16 @@ This is the Individual package "file", they can indivdually belong to any type, 
   dev_at = models.DateTimeField( editable=False, blank=True, null=True )
   stage_at = models.DateTimeField( editable=False, blank=True, null=True )
   prod_at = models.DateTimeField( editable=False, blank=True, null=True )
+  depr_at = models.DateTimeField( editable=False, blank=True, null=True )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
   @property
   def release( self ):
-    if self.prod_at and self.stage_at and self.dev_at and self.ci_at:
+    if self.depr_at:
+      return 'depr'
+
+    elif self.prod_at and self.stage_at and self.dev_at and self.ci_at:
       return 'prod'
 
     elif self.stage_at and self.dev_at and self.ci_at:
@@ -290,6 +297,11 @@ Promote a package to the next release level, to must be one of RELEASE_LEVELS
 
     self.save()
 
+  def deprocate( self ):
+    self.depr_at = datetime.utcnow().replace( tzinfo=utc )
+
+    self.save()
+
   def save( self, *args, **kwargs ):
     try:  # _checkfile_ran isn't a real model member, trying to use it to check if checkfile needs to run, incase it was run before save()
       checkfile_ran = self._checkfile_ran
@@ -311,4 +323,13 @@ Promote a package to the next release level, to must be one of RELEASE_LEVELS
 
   class API:
     constants = ( 'RELEASE_LEVELS', 'FILE_TYPES', 'FILE_ARCHS' )
-    actions = { 'promote': [ 'String' ] }
+    actions = { 'promote': [ 'String' ], 'deprocate': [] }
+    properties = [ 'release' ]
+    list_filters = { 'package': { 'package': Package } }
+
+    @staticmethod
+    def buildQS( qs, filter, values ):
+      if filter == 'package':
+        return qs.filter( package=values[ 'package' ] )
+
+      raise Exception( 'Invalid filter "%s"' % filter )
