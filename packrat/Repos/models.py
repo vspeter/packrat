@@ -137,7 +137,7 @@ This is a Collection of PacageFiles, they share a name.
   class API:
     pass
 
-class PackageFile( models.Model ): # TODO: add delete to cleanup the file, django no longer does this for us, see file TODO
+class PackageFile( models.Model ): # TODO: add delete to cleanup the file, django no longer does this for us
   """
 This is the Individual package "file", they can indivdually belong to any type, arch, package, this is the thing that is actually sent to the remote repos
   """
@@ -151,8 +151,8 @@ This is the Individual package "file", they can indivdually belong to any type, 
   arch = models.CharField( max_length=FILE_ARCH_LENGTH, editable=False, choices=FILE_ARCH_CHOICES )
   justification = models.TextField()
   provenance = models.TextField()
-  file = models.FileField() # TODO: Either prevent the file from changing after it has been uploaded, or make sure the old file is cleaned up if the file changes.
-  prod_changecontrol_id = models.CharField( max_length=20 )
+  file = models.FileField( editable=False )
+  prod_changecontrol_id = models.CharField( max_length=20, blank=True )
   ci_at = models.DateTimeField( editable=False, blank=True, null=True )
   dev_at = models.DateTimeField( editable=False, blank=True, null=True )
   stage_at = models.DateTimeField( editable=False, blank=True, null=True )
@@ -181,101 +181,98 @@ This is the Individual package "file", they can indivdually belong to any type, 
     else:
       return 'new'
 
-  # NOTE this does not save, make sure you .save() or something after, otherwise the supporting info will no be set
-  def checkfile( self, request_distro=None ):
-    if not self.file._file:  # no new file, nothing to look at, return what we curently have, just to be sane
-      if self.distroversion:
-        return [ self.distroversion.pk ]
+  def loadfile( self, file, request_distro ):
+    import magic
+
+    ( name, extension ) = os.path.splitext( os.path.basename( file.name ) )
+    extension = extension[1:]  # remove the .
+
+    if extension == 'deb':
+      try:
+        ( package, version, arch ) = name.split( '_' )
+      except ValueError:
+        raise ValidationError( 'Unrecognized deb file name Format' )
+
+      if arch == 'amd64':
+        arch = 'x86_64'
+      elif arch not in ( 'i386', 'all' ):
+        raise ValidationError( 'Unrecognized deb Arch' )
+
+    elif extension == 'rpm':
+      try:
+        ( package, version, release, arch ) = re.match( '(.+)-([^-]+)-([^-]+)\.(\w+)', name ).groups()
+      except ValueError:
+        raise ValidationError( 'Unrecognized rpm file name Format' )
+
+      if arch == 'noarch':
+        arch = 'all'
+      elif arch not in ( 'i386', 'x86_64' ):
+        raise ValidationError( 'Unrecognized rpm Arch' )
+
+      version = '%s-%s' % ( version, release )
+
+    else:
+      raise ValidationError( 'Unrecognized file Extension' )
+
+    try:
+      package = Package.objects.get( pk=package )
+    except Package.DoesNotExist:
+      raise ValidationError( 'Unable to find package "%s"' % package )
+
+    file.file.seek( 0 )
+
+    m = magic.open( 0 )
+    m.load()
+    try:
+      magic_type = m.descriptor( os.dup( file.file.fileno() ) )
+    except Exception as e:
+      raise Exception( 'Error getting magic: %s' % e)
+
+    if magic_type == 'Debian binary package (format 2.0)':
+      package_type = 'deb'
+    elif magic_type in ( 'RPM v3.0 bin noarch', 'RPM v3.0 bin i386/x86_64' ):
+      package_type = 'rpm'
+    else:
+      raise ValidationError( 'Unrecognized file Format' )
+
+    distroversion = None
+    distroversion_list = []
+    full_distroversion_list = []
+    for tmp in DistroVersion.objects.filter( file_type=package_type ):
+      full_distroversion_list.append( tmp.pk )
+      for name in tmp.release_names.split( '\t' ):
+        if name in version:
+          distroversion_list.append( tmp.pk )
+
+    if request_distro:
+      if request_distro in full_distroversion_list:
+        distroversion = request_distro
+
+    elif len( distroversion_list ) == 1:
+      distroversion = distroversion_list[0]
+
+    elif len( full_distroversion_list ) == 1:
+      distroversion = full_distroversion_list[0]
+
+    if not distroversion:  # confused, punt to the caller
+      if distroversion_list:
+        return distroversion_list
       else:
-        return []
+        return full_distroversion_list
 
-    else:  # new uploaded file, let's have a look
-      import magic
-      self._checkfile_ran = False
-
-      ( name, extension ) = os.path.splitext( self.file.name )
-      extension = extension[1:]  # remove the .
-
-      if extension == 'deb':
-        try:
-          ( package, version, arch ) = name.split( '_' )
-        except ValueError:
-          raise ValidationError( 'Unrecognized deb file name Format' )
-
-        if arch == 'amd64':
-          arch = 'x86_64'
-        elif arch not in ( 'i386', 'all' ):
-          raise ValidationError( 'Unrecognized deb Arch' )
-
-      elif extension == 'rpm':
-        try:
-          ( package, version, release, arch ) = re.match( '(.+)-([^-]+)-([^-]+)\.(\w+)', name ).groups()
-        except ValueError:
-          raise ValidationError( 'Unrecognized rpm file name Format' )
-
-        if arch == 'noarch':
-          arch = 'all'
-        elif arch not in ( 'i386', 'x86_64' ):
-          raise ValidationError( 'Unrecognized rpm Arch' )
-
-        version = '%s-%s' % ( version, release )
-
-      else:
-        raise ValidationError( 'Unrecognized file Extension' )
-
-        try:
-          package = Package.objects.get( pk=package )
-        except Package.DoesNotExist:
-          raise ValidationError( 'Unable to find package "%s"' % package )
-
-        m = magic.open( 0 )
-        m.load()
-        magic_type = m.file( self.file._file.temporary_file_path() )
-        if magic_type == 'Debian binary package (format 2.0)':
-          package_type = 'deb'
-        elif magic_type in ( 'RPM v3.0 bin noarch', 'RPM v3.0 bin i386/x86_64' ):
-          package_type = 'rpm'
-        else:
-          raise ValidationError( 'Unrecognized file Format' )
-
-        distroversion = None
-        distroversion_list = []
-        full_distroversion_list = []
-        for tmp in DistroVersion.objects.filter( file_type=package_type ):
-          full_distroversion_list.append( tmp.pk )
-          for name in tmp.release_names.split( '\t' ):
-            if name in version:
-              distroversion_list.append( tmp.pk )
-
-        if request_distro:
-          if request_distro in full_distroversion_list:
-            distroversion = request_distro
-
-        elif len( distroversion_list ) == 1:
-          distroversion = distroversion_list[0]
-
-        elif len( full_distroversion_list ) == 1:
-          distroversion = full_distroversion_list[0]
-
-        if not distroversion:  # confused, punt to the caller
-          if distroversion_list:
-            return distroversion_list
-          else:
-            return full_distroversion_list
-
-        # we found one and only one disto, we are taking it
-        self.distroversion_id = distroversion
-        self.package_type = package_type
-        self.package = package
-        self.type = extension
-        self.arch = arch
-        self.version = version
-        self._checkfile_ran = True
-        return [ distroversion ]
+    # we found one and only one disto, we are taking it
+    self.file = file
+    self.distroversion_id = distroversion
+    self.package_type = package_type
+    self.package = package
+    self.type = extension
+    self.arch = arch
+    self.version = version
+    return True
 
   def promote( self, to ):
     """
-Promote a package to the next release level, to must be one of RELEASE_LEVELS
+Promote package file to the next release level, to must be one of RELEASE_LEVELS
     """
     if to not in self.RELEASE_LEVELS:
       raise Exception( 'Release level "%s" is Invalid' % to )
@@ -289,7 +286,9 @@ Promote a package to the next release level, to must be one of RELEASE_LEVELS
     elif self.release == 'dev' and to == 'stage':
       self.stage_at = datetime.utcnow().replace( tzinfo=utc )
 
-    elif self.release == 'stage' and to == 'prod' and self.prod_changecontrol_id is not None:
+    elif self.release == 'stage' and to == 'prod':
+      if not self.prod_changecontrol_id:
+        raise Exception( 'Change Control ID Requred to promote to prod' )
       self.prod_at = datetime.utcnow().replace( tzinfo=utc )
 
     else:
@@ -298,20 +297,44 @@ Promote a package to the next release level, to must be one of RELEASE_LEVELS
     self.save()
 
   def deprocate( self ):
+    """
+Deprocate package file.
+    """
     self.depr_at = datetime.utcnow().replace( tzinfo=utc )
 
     self.save()
 
-  def save( self, *args, **kwargs ):
-    try:  # _checkfile_ran isn't a real model member, trying to use it to check if checkfile needs to run, incase it was run before save()
-      checkfile_ran = self._checkfile_ran
-    except AttributeError:
-      checkfile_ran = False
+  @staticmethod
+  def create( file, justification, provenance, version=None ):
+    """
+Create a new PackageFile, note version is the distro version and is only required if it
+can't be automatically detected, in which case the return value of created will be a list of
+possible versions
+    """
+    if not version or not version.strip():
+      version = None
 
-    if self.file._file and not checkfile_ran:
-      options = self.checkfile()
-      if not self._checkfile_ran:
-        raise ValidationError( 'distroversion not set, run checkfile manually before saving, aviable options "%s"' % options )
+    try:
+      PackageFile.objects.get( file='./%s' % file.name ) #TODO: Figure out where the ./ is comming from and get rid of it, make sure to update the clean up script
+      raise Exception( 'File name "%s" allready used' % file.name )
+    except PackageFile.DoesNotExist:
+      pass
+
+    result = PackageFile()
+    result.justification = justification
+    result.provenance = provenance
+    options = result.loadfile( file, version )
+
+    if options is True:
+      result.save()
+      return True
+
+    else:
+      return options
+
+  def save( self, *args, **kwargs ):
+    if self.pk and self.file._file:
+      raise ValidationError( 'Not Allowed to update the file.' )
 
     super( PackageFile, self ).save( *args, **kwargs )
 
@@ -321,9 +344,14 @@ Promote a package to the next release level, to must be one of RELEASE_LEVELS
   class Meta:
     unique_together = ( 'package', 'distroversion', 'version', 'type', 'arch' )
 
+    add auth for the actions
+
   class API:
+    not_allowed_methods = ( 'CREATE', 'DELETE' )
     constants = ( 'RELEASE_LEVELS', 'FILE_TYPES', 'FILE_ARCHS' )
-    actions = { 'promote': [ 'String' ], 'deprocate': [] }
+    actions = { 'promote': [ { 'type': 'String', 'choices': dict( RELEASE_TYPE_CHOICES ) } ],
+                'deprocate': [],
+                'create': [ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ] }
     properties = [ 'release' ]
     list_filters = { 'package': { 'package': Package } }
 

@@ -1,115 +1,11 @@
 from datetime import datetime
 import json
 
-from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import get_object_or_404, render
+from django.http import Http404
 from django.utils.timezone import utc
 from django.views.decorators.csrf import csrf_exempt
 
-from packrat.Repos.forms import PackageFileForm
 from packrat.Repos.models import Repo, Package, PackageFile, Mirror
-
-
-def index(request):
-    repo_list = Repo.objects.all()
-    mirror_list = Mirror.objects.all()
-    package_list = Package.objects.all()
-
-    return render(
-        request, 'Repos/index.html',
-        {
-            'package_list': package_list,
-            'repo_list': repo_list,
-            'mirror_list': mirror_list
-        }
-    )
-
-
-def repo(request, repo_id):
-    repo = get_object_or_404(Repo, pk=repo_id)
-    package_list = repo.package_queryset.all()
-
-    return render(
-        request, 'Repos/repo.html',
-        {
-            'repo': repo,
-            'package_list': package_list
-        }
-    )
-
-
-def mirror(request, mirror_id):
-    mirror = get_object_or_404(Mirror, pk=mirror_id)
-    repo_list = mirror.repo_list.all()
-
-    return render(
-        request, 'Repos/mirror.html',
-        {
-            'mirror': mirror,
-            'repo_list': repo_list
-        }
-    )
-
-
-def package(request, package_id):
-    package = get_object_or_404(Package, pk=package_id)
-    file_list = package.packagefile_set.all()
-
-    return render(
-        request, 'Repos/package.html',
-        {
-            'package': package,
-            'file_list': file_list
-        }
-    )
-
-
-def packagefile(request, packagefile_id):
-    file = get_object_or_404(PackageFile, pk=packagefile_id)
-
-    return render(
-        request, 'Repos/packagefile.html',
-        {
-            'file': file
-        }
-    )
-
-
-def packagefile_add(request):
-    if request.method == u'POST':
-        form = PackageFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            file = form.save()
-
-            return HttpResponseRedirect(
-                reverse('repos:package', args=(file.package.pk,)))
-
-    else:
-        form = PackageFileForm()
-
-    return render(
-        request, 'Repos/packagefile_add.html',
-        {
-            'form': form
-        }
-    )
-
-
-def packagefile_promote(request, packagefile_id):
-    file = get_object_or_404(PackageFile, pk=packagefile_id)
-    if file.release == 'new':
-        file.ci_at = datetime.utcnow().replace(tzinfo=utc)
-    elif file.release == 'ci':
-        file.dev_at = datetime.utcnow().replace(tzinfo=utc)
-    elif file.release == 'dev':
-        file.stage_at = datetime.utcnow().replace(tzinfo=utc)
-    elif file.release == 'stage':
-        file.prod_at = datetime.utcnow().replace(tzinfo=utc)
-    file.save()
-
-    return HttpResponseRedirect(reverse('repos:packagefile', args=(file.pk,)))
-
 
 @csrf_exempt
 def sync(request):

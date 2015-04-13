@@ -1,0 +1,158 @@
+var packratBuilder = {};
+( function()
+{
+  "use strict";
+  packratBuilder = function( cinp )
+  {
+    var packrat = { cinp: cinp };
+
+    packrat.getRepos = function()
+    {
+
+    };
+
+    packrat.getPackages = function()
+    {
+      var deferred = $.Deferred();
+
+      $.when( cinp.list( '/api/v1/Repos/Package' ) ).then(
+        function( data )
+        {
+          $.when( cinp.getObjects( data.list, null, 100 ) ).then(
+            function( data )
+            {
+              deferred.resolve( data );
+            }
+          ).fail(
+            function( reason )
+            {
+              deferred.reject( reason );
+            }
+          );
+        }
+      ).fail(
+        function( reason )
+        {
+          deferred.reject( reason );
+        }
+      );
+
+      return deferred.promise();
+    };
+
+    packrat.getPackageFiles = function( package_uri )
+    {
+      var deferred = $.Deferred();
+
+      $.when( cinp.list( '/api/v1/Repos/PackageFile', 'package', { 'package': package_uri } ) ).then(
+        function( data )
+        {
+          $.when( cinp.getObjects( data.list, null, 100 ) ).then(
+            function( data )
+            {
+              deferred.resolve( data );
+            }
+          ).fail(
+            function( reason )
+            {
+              deferred.reject( reason );
+            }
+          );
+        }
+      ).fail(
+        function( reason )
+        {
+          deferred.reject( reason );
+        }
+      );
+
+      return deferred.promise();
+    };
+
+    packrat.promote = function( uri, to )
+    {
+      var deferred = $.Deferred();
+
+      $.when( cinp.call( uri + '(promote)', { to: to } ) ).then(
+        function( data )
+        {
+          $.when( cinp.get( uri ) ).then(
+            function( data )
+            {
+              deferred.resolve( data );
+            }
+          ).fail(
+            function( reason )
+            {
+              deferred.reject( reason );
+            }
+          );
+        }
+      ).fail(
+        function( reason )
+        {
+          deferred.reject( reason );
+        }
+      );
+
+      return deferred.promise();
+    };
+
+    packrat.deprocate = function( uri )
+    {
+      var deferred = $.Deferred();
+
+      $.when( cinp.call( uri + '(deprocate)' ) ).then(
+        function( data )
+        {
+          $.when( cinp.get( uri ) ).then(
+            function( data )
+            {
+              deferred.resolve( data );
+            }
+          ).fail(
+            function( reason )
+            {
+              deferred.reject( reason );
+            }
+          );
+        }
+      ).fail(
+        function( reason )
+        {
+          deferred.reject( reason );
+        }
+      );
+
+      return deferred.promise();
+    };
+
+    packrat.addPackageFile = function( provenance, justification, file_uri )
+    {
+      var deferred = $.Deferred();
+
+      if( !provenance.length ) // clear these out if blank.... that will force the server to send back that they are missing
+        provenance = undefined;
+      if( !justification.length )
+        justification = undefined;
+      if( !file_uri.length )
+        file_uri = undefined;
+
+      $.when( cinp.call( '/api/v1/Repos/PackageFile(create)', { file: file_uri, justification: justification, provenance: provenance } ) ).then(
+        function( data )
+        {
+          deferred.resolve( data );
+        }
+      ).fail(
+        function( reason )
+        {
+          deferred.reject( reason );
+        }
+      );
+
+      return deferred.promise();
+    };
+
+    return packrat;
+  };
+} )();
