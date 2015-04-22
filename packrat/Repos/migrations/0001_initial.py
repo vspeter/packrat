@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                 ('arch', models.CharField(max_length=6, editable=False, choices=[(b'x86_64', b'x86_64'), (b'i386', b'i386'), (b'all', b'All')])),
                 ('justification', models.TextField()),
                 ('provenance', models.TextField()),
-                ('file', models.FileField(upload_to=b'')),
+                ('file', models.FileField(upload_to=b'', editable=False)),
                 ('prod_changecontrol_id', models.CharField(max_length=20, blank=True)),
                 ('ci_at', models.DateTimeField(null=True, editable=False, blank=True)),
                 ('dev_at', models.DateTimeField(null=True, editable=False, blank=True)),
@@ -73,6 +73,7 @@ class Migration(migrations.Migration):
                 ('package', models.ForeignKey(editable=False, to='Repos.Package')),
             ],
             options={
+                'default_permissions': ('add', 'change', 'describe', 'promote'),
             },
             bases=(models.Model,),
         ),

@@ -2,7 +2,7 @@ import os
 import re
 from datetime import datetime
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models
 from django.utils.timezone import utc
 
@@ -270,10 +270,15 @@ This is the Individual package "file", they can indivdually belong to any type, 
     self.version = version
     return True
 
-  def promote( self, to ):
+  def promote( self, _user_, to ):
     """
 Promote package file to the next release level, to must be one of RELEASE_LEVELS
     """
+    print _user_
+
+    if not _user_.has_perm( 'Repos.packagefile_deprocate' ):
+      raise PermissionDenied()
+
     if to not in self.RELEASE_LEVELS:
       raise Exception( 'Release level "%s" is Invalid' % to )
 
@@ -296,21 +301,31 @@ Promote package file to the next release level, to must be one of RELEASE_LEVELS
 
     self.save()
 
-  def deprocate( self ):
+  def deprocate( self, _user_ ):
     """
 Deprocate package file.
     """
+
+    print _user_
+
+    if not _user_.has_perm( 'Repos.packagefile_deprocate' ):
+      raise PermissionDenied()
+
     self.depr_at = datetime.utcnow().replace( tzinfo=utc )
 
     self.save()
 
   @staticmethod
-  def create( file, justification, provenance, version=None ):
+  def create( _user_, file, justification, provenance, version=None, ):
     """
 Create a new PackageFile, note version is the distro version and is only required if it
 can't be automatically detected, in which case the return value of created will be a list of
 possible versions
     """
+
+    if not _user_.has_perm( 'Repos.packagefile_create' ):
+      raise PermissionDenied()
+
     if not version or not version.strip():
       version = None
 
@@ -344,7 +359,7 @@ possible versions
   class Meta:
     unique_together = ( 'package', 'distroversion', 'version', 'type', 'arch' )
 
-    add auth for the actions
+    default_permissions = ( 'change', 'promote', 'create' )
 
   class API:
     not_allowed_methods = ( 'CREATE', 'DELETE' )
@@ -354,6 +369,14 @@ possible versions
                 'create': [ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ] }
     properties = [ 'release' ]
     list_filters = { 'package': { 'package': Package } }
+
+    @staticmethod
+    def check_permission( user, name, target ):
+      print '-----------'
+      print user
+      print name
+      print target
+      return False
 
     @staticmethod
     def buildQS( qs, filter, values ):
