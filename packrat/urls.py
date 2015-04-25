@@ -16,7 +16,6 @@ urlpatterns = patterns(
   '',
   url( r'^$', views.index, name='index' ),
   url( r'^repos/', include( 'packrat.Repos.urls', namespace='repos' ) ),
-  url( r'^gui/', include( 'packrat.GUI.urls', namespace='gui' ) ),
   url( r'^admin/', include( admin.site.urls ) ),
   url( r'^api/', include( api.urls ) ),
 

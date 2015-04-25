@@ -28,7 +28,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'cinp',
     'packrat.Repos',
-    'packrat.GUI',
 )
 
 MIDDLEWARE_CLASSES = (
