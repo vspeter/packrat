@@ -8,6 +8,9 @@
 
 var cinp;
 var packrat;
+var user;
+var token;
+
 /*-------------------------------------------
   Dynamically load plugin scripts
 ---------------------------------------------*/
@@ -18,20 +21,6 @@ var packrat;
 function LoadBootstrapValidatorScript(callback){
   if (!$.fn.bootstrapValidator){
     $.getScript('plugins/bootstrapvalidator/bootstrapValidator.min.js', callback);
-  }
-  else {
-    if (callback && typeof(callback) === "function") {
-      callback();
-    }
-  }
-}
-//
-//  Dynamically load jQuery Select2 plugin
-//  homepage: https://github.com/ivaynberg/select2  v3.4.5  license - GPL2
-//
-function loadSelect2Script(callback){
-  if (!$.fn.select2){
-    $.getScript('plugins/select2/select2.min.js', callback);
   }
   else {
     if (callback && typeof(callback) === "function") {
@@ -348,7 +337,7 @@ function Table2Json(table) {
   table.find("tr").each(function () {
     var oneRow = [];
     var varname = $(this).index();
-    $("td", this).each(function (index) { if (index != 0) {oneRow.push($("input", this).val());}});
+    $("td", this).each(function (index) { if (index !== 0) {oneRow.push($("input", this).val());}});
     result[varname] = oneRow;
   });
   var result_json = JSON.stringify(result);
@@ -361,18 +350,75 @@ function errorHandler( msg, stack_trace )
 }
 
 /*-------------------------------------------
-  Function for Packages (packages.html)
+  Function for Packages (repos.html)
 ---------------------------------------------*/
-function makeSelect2(){
-        $('select').select2();
-        $('.dataTables_filter').each(function(){
-                $(this).find('label input[type=text]').attr('placeholder', 'Search');
-        });
+
+function repoTable()
+{
+  if( $.fn.dataTable.isDataTable( '#repos-table' ) )
+    return;
+
+  $( '#repos-table' ).dataTable
+  (
+    {
+      "aaSorting": [[ 0, "asc" ]],
+      "sDom": "<'box-content'<'col-sm-6'f><'col-sm-6 text-right'l><'clearfix'>>rt<'box-content'<'col-sm-6'i><'col-sm-6 text-right'p><'clearfix'>>",
+      "sPaginationType": "bootstrap",
+      "oLanguage": {
+        "sSearch": "",
+        "sLengthMenu": '_MENU_'
+      },
+      "aaData": [],
+      'aoColumns': [
+        { 'title': 'Description', 'data': 'description' },
+        { 'title': 'Release', 'data': 'release_type' },
+        { 'title': 'Manager', 'data': 'manager_type' },
+        { 'title': 'Distros', 'data': 'distroversion_list' },
+        { 'title': 'Created', 'data': 'created', 'type': 'date' },
+        { 'title': 'Last Changed', 'data': 'updated' , 'type': 'date' },
+        { 'title': 'uri' , 'data': 'uri', 'visible': false }
+      ]
+    }
+  );
+
+  loadRepos();
 }
 
+function loadRepos()
+{
+  var repos_table = $( '#repos-table' ).DataTable();
 
+  $.when( packrat.getRepos() ).then(
+    function( data )
+    {
+      repos_table.clear();
+      for( var o in data )
+      {
+        var tmp = data[ o ];
+        tmp.uri = o;
+        repos_table.row.add( tmp );
+      }
+      repos_table.draw();
+    }
+  ).fail(
+  function( reason )
+  {
+    window.alert( "failed to get repo list: (" + reason.code + "): " + reason.msg  );
+  }
+);
+
+  repos_table.clear();
+
+}
+
+/*-------------------------------------------
+  Function for Packages (packages.html)
+---------------------------------------------*/
 function packageTable()
 {
+  if( $.fn.dataTable.isDataTable( '#packagefiles-table' ) )
+    return;
+
   $( '#packagefiles-table' ).dataTable
   (
     {
@@ -389,13 +435,97 @@ function packageTable()
         { 'title': 'Release', 'data': 'release' },
         { 'title': 'Created', 'data': 'created', 'type': 'date' },
         { 'title': 'Last Changed', 'data': 'updated' , 'type': 'date' },
-        { 'title': 'Actions', 'data': null, 'target': -1, 'defaultContent': '<button action="promote">Promote</button> <button action="depr">Deprocate</button>' },
+        { 'title': 'Actions', 'data': null, 'target': -1, 'defaultContent': '<button action="promote" class="fa fa-level-up" title="Promote"></button> <button action="depr" class="fa fa-archive" title="Deprocate"></button>' },
         { 'title': 'uri' , 'data': 'uri', 'visible': false }
       ]
     }
   );
 
-  loadSelect2Script( makeSelect2 );
+  var file_table = $( '#packagefiles-table' ).DataTable();
+
+  $( '#packagefiles-table tbody' ).on( 'click', '[action="promote"]',
+    function()
+    {
+      var row = file_table.row( $( this ).parents( 'tr' ) );
+      var orig_data = row.data();
+      var to;
+      switch( orig_data.release )
+      {
+        case 'new':
+          to = 'ci';
+          break;
+        case 'ci':
+          to = 'dev';
+          break;
+        case 'dev':
+          to = 'stage';
+          break;
+        case 'stage':
+          if( !orig_data.prod_changecontrol_id )
+          {
+            var ccid = window.prompt( 'Please enter the Change Control Number' );
+            if( !ccid )
+              return;
+
+            $.when( cinp.update( orig_data.uri, { prod_changecontrol_id: ccid } ) ).then(
+              function( data )
+              {
+                row.data( $.extend( {}, data.detail, { uri: orig_data.uri } ) );
+                window.alert( 'Change Control ID applied, re-promote to continue' );
+              }
+            ).fail(
+              function( reason )
+              {
+                window.alert( 'Failed To Apply Change Control ID: ' + reason.msg );
+              }
+            );
+            return;
+          }
+          to = 'prod';
+          break;
+        case 'depr':
+          window.alert( 'Can not promote a Deprocated File.' );
+          return;
+        case 'prod':
+          return;
+        default:
+          window.alert( 'Don\'t know how to promote from release "' + orig_data.release + '"' );
+          return;
+        }
+
+      $.when( packrat.promote( orig_data.uri, to ) ).then(
+        function( data )
+        {
+          row.data( $.extend( {}, data.detail, { uri: orig_data.uri } ) ); // TODO: really should get the uri from the data.detail
+        }
+      ).fail(
+        function( reason )
+        {
+          window.alert( 'Failed To Promote: ' + reason.msg );
+        }
+      );
+
+    }
+  );
+
+  $( '#packagefiles-table tbody' ).on( 'click', '[action="depr"]',
+    function()
+    {
+      var row = file_table.row( $( this ).parents( 'tr' ) );
+      var orig_data = row.data();
+      $.when( packrat.deprocate( orig_data.uri ) ).then(
+        function( data )
+        {
+          row.data( $.extend( {}, data.detail, { uri: orig_data.uri } ) ); // TODO: really should get the uri from the data.detail
+        }
+      ).fail(
+        function( reason )
+        {
+          window.alert( 'Failed To Deprocate: ' + reason.msg );
+        }
+      );
+    }
+  );
 }
 
 function loadPackageList()
@@ -409,122 +539,65 @@ function loadPackageList()
     {
       for( var uri in data )
         packageMenu.append( '<li><a href="#" class="" id="package-2" uri="' + uri + '"><i class="fa fa-folder"></i><span class="hidden-xs">' + data[ uri ].name + '</span></a></li>' );
+
+      packageMenu.append( '<li><a href="#" class="" id="add-package"><i class="fa fa-plus"></i><span class="hidden-xs">Add New Package</span></a></li>' );
+
+      $( '#add-package' ).click( addPackage );
     }
   ).fail(
     function( reason )
     {
-      window.alert( "bad (" + reason.code + "): " + reason.msg );
+      window.alert( "failed to load Package List (" + reason.code + "): " + reason.msg );
     }
   );
 }
 
-function promotePackage( row )
+function addPackage()
 {
-  window.alert( row );
+  var name = window.prompt( 'Package Name' );
+
+  if( name === null )
+  {
+    window.alert( "Add Package Canceled" );
+    return;
+  }
+
+  $.when( packrat.createPackage( name ) ).then(
+    function( data )
+    {
+      window.alert( "Package created" );
+      loadPackageList();
+    }
+  ).fail(
+    function( reason )
+    {
+      window.alert( "Failed to Create Package (" + reason.code + "): " + reason.msg );
+    }
+  );
 }
 
 function loadPackageFiles( package_uri )
 {
   var file_table = $( '#packagefiles-table' ).DataTable();
 
+  file_table.clear();
+  file_table.draw();
+
   $.when( packrat.getPackageFiles( package_uri ) ).then(
     function( data )
     {
-      file_table.clear();
       for( var o in data )
       {
         var tmp = data[ o ];
         tmp.uri = o;
         file_table.row.add( tmp );
       }
-      $( '#packagefiles-table tbody' ).on( 'click', '[action="promote"]',
-      function()
-        {
-          var row = file_table.row( $( this ).parents( 'tr' ) );
-          var orig_data = row.data();
-          var to;
-          switch( orig_data.release )
-          {
-            case 'new':
-              to = 'ci';
-              break;
-            case 'ci':
-              to = 'dev';
-              break;
-            case 'dev':
-              to = 'stage';
-              break;
-            case 'stage':
-              if( !orig_data.prod_changecontrol_id )
-              {
-                var ccid = window.prompt( 'Please enter the Change Control Number' );
-                if( !ccid )
-                  return;
-
-                $.when( cinp.update( orig_data.uri, { prod_changecontrol_id: ccid } ) ).then(
-                  function( data )
-                  {
-                    row.data( $.extend( {}, data.detail, { uri: orig_data.uri } ) );
-                    window.alert( 'Change Control ID applied, re-promote to continue' );
-                  }
-                ).fail(
-                  function( reason )
-                  {
-                    window.alert( 'Failed To Apply Change Control ID: ' + reason.msg );
-                  }
-                );
-                return;
-              }
-              to = 'prod';
-              break;
-            case 'depr':
-              window.alert( 'Can not promote a Deprocated File.' );
-              return;
-            case 'prod':
-              return;
-            default:
-              window.alert( 'Don\'t know how to promote from release "' + data.release + '"' );
-              return;
-            }
-
-          $.when( packrat.promote( orig_data.uri, to ) ).then(
-            function( data )
-            {
-              row.data( $.extend( {}, data.detail, { uri: orig_data.uri } ) ); // TODO: really should get the uri from the data.detail
-            }
-          ).fail(
-            function( reason )
-            {
-              window.alert( 'Failed To Promote: ' + reason.msg );
-            }
-          );
-
-        }
-      );
-      $( '#packagefiles-table tbody' ).on( 'click', '[action="depr"]',
-      function()
-        {
-          var row = file_table.row( $( this ).parents( 'tr' ) );
-          var orig_data = row.data();
-          $.when( packrat.deprocate( orig_data.uri ) ).then(
-            function( data )
-            {
-              row.data( $.extend( {}, data.detail, { uri: orig_data.uri } ) ); // TODO: really should get the uri from the data.detail
-            }
-          ).fail(
-            function( reason )
-            {
-              window.alert( 'Failed To Deprocate: ' + reason.msg );
-            }
-          );
-        }
-      );
       file_table.draw();
     }
   ).fail(
     function( reason )
     {
-      window.alert( "bad (" + reason.code + "): " + reason.msg );
+      window.alert( "Failed to get Package Files (" + reason.code + "): " + reason.msg );
     }
   );
 }
@@ -603,24 +676,40 @@ function initUploader( fileInput, progBar, uploadedFile, fileSelectBtn, submitBt
 
 }
 
-function initFileSaver( provenance, justification, fileURI, submitBtn, provenance_label, justification_label, file_label, uploadedFile, errorMsg )
+function initFileSaver( provenance, justification, distro, distro_select, fileURI, submitBtn, provenance_label, justification_label, file_label, distro_label, uploadedFile, errorMsg )
 {
+  distro_select.hide();
+
   submitBtn.click(
     function()
     {
       provenance_label.empty();
       justification_label.empty();
       file_label.empty();
+      distro_label.empty();
       errorMsg.empty();
-      $.when( packrat.addPackageFile( provenance[0].value, justification[0].value, fileURI[0].value ) ).then(
+      $.when( packrat.addPackageFile( provenance[0].value, justification[0].value, fileURI[0].value, distro[0].value ) ).then(
         function( data )
         {
-          submitBtn.hide();
-          provenance[0].value = '';
-          justification[0].value = '';
-          fileURI[0].value = '';
-          uploadedFile.empty();
-          errorMsg.append( 'New Packge File Added' );
+          if( Array.isArray( data.result.value ) )
+          {
+            errorMsg.append( 'Unable to Auto-Detect Distro, please select one.' );
+            for( var val in data.result.value )
+              distro.append( $( '<option></option>' ).attr( 'value', data.result.value[ val ] ).text( data.result.value[ val ] ) );
+            distro_select.show();
+          }
+          else
+          {
+            submitBtn.hide();
+            provenance[0].value = '';
+            justification[0].value = '';
+            fileURI[0].value = '';
+            distro[0].value = '';
+            distro.empty();
+            uploadedFile.empty();
+            distro_select.hide();
+            errorMsg.append( 'New Packge File Added' );
+          }
         }
       ).fail(
         function( reason )
@@ -632,6 +721,8 @@ function initFileSaver( provenance, justification, fileURI, submitBtn, provenanc
               provenance_label.append( reason.fields.provenance );
             if( reason.fields.justification )
               justification_label.append( reason.fields.justification );
+            if( reason.fields.distro )
+              distro_label.append( reason.fields.distro );
             if( reason.fields.file )
               file_label.append( reason.fields.file );
           }
@@ -641,6 +732,29 @@ function initFileSaver( provenance, justification, fileURI, submitBtn, provenanc
       );
     }
   );
+}
+
+/*-------------------------------------------
+  Function for Packages (index.html)
+---------------------------------------------*/
+
+
+function logout()
+{
+  $.removeCookie( 'user' );
+  $.removeCookie( 'token' );
+
+  $( '#user-logged-in' ).hide();
+  $( '#user-logged-out' ).show();
+
+  $( '#username' ).empty();
+
+  cinp.setAuth( '', '' );
+
+  packrat.logout( user, token );
+
+  user = undefined;
+  token = undefined;
 }
 
 //////////////////////////////////////////////////////
@@ -676,12 +790,12 @@ $(document).ready(function () {
     var another_items = $('.main-menu li').not(parents);
     another_items.find('a').removeClass('active');
     another_items.find('a').removeClass('active-parent');
-    if ($(this).hasClass('dropdown-toggle') || $(this).closest('li').find('ul').length == 0) {
+    if ($(this).hasClass('dropdown-toggle') || $(this).closest('li').find('ul').length === 0) {
       $(this).addClass('active-parent');
       var current = $(this).next();
       if (current.is(':visible')) {
         li.find("ul.dropdown-menu").slideUp('fast');
-        li.find("ul.dropdown-menu a").removeClass('active')
+        li.find("ul.dropdown-menu a").removeClass('active');
       }
       else {
         another_items.find("ul.dropdown-menu").slideUp('fast');
@@ -694,9 +808,9 @@ $(document).ready(function () {
         pre.find("li.dropdown").not($(this).closest('li')).find('ul.dropdown-menu').slideUp('fast');
       }
     }
-    if ($(this).hasClass('active') == false) {
+    if ($(this).hasClass('active') === false) {
       $(this).parents("ul.dropdown-menu").find('a').removeClass('active');
-      $(this).addClass('active')
+      $(this).addClass('active');
     }
     if ($(this).hasClass('ajax-link')) {
       e.preventDefault();
@@ -771,4 +885,19 @@ $(document).ready(function () {
       loadAjaxContent(url);
     }
   });
+
+  user = $.cookie( 'user' );
+  token = $.cookie( 'token' );
+
+  if( user )
+  {
+    $( '#user-logged-out' ).hide();
+    $( '#username' ).empty();
+    $( '#username' ).append( user );
+    cinp.setAuth( user, token );
+  }
+  else
+    $( '#user-logged-in' ).hide();
+
+  $( '#doLogout' ).click( logout );
 });

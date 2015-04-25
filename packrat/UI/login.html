@@ -25,19 +25,68 @@
           </div>
           <div class="form-group">
             <label class="control-label">Username</label>
-            <input type="text" class="form-control" name="username" />
+            <input type="text" class="form-control" id="username" />
           </div>
           <div class="form-group">
             <label class="control-label">Password</label>
-            <input type="password" class="form-control" name="password" />
+            <input type="password" class="form-control" id="password" />
           </div>
           <div class="text-center">
-            <a href="../index.html" class="btn btn-primary">Sign in</a>
+            <a href="#" class="btn btn-primary" id="login">Login</a>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+<script src="plugins/jquery/jquery.min.js"></script>
+<script src="plugins/jquery-ui/jquery-ui.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="plugins/bootstrap/bootstrap.min.js"></script>
+<script src="plugins/jQuery-File-Upload/js/vendor/jquery.ui.widget.js"></script>
+<script src="plugins/jquery-cookie/jquery.cookie.js"></script>
+<!-- All functions for this theme + document.ready processing -->
+<script src="js/cinp.js"></script>
+<script src="js/packrat.js"></script>
+<script type="text/javascript">
+function errorHandler( msg, stack_trace )
+{
+  alert( "error: " + msg );
+}
+
+$( document ).ready(
+  function()
+  {
+    cinp = cinpBuilder();
+    cinp.setHost( '' );
+    cinp.on_server_error = errorHandler;
+
+    packrat = packratBuilder( cinp );
+
+    $( '#login' ).click( login );
+  }
+);
+
+function login()
+{
+  var user = $( '#username' ).val();
+  var pass = $( '#password' ).val();
+
+  $.when( packrat.login( user, pass ) ).then(
+    function( token )
+    {
+      $.cookie( 'user', user );
+      $.cookie( 'token', token );
+
+      window.location.replace( 'index.html' );
+    }
+  ).fail(
+    function( reason )
+    {
+      window.alert( "Login Failure: " + reason.msg );
+    }
+  );
+}
+</script>
 </body>
 </html>

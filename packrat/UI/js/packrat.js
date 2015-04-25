@@ -6,9 +6,57 @@ var packratBuilder = {};
   {
     var packrat = { cinp: cinp };
 
+    packrat.login = function( username, password )
+    {
+      var deferred = $.Deferred();
+
+      $.when( cinp.call( '/api/v1/Auth(login)', { 'username': username, 'password': password } ) ).then(
+        function( data )
+        {
+          deferred.resolve( data.result.value );
+        }
+      ).fail(
+        function( reason )
+        {
+          deferred.reject( reason );
+        }
+      );
+
+      return deferred.promise();
+    };
+
+    packrat.logout = function( username, token )
+    {
+       cinp.call( '/api/v1/Auth(logout)', { 'username': username, 'token': token } );
+    };
+
     packrat.getRepos = function()
     {
+      var deferred = $.Deferred();
 
+      $.when( cinp.list( '/api/v1/Repos/Repo' ) ).then(
+        function( data )
+        {
+          $.when( cinp.getObjects( data.list, null, 100 ) ).then(
+            function( data )
+            {
+              deferred.resolve( data );
+            }
+          ).fail(
+            function( reason )
+            {
+              deferred.reject( reason );
+            }
+          );
+        }
+      ).fail(
+        function( reason )
+        {
+          deferred.reject( reason );
+        }
+      );
+
+      return deferred.promise();
     };
 
     packrat.getPackages = function()
@@ -29,6 +77,25 @@ var packratBuilder = {};
               deferred.reject( reason );
             }
           );
+        }
+      ).fail(
+        function( reason )
+        {
+          deferred.reject( reason );
+        }
+      );
+
+      return deferred.promise();
+    };
+
+    packrat.createPackage = function( name )
+    {
+      var deferred = $.Deferred();
+
+      $.when( cinp.create( '/api/v1/Repos/Package', { 'name': name } ) ).then(
+        function( data )
+        {
+          deferred.resolve( data );
         }
       ).fail(
         function( reason )
@@ -127,7 +194,7 @@ var packratBuilder = {};
       return deferred.promise();
     };
 
-    packrat.addPackageFile = function( provenance, justification, file_uri )
+    packrat.addPackageFile = function( provenance, justification, file_uri, distro_version )
     {
       var deferred = $.Deferred();
 
@@ -137,8 +204,10 @@ var packratBuilder = {};
         justification = undefined;
       if( !file_uri.length )
         file_uri = undefined;
+      if( !distro_version.length )
+        distro_version = undefined;
 
-      $.when( cinp.call( '/api/v1/Repos/PackageFile(create)', { file: file_uri, justification: justification, provenance: provenance } ) ).then(
+      $.when( cinp.call( '/api/v1/Repos/PackageFile(create)', { file: file_uri, justification: justification, provenance: provenance, version: distro_version } ) ).then(
         function( data )
         {
           deferred.resolve( data );
