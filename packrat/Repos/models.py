@@ -1,14 +1,16 @@
-import os
-import re
 from datetime import datetime
 
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models
 from django.utils.timezone import utc
 
+from Deb import Deb
+from Rpm import Rpm
+from Pdisk import Pdisk
+
 DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'centos', 'Centos' ), ( 'rhel', 'RHEL' ), ( 'sles', 'SLES' ) ) # there is no ubuntu, it shares the same version space as debian
-MANAGER_TYPE_CHOICES = ( ( 'apt', 'apt' ), ( 'yum', 'yum' ), ( 'zypper', 'zypper' ) )
-FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'rpm' ) )
+MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'zypper', 'Zypper' ) )
+FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'RPM' ), ( 'pdisk', 'Plato Disk' ) )
 FILE_ARCH_CHOICES = ( ( 'x86_64', 'x86_64' ), ( 'i386', 'i386' ), ( 'all', 'All' ) )
 RELEASE_TYPE_CHOICES = ( ( 'ci', 'CI' ), ( 'dev', 'Development' ), ( 'stage', 'Staging' ), ( 'prod', 'Production' ), ( 'depr', 'Deprocated' ) )
 
@@ -182,66 +184,29 @@ This is the Individual package "file", they can indivdually belong to any type, 
       return 'new'
 
   def loadfile( self, file, request_distro ):
-    import magic
+    file.file.seek( 0 ) # some upstream process might of left the cursor at the end of the file
 
-    ( name, extension ) = os.path.splitext( os.path.basename( file.name ) )
-    extension = extension[1:]  # remove the .
+    pkgFile = None
+    for loader in ( Deb, Rpm, Pdisk ):
+      pkgFile = loader.load( file )
+      if pkgFile is not None:
+        break
 
-    if extension == 'deb':
-      try:
-        ( package, version, arch ) = name.split( '_' )
-      except ValueError:
-        raise ValidationError( 'Unrecognized deb file name Format' )
-
-      if arch == 'amd64':
-        arch = 'x86_64'
-      elif arch not in ( 'i386', 'all' ):
-        raise ValidationError( 'Unrecognized deb Arch' )
-
-    elif extension == 'rpm':
-      try:
-        ( package, version, release, arch ) = re.match( '(.+)-([^-]+)-([^-]+)\.(\w+)', name ).groups()
-      except ValueError:
-        raise ValidationError( 'Unrecognized rpm file name Format' )
-
-      if arch == 'noarch':
-        arch = 'all'
-      elif arch not in ( 'i386', 'x86_64' ):
-        raise ValidationError( 'Unrecognized rpm Arch' )
-
-      version = '%s-%s' % ( version, release )
-
-    else:
-      raise ValidationError( 'Unrecognized file Extension' )
+    if not pkgFile:
+      raise ValidationError( 'Unable to Determine File Type' )
 
     try:
-      package = Package.objects.get( pk=package )
+      package = Package.objects.get( pk=pkgFile.package )
     except Package.DoesNotExist:
       raise ValidationError( 'Unable to find package "%s"' % package )
-
-    file.file.seek( 0 )
-
-    m = magic.open( 0 )
-    m.load()
-    try:
-      magic_type = m.descriptor( os.dup( file.file.fileno() ) )
-    except Exception as e:
-      raise Exception( 'Error getting magic: %s' % e)
-
-    if magic_type == 'Debian binary package (format 2.0)':
-      package_type = 'deb'
-    elif magic_type in ( 'RPM v3.0 bin noarch', 'RPM v3.0 bin i386/x86_64' ):
-      package_type = 'rpm'
-    else:
-      raise ValidationError( 'Unrecognized file Format' )
 
     distroversion = None
     distroversion_list = []
     full_distroversion_list = []
-    for tmp in DistroVersion.objects.filter( file_type=package_type ):
+    for tmp in DistroVersion.objects.filter( file_type=pkgFile.type ):
       full_distroversion_list.append( tmp.pk )
       for name in tmp.release_names.split( '\t' ):
-        if name in version:
+        if name in pkgFile.version:
           distroversion_list.append( tmp.pk )
 
     if request_distro:
@@ -263,20 +228,17 @@ This is the Individual package "file", they can indivdually belong to any type, 
     # we found one and only one disto, we are taking it
     self.file = file
     self.distroversion_id = distroversion
-    self.package_type = package_type
     self.package = package
-    self.type = extension
-    self.arch = arch
-    self.version = version
+    self.type = pkgFile.type
+    self.arch = pkgFile.arch
+    self.version = pkgFile.version
     return True
 
   def promote( self, _user_, to ):
     """
 Promote package file to the next release level, to must be one of RELEASE_LEVELS
     """
-    print _user_
-
-    if not _user_.has_perm( 'Repos.packagefile_deprocate' ):
+    if not _user_.has_perm( 'Repos.packagefile_promote' ):
       raise PermissionDenied()
 
     if to not in self.RELEASE_LEVELS:
@@ -306,9 +268,7 @@ Promote package file to the next release level, to must be one of RELEASE_LEVELS
 Deprocate package file.
     """
 
-    print _user_
-
-    if not _user_.has_perm( 'Repos.packagefile_deprocate' ):
+    if not _user_.has_perm( 'Repos.packagefile_promote' ):
       raise PermissionDenied()
 
     self.depr_at = datetime.utcnow().replace( tzinfo=utc )
@@ -369,14 +329,6 @@ possible versions
                 'create': [ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ] }
     properties = [ 'release' ]
     list_filters = { 'package': { 'package': Package } }
-
-    @staticmethod
-    def check_permission( user, name, target ):
-      print '-----------'
-      print user
-      print name
-      print target
-      return False
 
     @staticmethod
     def buildQS( qs, filter, values ):
