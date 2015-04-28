@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 class Deb( object ):
   @classmethod
   def load( cls, file ):
-    ( _, extension ) = os.path.splitext( os.path.basename( file.name ) )
+    ( filename, extension ) = os.path.splitext( os.path.basename( file.name ) )
 
     if extension != '.deb':
       return None
@@ -23,7 +23,7 @@ class Deb( object ):
 
     # TODO: get the package, version, arch from the changelog
     try:
-      ( package, version, arch ) = file.name.split( '_' )
+      ( package, version, arch ) = filename.split( '_' )
     except ValueError:
       raise ValidationError( 'Unrecognized deb file name Format' )
 

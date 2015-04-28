@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 class Rpm( object ):
   @classmethod
   def load( cls, file ):
-    ( _, extension ) = os.path.splitext( os.path.basename( file.name ) )
+    ( filename, extension ) = os.path.splitext( os.path.basename( file.name ) )
 
     if extension != '.rpm':
       return None
@@ -24,7 +24,7 @@ class Rpm( object ):
 
     # TODO: get these from the rpm file
     try:
-      ( package, version, release, arch ) = re.match( '(.+)-([^-]+)-([^-]+)\.(\w+)', file.name ).groups()
+      ( package, version, release, arch ) = re.match( '(.+)-([^-]+)-([^-]+)\.(\w+)', filename ).groups()
     except ValueError:
       raise ValidationError( 'Unrecognized rpm file name Format' )
 

@@ -4,11 +4,5 @@
 
 {% block content %}
 <p>Welcome to Packrat, the Package Lifecycle and Repo Manager</p>
-<p><a href="/repos/">repos</a></p>
-<p><a href="{% url 'gui:index' %}">GUI</a></p>
-
-<form method="POST" action="/api/FILES" enctype="multipart/form-data">
-  <input type="file" name="file" />
-  <input type="submit"/>
-</form>
+<p><a href="/ui/">UI</a></p>
 {% endblock %}
