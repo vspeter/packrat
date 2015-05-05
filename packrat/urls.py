@@ -15,7 +15,6 @@ api.registerFileUploader( 'FILES' )
 urlpatterns = patterns(
   '',
   url( r'^$', views.index, name='index' ),
-  url( r'^repos/', include( 'packrat.Repos.urls', namespace='repos' ) ),
   url( r'^admin/', include( admin.site.urls ) ),
   url( r'^api/', include( api.urls ) ),
 

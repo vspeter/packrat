@@ -30,6 +30,35 @@ var packratBuilder = {};
        cinp.call( '/api/v1/Auth(logout)', { 'username': username, 'token': token } );
     };
 
+    packrat.getMirrors = function()
+    {
+      var deferred = $.Deferred();
+
+      $.when( cinp.list( '/api/v1/Repos/Mirror' ) ).then(
+        function( data )
+        {
+          $.when( cinp.getObjects( data.list, null, 100 ) ).then(
+            function( data )
+            {
+              deferred.resolve( data );
+            }
+          ).fail(
+            function( reason )
+            {
+              deferred.reject( reason );
+            }
+          );
+        }
+      ).fail(
+        function( reason )
+        {
+          deferred.reject( reason );
+        }
+      );
+
+      return deferred.promise();
+    };
+
     packrat.getRepos = function()
     {
       var deferred = $.Deferred();

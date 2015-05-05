@@ -103,7 +103,7 @@ function loadAjaxContent(url){
       $('.preloader').hide();
     },
     error: function (jqXHR, textStatus, errorThrown) {
-      alert(errorThrown);
+      window.alert(errorThrown);
     },
     dataType: "html",
     async: false
@@ -302,7 +302,7 @@ function closeModalBox(){
         });
       }
     });
-  })
+  });
 };
 })( jQuery );
 //
@@ -408,7 +408,67 @@ function loadRepos()
 );
 
   repos_table.clear();
+}
 
+/*-------------------------------------------
+  Function for Packages (mirrors.html)
+---------------------------------------------*/
+
+function mirrorTable()
+{
+  if( $.fn.dataTable.isDataTable( '#mirrors-table' ) )
+    return;
+
+  $( '#mirrors-table' ).dataTable
+  (
+    {
+      "aaSorting": [[ 0, "asc" ]],
+      "sDom": "<'box-content'<'col-sm-6'f><'col-sm-6 text-right'l><'clearfix'>>rt<'box-content'<'col-sm-6'i><'col-sm-6 text-right'p><'clearfix'>>",
+      "sPaginationType": "bootstrap",
+      "oLanguage": {
+        "sSearch": "",
+        "sLengthMenu": '_MENU_'
+      },
+      "aaData": [],
+      'aoColumns': [
+        { 'title': 'Description', 'data': 'description' },
+        { 'title': 'Name', 'data': 'name' },
+        { 'title': 'Repos', 'data': 'repo_list' },
+        { 'title': 'Last Sync Start', 'data': 'last_sync_start', 'type': 'date' },
+        { 'title': 'Last Sync Complete', 'data': 'last_sync_complete', 'type': 'date' },
+        { 'title': 'Last Changed', 'data': 'updated' , 'type': 'date' },
+        { 'title': 'uri' , 'data': 'uri', 'visible': false }
+      ]
+    }
+  );
+
+  loadMirrors();
+}
+
+function loadMirrors()
+{
+  var mirrors_table = $( '#mirrors-table' ).DataTable();
+
+  $.when( packrat.getMirrors() ).then(
+    function( data )
+    {
+      mirrors_table.clear();
+      for( var o in data )
+      {
+        var tmp = data[ o ];
+        tmp.uri = o;
+        mirrors_table.row.add( tmp );
+      }
+      mirrors_table.draw();
+    }
+  ).fail(
+  function( reason )
+  {
+    window.alert( "failed to get mirror list: (" + reason.code + "): " + reason.msg  );
+  }
+);
+
+  mirrors_table.clear();
 }
 
 /*-------------------------------------------
@@ -432,6 +492,7 @@ function packageTable()
       "aaData": [],
       'aoColumns': [
         { 'title': 'Version', 'data': 'version' },
+        { 'title': 'Distro Version', 'data': 'distroversion' },
         { 'title': 'Release', 'data': 'release' },
         { 'title': 'Created', 'data': 'created', 'type': 'date' },
         { 'title': 'Last Changed', 'data': 'updated' , 'type': 'date' },

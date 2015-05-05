@@ -68,34 +68,33 @@ This is a Collection of PackageFiles that meant certian requrements, ie: distro,
       qs[ 'packagefile__dev_at__isnull' ] = True
       qs[ 'packagefile__stage_at__isnull' ] = True
       qs[ 'packagefile__prod_at__isnull' ] = True
+      qs[ 'packagefile__depr_at__isnull' ] = True
 
     elif self.release_type == 'dev':
       qs[ 'packagefile__ci_at__isnull' ] = False
       qs[ 'packagefile__dev_at__isnull' ] = False
       qs[ 'packagefile__stage_at__isnull' ] = True
       qs[ 'packagefile__prod_at__isnull' ] = True
+      qs[ 'packagefile__depr_at__isnull' ] = True
 
     elif self.release_type == 'stage':
       qs[ 'packagefile__ci_at__isnull' ] = False
       qs[ 'packagefile__dev_at__isnull' ] = False
       qs[ 'packagefile__stage_at__isnull' ] = False
       qs[ 'packagefile__prod_at__isnull' ] = True
+      qs[ 'packagefile__depr_at__isnull' ] = True
 
     elif self.release_type == 'prod':
       qs[ 'packagefile__ci_at__isnull' ] = False
       qs[ 'packagefile__dev_at__isnull' ] = False
       qs[ 'packagefile__stage_at__isnull' ] = False
       qs[ 'packagefile__prod_at__isnull' ] = False
+      qs[ 'packagefile__depr_at__isnull' ] = True
 
     elif self.release_type == 'depr':
-      raise Exception( 'Not implemented' )
+      qs[ 'packagefile__depr_at__isnull' ] = False
 
     return qs
-
-  @property
-  def package_queryset( self ):
-    qs = Package.objects.filter( **self.package_queryset_parms )
-    return qs.distinct()
 
   def __unicode__( self ):
     return 'Repo "%s"' % self.description
@@ -121,8 +120,18 @@ NOTE: this dosen't prevent the remote server from downloading an indivvidual fil
   def __unicode__( self ):
     return 'Mirror "%s"' % self.description
 
+  def syncStart( self ):
+    self.last_sync_start = datetime.utcnow().replace( tzinfo=utc )
+    self.save()
+
+  def syncComplete( self ):
+    self.last_sync_complete = datetime.utcnow().replace( tzinfo=utc )
+    self.save()
+
   class API:
-    pass
+    actions = { 'syncStart': [],
+                'syncComplete': [],
+              }
 
 
 class Package( models.Model ):
@@ -137,7 +146,15 @@ This is a Collection of PacageFiles, they share a name.
     return 'Package "%s"' % self.name
 
   class API:
-    pass
+    list_filters = { 'repo-sync': { 'repo': Repo } }
+
+    @staticmethod
+    def buildQS( qs, filter, values ):
+      if filter == 'repo-sync':
+        return qs.filter( **values[ 'repo' ].package_queryset_parms )
+
+      raise Exception( 'Invalid filter "%s"' % filter )
+
 
 class PackageFile( models.Model ): # TODO: add delete to cleanup the file, django no longer does this for us
   """
@@ -324,15 +341,25 @@ possible versions
   class API:
     not_allowed_methods = ( 'CREATE', 'DELETE' )
     constants = ( 'RELEASE_LEVELS', 'FILE_TYPES', 'FILE_ARCHS' )
-    actions = { 'promote': [ { 'type': 'String', 'choices': dict( RELEASE_TYPE_CHOICES ) } ],
-                'deprocate': [],
-                'create': [ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ] }
+    actions = {
+               'promote': [ { 'type': 'String', 'choices': dict( RELEASE_TYPE_CHOICES ) } ],
+               'deprocate': [],
+               'create': [ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ]
+              }
     properties = [ 'release' ]
-    list_filters = { 'package': { 'package': Package } }
+    list_filters = {
+                      'package': { 'package': Package },
+                      'repo-sync': { 'repo': Repo, 'package': Package }
+                   }
 
     @staticmethod
     def buildQS( qs, filter, values ):
       if filter == 'package':
         return qs.filter( package=values[ 'package' ] )
+
+      if filter == 'repo-sync':
+        repo_parms = values[ 'repo' ].package_queryset_parms
+        repo_parms = dict( zip( [ i[13:] for i in repo_parms.keys() ], repo_parms.values() ) ) # take off the "packagefile__" prefix
+        return qs.filter( package=values[ 'package'], **repo_parms )
 
       raise Exception( 'Invalid filter "%s"' % filter )
