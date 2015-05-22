@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=20, serialize=False, primary_key=True)),
                 ('distro', models.CharField(max_length=6, choices=[(b'debian', b'Debian'), (b'centos', b'Centos'), (b'rhel', b'RHEL'), (b'sles', b'SLES')])),
                 ('version', models.CharField(max_length=10)),
-                ('file_type', models.CharField(max_length=3, choices=[(b'deb', b'deb'), (b'rpm', b'rpm')])),
+                ('file_type', models.CharField(max_length=3, choices=[(b'deb', b'deb'), (b'rpm', b'RPM'), (b'pdisk', b'Plato Disk')])),
                 ('release_names', models.CharField(max_length=100, blank=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('version', models.CharField(max_length=50, editable=False)),
-                ('type', models.CharField(max_length=3, editable=False, choices=[(b'deb', b'deb'), (b'rpm', b'rpm')])),
+                ('type', models.CharField(max_length=3, editable=False, choices=[(b'deb', b'deb'), (b'rpm', b'RPM'), (b'pdisk', b'Plato Disk')])),
                 ('arch', models.CharField(max_length=6, editable=False, choices=[(b'x86_64', b'x86_64'), (b'i386', b'i386'), (b'all', b'All')])),
                 ('justification', models.TextField()),
                 ('provenance', models.TextField()),
@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
                 ('package', models.ForeignKey(editable=False, to='Repos.Package')),
             ],
             options={
-                'default_permissions': ('add', 'change', 'describe', 'promote'),
+                'default_permissions': ('change', 'promote', 'create'),
             },
             bases=(models.Model,),
         ),
@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
             name='Repo',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('manager_type', models.CharField(max_length=6, choices=[(b'apt', b'apt'), (b'yum', b'yum'), (b'zypper', b'zypper')])),
+                ('manager_type', models.CharField(max_length=6, choices=[(b'apt', b'APT'), (b'yum', b'YUM'), (b'zypper', b'Zypper')])),
                 ('description', models.CharField(max_length=200)),
                 ('release_type', models.CharField(max_length=5, choices=[(b'ci', b'CI'), (b'dev', b'Development'), (b'stage', b'Staging'), (b'prod', b'Production'), (b'depr', b'Deprocated')])),
                 ('created', models.DateTimeField(auto_now_add=True)),

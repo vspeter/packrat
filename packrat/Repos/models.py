@@ -215,7 +215,7 @@ This is the Individual package "file", they can indivdually belong to any type, 
     try:
       package = Package.objects.get( pk=pkgFile.package )
     except Package.DoesNotExist:
-      raise ValidationError( 'Unable to find package "%s"' % package )
+      raise ValidationError( 'Unable to find package "%s"' % pkgFile.package )
 
     distroversion = None
     distroversion_list = []
@@ -255,7 +255,7 @@ This is the Individual package "file", they can indivdually belong to any type, 
     """
 Promote package file to the next release level, to must be one of RELEASE_LEVELS
     """
-    if not _user_.has_perm( 'Repos.packagefile_promote' ):
+    if not _user_.has_perm( 'Repos.promote_packagefile' ):
       raise PermissionDenied()
 
     if to not in self.RELEASE_LEVELS:
@@ -285,7 +285,7 @@ Promote package file to the next release level, to must be one of RELEASE_LEVELS
 Deprocate package file.
     """
 
-    if not _user_.has_perm( 'Repos.packagefile_promote' ):
+    if not _user_.has_perm( 'Repos.promote_packagefile' ):
       raise PermissionDenied()
 
     self.depr_at = datetime.utcnow().replace( tzinfo=utc )
@@ -300,7 +300,7 @@ can't be automatically detected, in which case the return value of created will 
 possible versions
     """
 
-    if not _user_.has_perm( 'Repos.packagefile_create' ):
+    if not _user_.has_perm( 'Repos.create_packagefile' ):
       raise PermissionDenied()
 
     if not version or not version.strip():
