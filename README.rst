@@ -1,3 +1,5 @@
+NOTE: this is all old and out of date
+
 =============================
 packrat
 =============================

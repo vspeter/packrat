@@ -1,5 +1,3 @@
 *.pyc
 
-db.sqlite3
-
 files/*
