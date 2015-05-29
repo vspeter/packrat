@@ -1,3 +1,4 @@
 *.pyc
 
-files/*
+www/files/*
+www/static/*
