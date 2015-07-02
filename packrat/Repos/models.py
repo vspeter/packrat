@@ -6,11 +6,11 @@ from django.utils.timezone import utc
 
 from Deb import Deb
 from Rpm import Rpm
-from Pdisk import Pdisk
+from Resource import Resource
 
 DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'centos', 'Centos' ), ( 'rhel', 'RHEL' ), ( 'sles', 'SLES' ) ) # there is no ubuntu, it shares the same version space as debian
 MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'zypper', 'Zypper' ) )
-FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'RPM' ), ( 'pdisk', 'Plato Disk' ) )
+FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'RPM' ), ( 'rsc', 'Resource' ) )
 FILE_ARCH_CHOICES = ( ( 'x86_64', 'x86_64' ), ( 'i386', 'i386' ), ( 'all', 'All' ) )
 RELEASE_TYPE_CHOICES = ( ( 'ci', 'CI' ), ( 'dev', 'Development' ), ( 'stage', 'Staging' ), ( 'prod', 'Production' ), ( 'depr', 'Deprocated' ) )
 
@@ -204,7 +204,7 @@ This is the Individual package "file", they can indivdually belong to any type, 
     file.file.seek( 0 ) # some upstream process might of left the cursor at the end of the file
 
     pkgFile = None
-    for loader in ( Deb, Rpm, Pdisk ):
+    for loader in ( Deb, Rpm, Resource ):
       pkgFile = loader.load( file )
       if pkgFile is not None:
         break

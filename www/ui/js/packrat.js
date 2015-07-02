@@ -92,7 +92,7 @@ var packratBuilder = {};
     {
       var deferred = $.Deferred();
 
-      $.when( cinp.list( '/api/v1/Repos/Package' ) ).then(
+      $.when( cinp.list( '/api/v1/Repos/Package', null, null, 0, 200 ) ).then(
         function( data )
         {
           $.when( cinp.getObjects( data.list, null, 100 ) ).then(
@@ -140,7 +140,7 @@ var packratBuilder = {};
     {
       var deferred = $.Deferred();
 
-      $.when( cinp.list( '/api/v1/Repos/PackageFile', 'package', { 'package': package_uri } ) ).then(
+      $.when( cinp.list( '/api/v1/Repos/PackageFile', 'package', { 'package': package_uri }, 0, 500 ) ).then(
         function( data )
         {
           $.when( cinp.getObjects( data.list, null, 100 ) ).then(
