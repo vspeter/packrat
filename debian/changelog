@@ -1,3 +1,10 @@
+packrat (0.2-1) trusty; urgency=medium
+
+  * Added Distros CoreOS and None
+  * change PDisk to Resource
+
+ -- Peter <peter@blueboy>  Fri, 03 Jul 2015 11:45:58 -0600
+
 packrat (0.1) trusty; urgency=medium
 
   * Initial release.

@@ -1,0 +1,62 @@
+[
+{
+  "fields": {
+    "updated": "2013-01-01T01:01:00",
+    "created": "2013-01-01T01:01:00",
+    "file_type": "deb",
+    "version": "precise",
+    "release_names": "precise",
+    "distro": "debian"
+  },
+  "model": "Repos.distroversion",
+  "pk": "precise"
+},
+{
+  "fields": {
+    "updated": "2013-01-01T01:01:00",
+    "created": "2013-01-01T01:01:00",
+    "file_type": "deb",
+    "version": "trusty",
+    "release_names": "trusty",
+    "distro": "debian"
+  },
+  "model": "Repos.distroversion",
+  "pk": "trusty"
+},
+{
+  "fields": {
+    "updated": "2013-01-01T01:01:00",
+    "created": "2013-01-01T01:01:00",
+    "file_type": "rpm",
+    "version": "6",
+    "release_names": "el6",
+    "distro": "centos"
+  },
+  "model": "Repos.distroversion",
+  "pk": "centos6"
+},
+{
+  "fields": {
+    "updated": "2013-01-01T01:01:00",
+    "created": "2013-01-01T01:01:00",
+    "file_type": "rpm",
+    "version": "7",
+    "release_names": "el7",
+    "distro": "centos"
+  },
+  "model": "Repos.distroversion",
+  "pk": "centos7"
+},
+{
+  "fields": {
+    "updated": "2013-01-01T01:01:00",
+    "created": "2013-01-01T01:01:00",
+    "file_type": "rsc",
+    "version": "",
+    "release_names": "",
+    "distro": "none"
+  },
+  "model": "Repos.distroversion",
+  "pk": "resource"
+}
+]

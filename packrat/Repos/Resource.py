@@ -1,19 +1,14 @@
 import os
 
-from django.core.exceptions import ValidationError
-
-class Resource( object ):
+class Resource( object ): # This will take anything that has one (and only one) "_" in the file name to delinitate the package and version
   @classmethod
   def load( cls, file ):
     ( filename, extension ) = os.path.splitext( os.path.basename( file.name ) )
 
-    if extension != '.tar.gz':
-      return None
-
     try:
       ( package, version ) = filename.split( '_' )
     except ValueError:
-      raise ValidationError( 'Unrecognized Resource file name Format' )
+      return None
 
     return cls( package, version )
 
