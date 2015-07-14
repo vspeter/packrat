@@ -30,15 +30,25 @@ case "$1" in
           echo "Fixing settings.py..."
           ln -sf /etc/packrat/master.conf /usr/lib/python2.7/dist-packages/packrat/settings.py
         fi
+
         echo "Reloading cron..."
         /etc/init.d/cron reload
+
         echo "Enabeling Site..."
         a2ensite packrat.conf
         a2enmod	wsgi
+
         echo "Restarting Apache..."
         /etc/init.d/apache2 restart
+
         echo "Fixing permissions to files directory..."
         chown www-data.www-data /var/www/packrat/files
+
+        echo "Checking admin static content..."
+        if [ ! -L /var/www/packrat/static/admin ];
+        then
+          ln -s /usr/share/python-django-common/django/contrib/admin/static/admin /var/www/packrat/static/admin
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

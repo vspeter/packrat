@@ -685,7 +685,7 @@ function initUploader( fileInput, progBar, uploadedFile, fileSelectBtn, submitBt
       dataType: 'json',
       singleFileUploads: true,
       autoUpload: false,
-      acceptFileTypes: /(\.|\/)(deb|rpm)$/i,
+      //acceptFileTypes: /(\.|\/)(deb|rpm)$/i,
       done:
         function( e, data )
         {
@@ -719,11 +719,11 @@ function initUploader( fileInput, progBar, uploadedFile, fileSelectBtn, submitBt
     {
       errorMsg.empty();
 
-      if( !data.originalFiles[0].name.match( /(\.|\/)(deb|rpm)$/i ) )
-      {
-        window.alert( 'Must be a .deb or .rpm file.' );
-        return;
-      }
+      //if( !data.originalFiles[0].name.match( /(\.|\/)(deb|rpm)$/i ) )
+      //{
+      //  window.alert( 'Must be a .deb or .rpm file.' );
+      //  return;
+      //}
 
       if( !window.confirm( 'Ok to upload file "' + data.originalFiles[0].name + '" of size "' + data.originalFiles[0].size + '"?' ) )
       {
