@@ -9,7 +9,7 @@ from Rpm import Rpm
 from Resource import Resource
 
 DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'centos', 'Centos' ), ( 'rhel', 'RHEL' ), ( 'sles', 'SLES' ), ( 'core', 'CoreOS' ), ( 'none', 'None' ) ) # there is no ubuntu, it shares the same version space as debian
-MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'zypper', 'Zypper' ), ( 'json', 'JSON' ) )
+MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'yast', 'YaST' ), ( 'json', 'JSON' ) )
 FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'RPM' ), ( 'rsc', 'Resource' ) )
 FILE_ARCH_CHOICES = ( ( 'x86_64', 'x86_64' ), ( 'i386', 'i386' ), ( 'all', 'All' ) )
 RELEASE_TYPE_CHOICES = ( ( 'ci', 'CI' ), ( 'dev', 'Development' ), ( 'stage', 'Staging' ), ( 'prod', 'Production' ), ( 'depr', 'Deprocated' ) )
@@ -324,6 +324,16 @@ possible versions
     else:
       return options
 
+  @staticmethod
+  def filenameInUse( file_name ):
+    try:
+      PackageFile.objects.get( file='./%s' % file_name ) #TODO: see ./ comment in create
+      return True
+    except PackageFile.DoesNotExist:
+      pass
+
+    return False
+
   def save( self, *args, **kwargs ):
     if self.pk and self.file._file:
       raise ValidationError( 'Not Allowed to update the file.' )
@@ -344,7 +354,8 @@ possible versions
     actions = {
                'promote': [ { 'type': 'String', 'choices': dict( RELEASE_TYPE_CHOICES ) } ],
                'deprocate': [],
-               'create': [ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ]
+               'create': [ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ],
+               'filenameInUse': [ { 'type': 'String' } ]
               }
     properties = [ 'release' ]
     list_filters = {

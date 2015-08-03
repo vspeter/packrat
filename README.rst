@@ -5,7 +5,7 @@ packrat
 =============================
 
 
-A single interface for managing apt, yum, and zypper repos.
+A single interface for managing apt, yum, and YaST repos.
 
 Documentation
 -------------

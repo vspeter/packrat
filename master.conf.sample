@@ -63,7 +63,9 @@ USE_TZ = True
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
 MEDIA_URL = '/files/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'www/files')
+MEDIA_ROOT = /var/www/packrat/files'
+#MEDIA_ROOT = os.path.join(BASE_DIR, 'www/files') # for Dev work
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'www/static')
+STATIC_ROOT = '/var/www/packrat/static'
+#STATIC_ROOT = os.path.join(BASE_DIR, 'www/static') # for Dev work
