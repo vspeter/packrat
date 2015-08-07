@@ -30,6 +30,11 @@ var packratBuilder = {};
        cinp.call( '/api/v1/Auth(logout)', { 'username': username, 'token': token } );
     };
 
+    packrat.keepalive = function()
+    {
+       cinp.call( '/api/v1/Auth(keepalive)', {} );
+    };
+
     packrat.getMirrors = function()
     {
       var deferred = $.Deferred();

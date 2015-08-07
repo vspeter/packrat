@@ -10,6 +10,7 @@ var cinp;
 var packrat;
 var user;
 var token;
+var keepalive_interval;
 
 /*-------------------------------------------
   Dynamically load plugin scripts
@@ -247,12 +248,12 @@ function closeModalBox(){
             col.next().children("input[type=text]").focus();
             break;
           case 40: // down arrow
-            if (string_fill==false){
+            if (string_fill===false){
               tr.next().find('td:eq('+col.index()+') input[type=text]').focus();
             }
             break;
           case 38: // up arrow
-            if (string_fill==false){
+            if (string_fill===false){
               tr.prev().find('td:eq('+col.index()+') input[type=text]').focus();
             }
             break;
@@ -267,12 +268,12 @@ function closeModalBox(){
             tr.find('td:last-child').find("input[type=text]").focus();
             break;
         case 40: // down arrow
-          if (string_fill==false){
+          if (string_fill===false){
             table.find('tr:last-child td:eq('+col.index()+') input[type=text]').focus();
           }
           break;
         case 38: // up arrow
-          if (string_fill==false){
+          if (string_fill===false){
             table.find('tr:eq(1) td:eq('+col.index()+') input[type=text]').focus();
           }
             break;
@@ -282,7 +283,7 @@ function closeModalBox(){
         event.preventDefault();
         col.next().find("input[type=text]").focus();
       }
-      if (string_fill==false){
+      if (string_fill===false){
         if (event.keyCode == 34) {
           event.preventDefault();
           table.find('tr:last-child td:last-child').find("input[type=text]").focus();}
@@ -296,7 +297,7 @@ function closeModalBox(){
       $(this).on('blur', function(event){
       var target = event.target;
       var col = $(target).parents("td");
-      if(table.find("input[name=string-fill]").prop("checked")==true) {
+      if(table.find("input[name=string-fill]").prop("checked")===true) {
         col.nextAll().find("input[type=text]").each(function() {
           $(this).val($(target).val());
         });
@@ -810,6 +811,8 @@ function logout()
 
   $( '#username' ).empty();
 
+  clearInterval( keepalive_interval );
+
   cinp.setAuth( '', '' );
 
   packrat.logout( user, token );
@@ -956,6 +959,11 @@ $(document).ready(function () {
     $( '#username' ).empty();
     $( '#username' ).append( user );
     cinp.setAuth( user, token );
+    keepalive_interval = setInterval(
+      function()
+      {
+        packrat.keepalive();
+      }, 60000 );
   }
   else
     $( '#user-logged-in' ).hide();

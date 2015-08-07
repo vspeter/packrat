@@ -11,10 +11,10 @@ dpkg-distros:
 	echo trusty
 
 dpkg-requires:
-	echo dpkg-dev debhelper cdbs
+	echo dpkg-dev debhelper cdbs python-dev python-setuptools
 
 dpkg:
-	dpkg-buildpackage -b -us -uc
+	dpkg-buildpackage -b -us -uc > /tmp/dpkg-build.log 2>&1
 	touch dpkg
 
 dpkg-file:
