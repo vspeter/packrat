@@ -8,11 +8,6 @@ import os
 
 class custom_build( build_py ):
     def run( self ):
-      if os.path.exists( 'packrat/settings.py' ):
-        print 'Moving settings.py asside...'
-        os.rename('packrat/settings.py', 'packrat/settings.py.tmp')
-        open( 'packrat/settings.py', 'w' ).close()
-
       # build_py.run( self )
       # get .pys
       for package in self.packages: # derived from build_py.run
@@ -62,11 +57,6 @@ class custom_build( build_py ):
           target = os.path.join(build_dir, filename)
           self.mkpath(os.path.dirname(target))
           self.copy_file(os.path.join(src_dir, filename), target, preserve_mode=False)
-
-      if os.path.exists( 'packrat/settings.py.tmp' ):
-        print 'Moving settings.py back...'
-        os.unlink( 'packrat/settings.py' )
-        os.rename('packrat/settings.py.tmp', 'packrat/settings.py')
 
 setup( name='packrat',
        description='Packrat',
