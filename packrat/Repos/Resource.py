@@ -5,7 +5,7 @@ class Resource( object ): # This will take anything that has one (and only one) 
   def load( cls, file ): # compare with packrat-agent/packratAgent/Json.py -> _splitFileName
     filename = os.path.basename( file.name )
 
-    if filename.endswith( ( '.tar.gz', '.tar.bz2', '.tar.xz' ) ):
+    if filename.endswith( ( '.tar.gz', '.tar.bz2', '.tar.xz', 'img.gz', 'img.bz2', 'img.xz' ) ):
       ( filename, _, _ ) = filename.rsplit( '.', 2 )
     else:
       try:
