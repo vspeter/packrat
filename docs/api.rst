@@ -1,13 +1,17 @@
+==================================
+CInP API Documentation for Packrat
+==================================
 
-*/api/v1/*
-==========
+------------
+Namespace - 
+------------
 URL: /api/v1/
 
 API Version: v1
 
-Models
-======
 
+Model - Auth
+------------
 
 URL: /api/v1/Auth
 
@@ -16,12 +20,9 @@ URL: /api/v1/Auth
 
 
 
-Actions
--------
 
-
-login
------
+Action - login
+~~~~~~~~~~~~~~
 
 URL: /api/v1/Auth(login)
 
@@ -40,8 +41,8 @@ Paramaters::
 
 
 
-logout
-------
+Action - logout
+~~~~~~~~~~~~~~~
 
 URL: /api/v1/Auth(logout)
 
@@ -60,8 +61,8 @@ Paramaters::
 
 
 
-keepalive
----------
+Action - keepalive
+~~~~~~~~~~~~~~~~~~
 
 URL: /api/v1/Auth(keepalive)
 
@@ -76,15 +77,16 @@ Return Type::
 
 
 
-*/api/v1/.Repos*
-================
+------------------
+Namespace - .Repos
+------------------
 URL: /api/v1/Repos
 
 API Version: v1
 
-Models
-======
 
+Model - Repo
+------------
 
 URL: /api/v1/Repos/Repo
 
@@ -97,21 +99,21 @@ URL: /api/v1/Repos/Repo
 
 
 Fields
-------
+~~~~~~
 
 ::
 
-  - updated(DateTime)(R) - 
-  - description(String)(RW)(Req) - 
-  - created(DateTime)(R) - 
-  - manager_type(String)(RW)(Req) - 
-  - distroversion_list(ModelList)(RW)(Req) uri: /api/v1/Repos/DistroVersion - 
-  - release_type(String)(RW)(Req) - 
+  - updated(DateTime)(R)
+  - description(String)(RW)(Req)
+  - created(DateTime)(R)
+  - manager_type(String)(RW)(Req)
+  - distroversion_list(ModelList)(RW)(Req) uri: /api/v1/Repos/DistroVersion
+  - release_type(String)(RW)(Req)
 
 
-Actions
--------
 
+Model - PackageFile
+-------------------
 
 URL: /api/v1/Repos/PackageFile
 
@@ -123,7 +125,7 @@ URL: /api/v1/Repos/PackageFile
 
 
 List Filters
-------------
+~~~~~~~~~~~~
 
 ::
 
@@ -131,35 +133,32 @@ List Filters
   - package - package(Model)(Req) uri: /api/v1/Repos/Package
 
 Fields
-------
+~~~~~~
 
 ::
 
-  - updated(DateTime)(R) - 
-  - justification(String)(RW)(Req) - 
-  - ci_at(DateTime)(R) - 
-  - prod_at(DateTime)(R) - 
-  - package(Model)(R)(Req) uri: /api/v1/Repos/Package - 
-  - type(String)(R)(Req) - 
-  - stage_at(DateTime)(R) - 
-  - provenance(String)(RW)(Req) - 
-  - created(DateTime)(R) - 
-  - prod_changecontrol_id(String)(RW) - 
-  - version(String)(R)(Req) - 
-  - file(File)(R)(Req) - 
-  - dev_at(DateTime)(R) - 
-  - release(String)(R) - None
-  - distroversion(Model)(R)(Req) uri: /api/v1/Repos/DistroVersion - 
-  - arch(String)(R)(Req) - 
-  - depr_at(DateTime)(R) - 
+  - updated(DateTime)(R)
+  - justification(String)(RW)(Req)
+  - ci_at(DateTime)(R)
+  - prod_at(DateTime)(R)
+  - package(Model)(R)(Req) uri: /api/v1/Repos/Package
+  - type(String)(R)(Req)
+  - stage_at(DateTime)(R)
+  - provenance(String)(RW)(Req)
+  - created(DateTime)(R)
+  - prod_changecontrol_id(String)(RW)
+  - version(String)(R)(Req)
+  - file(File)(R)(Req)
+  - dev_at(DateTime)(R)
+  - release(String)(R)
+  - distroversion(Model)(R)(Req) uri: /api/v1/Repos/DistroVersion
+  - arch(String)(R)(Req)
+  - depr_at(DateTime)(R)
 
 
-Actions
--------
 
-
-deprocate
----------
+Action - deprocate
+~~~~~~~~~~~~~~~~~~
 
 URL: /api/v1/Repos/PackageFile(deprocate)
 
@@ -179,8 +178,8 @@ Return Type::
 
 
 
-promote
--------
+Action - promote
+~~~~~~~~~~~~~~~~
 
 URL: /api/v1/Repos/PackageFile(promote)
 
@@ -203,8 +202,8 @@ Paramaters::
 
 
 
-create
-------
+Action - create
+~~~~~~~~~~~~~~~
 
 URL: /api/v1/Repos/PackageFile(create)
 
@@ -232,8 +231,8 @@ Paramaters::
 
 
 
-filenameInUse
--------------
+Action - filenameInUse
+~~~~~~~~~~~~~~~~~~~~~~
 
 URL: /api/v1/Repos/PackageFile(filenameInUse)
 
@@ -251,6 +250,9 @@ Paramaters::
 
 
 
+Model - DistroVersion
+---------------------
+
 URL: /api/v1/Repos/DistroVersion
 
 
@@ -262,22 +264,22 @@ URL: /api/v1/Repos/DistroVersion
 
 
 Fields
-------
+~~~~~~
 
 ::
 
-  - updated(DateTime)(R) - 
-  - name(String)(RC)(Req) - 
-  - created(DateTime)(R) - 
-  - file_type(String)(RW)(Req) - 
-  - version(String)(RW)(Req) - 
-  - release_names(String)(RW) - 
-  - distro(String)(RW)(Req) - 
+  - updated(DateTime)(R)
+  - name(String)(RC)(Req)
+  - created(DateTime)(R)
+  - file_type(String)(RW)(Req)
+  - version(String)(RW)(Req)
+  - release_names(String)(RW)
+  - distro(String)(RW)(Req)
 
 
-Actions
--------
 
+Model - Package
+---------------
 
 URL: /api/v1/Repos/Package
 
@@ -289,25 +291,25 @@ URL: /api/v1/Repos/Package
 
 
 List Filters
-------------
+~~~~~~~~~~~~
 
 ::
 
   - repo-sync - repo(Model)(Req) uri: /api/v1/Repos/Repo
 
 Fields
-------
+~~~~~~
 
 ::
 
-  - updated(DateTime)(R) - 
-  - name(String)(RC)(Req) - 
-  - created(DateTime)(R) - 
+  - updated(DateTime)(R)
+  - name(String)(RC)(Req)
+  - created(DateTime)(R)
 
 
-Actions
--------
 
+Model - Mirror
+--------------
 
 URL: /api/v1/Repos/Mirror
 
@@ -321,26 +323,23 @@ URL: /api/v1/Repos/Mirror
 
 
 Fields
-------
+~~~~~~
 
 ::
 
-  - psk(String)(RW)(Req) - 
-  - updated(DateTime)(R) - 
-  - name(String)(RC)(Req) - 
-  - created(DateTime)(R) - 
-  - last_sync_complete(DateTime)(R) - 
-  - last_sync_start(DateTime)(R) - 
-  - repo_list(ModelList)(RW)(Req) uri: /api/v1/Repos/Repo - 
-  - description(String)(RW)(Req) - 
+  - psk(String)(RW)(Req)
+  - updated(DateTime)(R)
+  - name(String)(RC)(Req)
+  - created(DateTime)(R)
+  - last_sync_complete(DateTime)(R)
+  - last_sync_start(DateTime)(R)
+  - repo_list(ModelList)(RW)(Req) uri: /api/v1/Repos/Repo
+  - description(String)(RW)(Req)
 
 
-Actions
--------
 
-
-syncStart
----------
+Action - syncStart
+~~~~~~~~~~~~~~~~~~
 
 URL: /api/v1/Repos/Mirror(syncStart)
 
@@ -355,8 +354,8 @@ Return Type::
 
 
 
-syncComplete
-------------
+Action - syncComplete
+~~~~~~~~~~~~~~~~~~~~~
 
 URL: /api/v1/Repos/Mirror(syncComplete)
 
@@ -370,3 +369,6 @@ Return Type::
 
 
 
+
+Generated by CInP autodoc
+*************************
