@@ -27,6 +27,18 @@
   "fields": {
     "updated": "2013-01-01T01:01:00",
     "created": "2013-01-01T01:01:00",
+    "file_type": "deb",
+    "version": "xenial",
+    "release_names": "xenial",
+    "distro": "debian"
+  },
+  "model": "Repos.distroversion",
+  "pk": "xenial"
+},
+{
+  "fields": {
+    "updated": "2013-01-01T01:01:00",
+    "created": "2013-01-01T01:01:00",
     "file_type": "rpm",
     "version": "6",
     "release_names": "el6",
@@ -91,7 +103,8 @@
     "manager_type": "apt",
     "distroversion_list": [
       "precise",
-      "trusty"
+      "trusty",
+      "xenial"
     ],
     "release_type": "ci"
   },
@@ -106,7 +119,8 @@
     "manager_type": "apt",
     "distroversion_list": [
       "precise",
-      "trusty"
+      "trusty",
+      "xenial"
     ],
     "release_type": "dev"
   },
@@ -121,7 +135,8 @@
     "manager_type": "apt",
     "distroversion_list": [
       "precise",
-      "trusty"
+      "trusty",
+      "xenial"
     ],
     "release_type": "stage"
   },
@@ -136,7 +151,8 @@
     "manager_type": "apt",
     "distroversion_list": [
       "precise",
-      "trusty"
+      "trusty",
+      "xenial"
     ],
     "release_type": "prod"
   },
@@ -197,7 +213,7 @@
 {
   "fields": {
     "updated": "2015-07-14T15:13:20.404Z",
-    "description": "YUM - Dev",
+    "description": "YUM - Ci",
     "created": "2015-07-14T15:13:20.404Z",
     "manager_type": "yum",
     "distroversion_list": [

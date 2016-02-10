@@ -18,6 +18,6 @@ dpkg:
 	touch dpkg
 
 dpkg-file:
-	@echo $(shell ls ../packrat*.deb):trusty
+	@echo $(shell ls ../packrat_*.deb):trusty
 
 .PHONY: all install clean dpkg-distros dpkg-requires dpkg-file
