@@ -112,6 +112,25 @@ Fields
 
 
 
+Action - poll
+~~~~~~~~~~~~~
+
+URL: /api/v1/Repos/Repo(poll)
+
+Static: False
+
+
+
+Return Type::
+
+  None(String)(Req)
+
+Paramaters::
+
+  - timeout(Integer)(Req)
+
+
+
 Model - PackageFile
 -------------------
 
