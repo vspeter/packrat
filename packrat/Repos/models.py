@@ -1,7 +1,10 @@
+import select
+import errno
+import time
 from datetime import datetime
 
 from django.core.exceptions import ValidationError, PermissionDenied
-from django.db import models
+from django.db import models, connection
 from django.utils.timezone import utc
 
 from Deb import Deb
@@ -96,11 +99,43 @@ This is a Collection of PackageFiles that meant certian requrements, ie: distro,
 
     return qs
 
+  def poll( self, timeout ):
+    cursor = connection.cursor()
+    cursor.execute( 'LISTEN mirror_repo_%s' % self.pk )
+    conn = cursor.cursor.connection
+    conn.commit()
+    try:
+      select.select( [ conn ], [], [], timeout )
+    except select.error as e:
+      if e[0] == errno.EINTR:
+        time.sleep( timeout ) # Self DOS Preventor
+      else:
+        raise e
+
+    conn.poll()
+
+    result = []
+    while conn.notifies:
+      notify = conn.notifies.pop() # hopfully notify.channel = the LISTEN name, can't do anything about it if it isn't at this point
+      if notify.payload: # is '' if there is not a payload
+        result.append( notify.payload )
+
+    return result  # get cinp to take a return paramater type specification
+
+  def notify( self, package=None ):
+    if package is None:
+      connection.cursor().execute( 'NOTIFY mirror_repo_%s' % self.pk )
+    else:
+      connection.cursor().execute( 'NOTIFY mirror_repo_%s, \'%s\'' % ( self.pk, package.pk ) )
+
   def __unicode__( self ):
     return 'Repo "%s"' % self.description
 
   class API:
     constants = ( 'MANAGER_TYPES', 'RELEASE_TYPES' )
+    actions = {
+                'poll': [ { 'type': 'Integer' } ]
+              }
 
 
 class Mirror( models.Model ):
@@ -200,6 +235,17 @@ This is the Individual package "file", they can indivdually belong to any type, 
     else:
       return 'new'
 
+  def notify( self, previous_release ):
+    try:
+      Repo.objects.get( release_type=previous_release, distroversion_list=self.distroversion ).notify( self.package )
+    except Repo.DoesNotExist:
+      pass
+
+    try:
+      Repo.objects.get( release_type=self.release, distroversion_list=self.distroversion ).notify( self.package )
+    except Repo.DoesNotExist:
+      pass
+
   def loadfile( self, file, request_distro ):
     file.file.seek( 0 ) # some upstream process might of left the cursor at the end of the file
 
@@ -261,6 +307,8 @@ Promote package file to the next release level, to must be one of RELEASE_LEVELS
     if to not in self.RELEASE_LEVELS:
       raise Exception( 'Release level "%s" is Invalid' % to )
 
+    previous_release = self.release
+
     if self.release == 'new' and to == 'ci':
       self.ci_at = datetime.utcnow().replace( tzinfo=utc )
 
@@ -279,18 +327,21 @@ Promote package file to the next release level, to must be one of RELEASE_LEVELS
       raise Exception( 'Unable to promote from "%s" to "%s"' % ( self.release, to ) )
 
     self.save()
+    self.notify( previous_release )
 
   def deprocate( self, _user_ ):
     """
 Deprocate package file.
     """
-
     if not _user_.has_perm( 'Repos.promote_packagefile' ):
       raise PermissionDenied()
+
+    previous_release = self.release
 
     self.depr_at = datetime.utcnow().replace( tzinfo=utc )
 
     self.save()
+    self.notify( previous_release )
 
   @staticmethod
   def create( _user_, file, justification, provenance, version=None, ):
@@ -299,7 +350,6 @@ Create a new PackageFile, note version is the distro version and is only require
 can't be automatically detected, in which case the return value of created will be a list of
 possible versions
     """
-
     if not _user_.has_perm( 'Repos.create_packagefile' ):
       raise PermissionDenied()
 
