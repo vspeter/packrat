@@ -1,0 +1,82 @@
+Vagrant.configure(2) do |config|
+  config.vm.box = "plato-trusty"
+  config.vm.box_url = "http://http.lab.stgr01.monilytics.net/vagrant/"
+
+  config.vm.communicator = "ssh"
+  config.vm.guest = "linux"
+
+  config.vm.provider "virtualbox" do |vb|
+     vb.gui = true
+     vb.memory = "512"
+     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+     vb.name = 'packrat-dev'
+  end
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+  config.vm.network "public_network", auto_config: false
+
+  # plato-client/master setup
+  config.vm.provision "file", source: "plato-config.json", destination: "/etc/plato/config.json"
+
+  config.vm.provision "shell", inline: <<-PLATO_CONFIG
+set -e
+set -x
+
+export DEBIAN_FRONTEND=noninteractive
+sed s/--MAC--/$( cat /sys/class/net/eth0/address )/ -i /etc/plato/config.json
+sed s/--hostname--/$( hostname )/ -i /etc/plato/config.json
+echo "plato-client plato-client/plato-host string file:///etc/plato/config.json" | /usr/bin/debconf-set-selections
+dpkg -i /root/plato-client.deb
+dpkg -i /root/plato-client-config.deb
+wget -q -O- http://repo/repo-key | apt-key add -
+apt-get update
+PLATO_CONFIG
+
+  # "install" packrat
+  config.vm.synced_folder "../www", "/opt/packratoverlay/www_lower", create: true, :mount_options => ["ro"]
+  config.vm.synced_folder "../local", "/opt/packratoverlay/local_lower", create: true, :mount_options => ["ro"]
+  config.vm.synced_folder "../packrat", "/opt/packratoverlay/packrat_lower", create: true, :mount_options => ["ro"]
+  config.vm.provision "file", source: "../master.conf.sample", destination: "/tmp/master.conf"
+  config.vm.provision "file", source: "../packrat.conf", destination: "/tmp/packrat.conf"
+  config.vm.provision "file", source: "setup-answers", destination: "/tmp/setup-answers"
+
+  config.vm.provision "shell", inline: <<-PACKRAT_CONFIG
+set -e
+set -x
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get install -y python-cinp python-django python-simplejson apache2 libapache2-mod-wsgi libapache2-mod-python postgresql-client-9.3 python-psycopg2 python-magic python-dateutil
+
+# make it possible to "write" to the readonly local dirs
+mkdir -p /opt/packratoverlay/local_upper
+mkdir -p /usr/local/packrat
+mount -t overlayfs overlayfs -olowerdir=/opt/packratoverlay/local_lower,upperdir=/opt/packratoverlay/local_upper /usr/local/packrat
+
+mkdir -p /opt/packratoverlay/packrat_upper
+mkdir -p /usr/lib/python2.7/dist-packages/packrat
+mount -t overlayfs overlayfs -olowerdir=/opt/packratoverlay/packrat_lower,upperdir=/opt/packratoverlay/packrat_upper /usr/lib/python2.7/dist-packages/packrat
+
+mkdir -p /opt/packratoverlay/www_upper
+mkdir -p /var/www/packrat
+mount -t overlayfs overlayfs -olowerdir=/opt/packratoverlay/www_lower,upperdir=/opt/packratoverlay/www_upper /var/www/packrat
+
+# "install" the package
+mkdir -p /etc/packrat
+mv /tmp/packrat.conf /etc/apache2/sites-available/packrat.conf
+mv /tmp/master.conf /etc/packrat/master.conf
+
+ln -sf /etc/packrat/master.conf /usr/lib/python2.7/dist-packages/packrat/settings.py
+sed s/'DEBUG = False'/'DEBUG = True'/ -i /etc/packrat/master.conf
+
+a2dissite 000-default
+a2ensite packrat.conf
+a2enmod wsgi
+chown www-data.www-data /var/www/packrat/files
+/etc/init.d/apache2 restart
+
+# setup Packrat
+/usr/local/packrat/setup/setupWizzard /tmp/setup-answers
+
+PACKRAT_CONFIG
+end

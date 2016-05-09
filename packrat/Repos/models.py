@@ -120,7 +120,7 @@ This is a Collection of PackageFiles that meant certian requrements, ie: distro,
       if notify.payload: # is '' if there is not a payload
         result.append( notify.payload )
 
-    return result  # get cinp to take a return paramater type specification
+    return result
 
   def notify( self, package=None ):
     if package is None:
@@ -134,7 +134,7 @@ This is a Collection of PackageFiles that meant certian requrements, ie: distro,
   class API:
     constants = ( 'MANAGER_TYPES', 'RELEASE_TYPES' )
     actions = {
-                'poll': [ { 'type': 'Integer' } ]
+                'poll': ( { 'type': 'StringList' }, ( { 'type': 'Integer' }, ) )
               }
 
 
@@ -164,9 +164,7 @@ NOTE: this dosen't prevent the remote server from downloading an indivvidual fil
     self.save()
 
   class API:
-    actions = { 'syncStart': [],
-                'syncComplete': [],
-              }
+    pass
 
 
 class Package( models.Model ):
@@ -297,11 +295,11 @@ This is the Individual package "file", they can indivdually belong to any type, 
     self.version = pkgFile.version
     return True
 
-  def promote( self, _user_, to ):
+  def promote( self, user, to ):
     """
 Promote package file to the next release level, to must be one of RELEASE_LEVELS
     """
-    if not _user_.has_perm( 'Repos.promote_packagefile' ):
+    if not user.has_perm( 'Repos.promote_packagefile' ):
       raise PermissionDenied()
 
     if to not in self.RELEASE_LEVELS:
@@ -329,11 +327,11 @@ Promote package file to the next release level, to must be one of RELEASE_LEVELS
     self.save()
     self.notify( previous_release )
 
-  def deprocate( self, _user_ ):
+  def deprocate( self, user ):
     """
 Deprocate package file.
     """
-    if not _user_.has_perm( 'Repos.promote_packagefile' ):
+    if not user.has_perm( 'Repos.promote_packagefile' ):
       raise PermissionDenied()
 
     previous_release = self.release
@@ -344,13 +342,13 @@ Deprocate package file.
     self.notify( previous_release )
 
   @staticmethod
-  def create( _user_, file, justification, provenance, version=None, ):
+  def create( user, file, justification, provenance, version=None, ):
     """
 Create a new PackageFile, note version is the distro version and is only required if it
 can't be automatically detected, in which case the return value of created will be a list of
 possible versions
     """
-    if not _user_.has_perm( 'Repos.create_packagefile' ):
+    if not user.has_perm( 'Repos.create_packagefile' ):
       raise PermissionDenied()
 
     if not version or not version.strip():
@@ -369,7 +367,7 @@ possible versions
 
     if options is True:
       result.save()
-      return True
+      return []
 
     else:
       return options
@@ -402,10 +400,10 @@ possible versions
     not_allowed_methods = ( 'CREATE', 'DELETE' )
     constants = ( 'RELEASE_LEVELS', 'FILE_TYPES', 'FILE_ARCHS' )
     actions = {
-               'promote': [ { 'type': 'String', 'choices': dict( RELEASE_TYPE_CHOICES ) } ],
-               'deprocate': [],
-               'create': [ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ],
-               'filenameInUse': [ { 'type': 'String' } ]
+               'promote': ( None, ( { 'type': '_USER_' }, { 'type': 'String', 'choices': dict( RELEASE_TYPE_CHOICES ) }, ) ),
+               'deprocate': ( None, ( { 'type': '_USER_' }, ) ),
+               'create': ( { 'type': 'StringList' }, ( { 'type': '_USER_' }, { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ) ),
+               'filenameInUse': ( { 'type': 'Boolean' }, ( { 'type': 'String' }, ) )
               }
     properties = [ 'release' ]
     list_filters = {
