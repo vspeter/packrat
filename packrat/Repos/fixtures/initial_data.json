@@ -105,8 +105,7 @@
       "precise",
       "trusty",
       "xenial"
-    ],
-    "release_type": "ci"
+    ]
   },
   "model": "Repos.repo",
   "pk": 1
@@ -121,8 +120,7 @@
       "precise",
       "trusty",
       "xenial"
-    ],
-    "release_type": "dev"
+    ]
   },
   "model": "Repos.repo",
   "pk": 2
@@ -137,8 +135,7 @@
       "precise",
       "trusty",
       "xenial"
-    ],
-    "release_type": "stage"
+    ]
   },
   "model": "Repos.repo",
   "pk": 3
@@ -153,8 +150,7 @@
       "precise",
       "trusty",
       "xenial"
-    ],
-    "release_type": "prod"
+    ]
   },
   "model": "Repos.repo",
   "pk": 4
@@ -170,8 +166,7 @@
       "centos7",
       "sles11",
       "sles12"
-    ],
-    "release_type": "prod"
+    ]
   },
   "model": "Repos.repo",
   "pk": 5
@@ -187,8 +182,7 @@
       "centos7",
       "sles11",
       "sles12"
-    ],
-    "release_type": "stage"
+    ]
   },
   "model": "Repos.repo",
   "pk": 6
@@ -204,8 +198,7 @@
       "centos7",
       "sles11",
       "sles12"
-    ],
-    "release_type": "dev"
+    ]
   },
   "model": "Repos.repo",
   "pk": 7
@@ -221,8 +214,7 @@
       "centos7",
       "sles11",
       "sles12"
-    ],
-    "release_type": "ci"
+    ]
   },
   "model": "Repos.repo",
   "pk": 8
@@ -235,8 +227,7 @@
     "manager_type": "json",
     "distroversion_list": [
       "resource"
-    ],
-    "release_type": "ci"
+    ]
   },
   "model": "Repos.repo",
   "pk": 9
@@ -249,8 +240,7 @@
     "manager_type": "json",
     "distroversion_list": [
       "resource"
-    ],
-    "release_type": "dev"
+    ]
   },
   "model": "Repos.repo",
   "pk": 10
@@ -263,8 +253,7 @@
     "manager_type": "json",
     "distroversion_list": [
       "resource"
-    ],
-    "release_type": "stage"
+    ]
   },
   "model": "Repos.repo",
   "pk": 11
@@ -277,8 +266,7 @@
     "manager_type": "json",
     "distroversion_list": [
       "resource"
-    ],
-    "release_type": "prod"
+    ]
   },
   "model": "Repos.repo",
   "pk": 12
