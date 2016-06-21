@@ -67,8 +67,6 @@ fi
 echo "Populating db..."
 /usr/local/packrat/util/manage.py syncdb --noinput
 
-/usr/local/packrat/util/manage.py loaddata initial_data
-
 echo "Creating super user..."
 /usr/local/packrat/util/manage.py createsuperuser --noinput --username=root --email=test@test.com
 

@@ -373,6 +373,7 @@ function repoTable()
       },
       "aaData": [],
       'aoColumns': [
+        { 'title': 'Name', 'data': 'name' },
         { 'title': 'Description', 'data': 'description' },
         { 'title': 'Release', 'data': 'release_type_list' },
         { 'title': 'Manager', 'data': 'manager_type' },
@@ -437,8 +438,7 @@ function mirrorTable()
         { 'title': 'Description', 'data': 'description' },
         { 'title': 'Name', 'data': 'name' },
         { 'title': 'Repos', 'data': 'repo_list' },
-        { 'title': 'Last Sync Start', 'data': 'last_sync_start', 'type': 'date' },
-        { 'title': 'Last Sync Complete', 'data': 'last_sync_complete', 'type': 'date' },
+        { 'title': 'Last Heartbeat', 'data': 'last_heartbeat', 'type': 'date' },
         { 'title': 'Last Changed', 'data': 'updated' , 'type': 'date' },
         { 'title': 'uri' , 'data': 'uri', 'visible': false }
       ]
