@@ -24,8 +24,24 @@
           "mtu": 1500
         }
       ],
-      "mac": "--MAC--",
+      "mac": "--MAC0--",
       "name": "eth0"
+    },
+    "eth1": {
+      "address_list": [
+        {
+          "address": "169.254.0.10",
+          "netmask": "255.255.255.0",
+          "auto": true,
+          "primary": false,
+          "sub_interface": null,
+          "tagged": false,
+          "vlan": 0,
+          "mtu": 1500
+        }
+      ],
+      "mac": "--MAC1--",
+      "name": "eth1"
     }
   }
 }
