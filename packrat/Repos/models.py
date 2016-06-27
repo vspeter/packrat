@@ -1,6 +1,8 @@
 import select
 import errno
 import time
+import hashlib
+import re
 from datetime import datetime
 
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -15,14 +17,35 @@ DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'centos', 'Centos' ), ( 'rhel', 'RH
 MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'yast', 'YaST' ), ( 'json', 'JSON' ) )
 FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'RPM' ), ( 'rsc', 'Resource' ) )
 FILE_ARCH_CHOICES = ( ( 'x86_64', 'x86_64' ), ( 'i386', 'i386' ), ( 'all', 'All' ) )
-RELEASE_TYPE_CHOICES = ( ( 'ci', 'CI' ), ( 'dev', 'Development' ), ( 'stage', 'Staging' ), ( 'prod', 'Production' ), ( 'depr', 'Deprocated' ) )
 
+# if these are changed (or any other field length), make sure to update the sqlite db in packrat-agent
 MANAGER_TYPE_LENGTH = 6
 FILE_TYPE_LENGTH = 3
 FILE_ARCH_LENGTH = 6
-RELEASE_TYPE_LENGTH = 5
 DISTRO_LENGTH = 6
 
+class ReleaseType( models.Model ):
+  name = models.CharField( max_length=10, primary_key=True )
+  description = models.CharField( max_length=100 )
+  level = models.IntegerField() # can promote to a higher level, highest level on a package file is the promotion level
+  change_control_required = models.BooleanField( default=False )
+  created = models.DateTimeField( editable=False, auto_now_add=True )
+  updated = models.DateTimeField( editable=False, auto_now=True )
+
+  def save( self, *args, **kwargs ):
+    if self.level < 1 or self.level > 100:
+      raise ValidationError( 'Level must be from 1 to 100 inclusive.' )
+
+    if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
+      raise ValidationError( 'Invalid ReleaseType Name' )
+
+    super( ReleaseType, self ).save( *args, **kwargs )
+
+  def __unicode__( self ):
+    return 'ReleaseType "%s"(%s)' % ( self.description, self.name )
+
+  class API:
+    not_allowed_methods = ( 'CREATE', 'DELETE', 'UPDATE' )
 
 class DistroVersion( models.Model ):
   """
@@ -32,12 +55,18 @@ This is a type of Distro, ie Centos 6 or Ubuntu 14.04(Trusty)
   DISTROS = DISTRO_CHOICES
   FILE_TYPES = FILE_TYPE_CHOICES
   name = models.CharField( max_length=20, primary_key=True )
-  distro = models.CharField( max_length=DISTRO_LENGTH, choices=DISTRO_CHOICES ) # TODO: convert into another model
+  distro = models.CharField( max_length=DISTRO_LENGTH, choices=DISTROS ) # TODO: convert into another model
   version = models.CharField( max_length=10 )
-  file_type = models.CharField( max_length=FILE_TYPE_LENGTH, choices=FILE_TYPE_CHOICES )
-  release_names = models.CharField( max_length=100, blank=True ) # '\t' delimited, things like el5, trusty, something that is in filename that tells what version it belongs to
+  file_type = models.CharField( max_length=FILE_TYPE_LENGTH, choices=FILE_TYPES )
+  release_names = models.CharField( max_length=100, blank=True, help_text='tab delimited list of things like el5, trusty, something that is in filename that tells what version it belongs to' )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
+
+  def save( self, *args, **kwargs ):
+    if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
+      raise ValidationError( 'Invalid DistroVersion Name' )
+
+    super( DistroVersion, self ).save( *args, **kwargs )
 
   def __unicode__( self ):
     return 'Version "%s" of "%s"' % ( self.version, self.distro )
@@ -46,6 +75,7 @@ This is a type of Distro, ie Centos 6 or Ubuntu 14.04(Trusty)
     unique_together = ( 'distro', 'version', 'file_type' )
 
   class API:
+    not_allowed_methods = ( 'CREATE', 'DELETE', 'UPDATE' )
     constants = ( 'DISTROS', 'FILE_TYPES' )
 
 
@@ -54,54 +84,17 @@ class Repo( models.Model ):
 This is a Collection of PackageFiles that meant certian requrements, ie: distro, repo manager, and release type.
   """
   MANAGER_TYPES = MANAGER_TYPE_CHOICES
-  RELEASE_TYPES = RELEASE_TYPE_CHOICES
+  name = models.CharField( max_length=50, primary_key=True )
   distroversion_list = models.ManyToManyField( DistroVersion )
-  manager_type = models.CharField( max_length=MANAGER_TYPE_LENGTH, choices=MANAGER_TYPE_CHOICES )
+  manager_type = models.CharField( max_length=MANAGER_TYPE_LENGTH, choices=MANAGER_TYPES )
   description = models.CharField( max_length=200 )
-  release_type = models.CharField( max_length=RELEASE_TYPE_LENGTH, choices=RELEASE_TYPE_CHOICES )
+  release_type_list = models.ManyToManyField( ReleaseType )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
-  @property
-  def package_queryset_parms( self ):
-    qs = { 'packagefile__distroversion__in': [ i.pk for i in self.distroversion_list.all() ] }
-
-    if self.release_type == 'ci':
-      qs[ 'packagefile__ci_at__isnull' ] = False
-      qs[ 'packagefile__dev_at__isnull' ] = True
-      qs[ 'packagefile__stage_at__isnull' ] = True
-      qs[ 'packagefile__prod_at__isnull' ] = True
-      qs[ 'packagefile__depr_at__isnull' ] = True
-
-    elif self.release_type == 'dev':
-      qs[ 'packagefile__ci_at__isnull' ] = False
-      qs[ 'packagefile__dev_at__isnull' ] = False
-      qs[ 'packagefile__stage_at__isnull' ] = True
-      qs[ 'packagefile__prod_at__isnull' ] = True
-      qs[ 'packagefile__depr_at__isnull' ] = True
-
-    elif self.release_type == 'stage':
-      qs[ 'packagefile__ci_at__isnull' ] = False
-      qs[ 'packagefile__dev_at__isnull' ] = False
-      qs[ 'packagefile__stage_at__isnull' ] = False
-      qs[ 'packagefile__prod_at__isnull' ] = True
-      qs[ 'packagefile__depr_at__isnull' ] = True
-
-    elif self.release_type == 'prod':
-      qs[ 'packagefile__ci_at__isnull' ] = False
-      qs[ 'packagefile__dev_at__isnull' ] = False
-      qs[ 'packagefile__stage_at__isnull' ] = False
-      qs[ 'packagefile__prod_at__isnull' ] = False
-      qs[ 'packagefile__depr_at__isnull' ] = True
-
-    elif self.release_type == 'depr':
-      qs[ 'packagefile__depr_at__isnull' ] = False
-
-    return qs
-
   def poll( self, timeout ):
     cursor = connection.cursor()
-    cursor.execute( 'LISTEN mirror_repo_%s' % self.pk )
+    cursor.execute( 'LISTEN "mirror_repo_%s"' % self.pk )
     conn = cursor.cursor.connection
     conn.commit()
     try:
@@ -120,21 +113,28 @@ This is a Collection of PackageFiles that meant certian requrements, ie: distro,
       if notify.payload: # is '' if there is not a payload
         result.append( notify.payload )
 
-    return result  # get cinp to take a return paramater type specification
+    return result
 
   def notify( self, package=None ):
     if package is None:
-      connection.cursor().execute( 'NOTIFY mirror_repo_%s' % self.pk )
+      connection.cursor().execute( 'NOTIFY "mirror_repo_%s"' % self.pk )
     else:
-      connection.cursor().execute( 'NOTIFY mirror_repo_%s, \'%s\'' % ( self.pk, package.pk ) )
+      connection.cursor().execute( 'NOTIFY "mirror_repo_%s", \'%s\'' % ( self.pk, package.pk ) )
+
+  def save( self, *args, **kwargs ):
+    if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
+      raise ValidationError( 'Invalid Repo Name' )
+
+    super( Repo, self ).save( *args, **kwargs )
 
   def __unicode__( self ):
     return 'Repo "%s"' % self.description
 
   class API:
-    constants = ( 'MANAGER_TYPES', 'RELEASE_TYPES' )
+    not_allowed_methods = ( 'CREATE', 'DELETE', 'UPDATE' )
+    constants = ( 'MANAGER_TYPES', )
     actions = {
-                'poll': [ { 'type': 'Integer' } ]
+                'poll': ( { 'type': 'StringList' }, ( { 'type': 'Integer' }, ) )
               }
 
 
@@ -147,25 +147,27 @@ NOTE: this dosen't prevent the remote server from downloading an indivvidual fil
   description = models.CharField( max_length=200 )
   psk = models.CharField( max_length=100 )
   repo_list = models.ManyToManyField( Repo )
-  last_sync_start = models.DateTimeField( editable=False, blank=True, null=True )
-  last_sync_complete = models.DateTimeField( editable=False, blank=True, null=True )
+  last_heartbeat = models.DateTimeField( editable=False, blank=True, null=True )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
+
+  def save( self, *args, **kwargs ):
+    if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
+      raise ValidationError( 'Invalid Mirror Name' )
+
+    super( Mirror, self ).save( *args, **kwargs )
 
   def __unicode__( self ):
     return 'Mirror "%s"' % self.description
 
-  def syncStart( self ):
-    self.last_sync_start = datetime.utcnow().replace( tzinfo=utc )
-    self.save()
-
-  def syncComplete( self ):
-    self.last_sync_complete = datetime.utcnow().replace( tzinfo=utc )
+  def heartbeat( self, user ): #TODO: make sure it's the right user for the Mirror
+    self.last_heartbeat = datetime.utcnow().replace( tzinfo=utc )
     self.save()
 
   class API:
-    actions = { 'syncStart': [],
-                'syncComplete': [],
+    not_allowed_methods = ( 'CREATE', 'DELETE', 'UPDATE' )
+    actions = {
+                'heartbeat': ( None, ( { 'type': '_USER_' }, ) )
               }
 
 
@@ -177,74 +179,49 @@ This is a Collection of PacageFiles, they share a name.
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
+  def save( self, *args, **kwargs ):
+    if not re.match( '^[0-9a-zA-Z]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe, also don't allow chars that are used to delimit version and other info
+      raise ValidationError( 'Invalid Package Name' )
+
+    super( Package, self ).save( *args, **kwargs )
+
   def __unicode__( self ):
     return 'Package "%s"' % self.name
 
   class API:
-    list_filters = { 'repo-sync': { 'repo': Repo } }
-
-    @staticmethod
-    def buildQS( qs, filter, values ):
-      if filter == 'repo-sync':
-        return qs.filter( **values[ 'repo' ].package_queryset_parms )
-
-      raise Exception( 'Invalid filter "%s"' % filter )
-
+    not_allowed_methods = ( 'DELETE', 'UPDATE' )
 
 class PackageFile( models.Model ): # TODO: add delete to cleanup the file, django no longer does this for us
   """
 This is the Individual package "file", they can indivdually belong to any type, arch, package, this is the thing that is actually sent to the remote repos
   """
-  RELEASE_LEVELS = ( 'new', 'ci', 'dev', 'stage', 'prod', 'depr' )
   FILE_TYPES = FILE_TYPE_CHOICES
   FILE_ARCHS = FILE_ARCH_CHOICES
-  package = models.ForeignKey( Package, editable=False )
-  distroversion = models.ForeignKey( DistroVersion, editable=False )
+  package = models.ForeignKey( Package, editable=False, on_delete=models.CASCADE )
+  distroversion = models.ForeignKey( DistroVersion, editable=False, on_delete=models.CASCADE )
   version = models.CharField( max_length=50, editable=False )
-  type = models.CharField( max_length=FILE_TYPE_LENGTH, editable=False, choices=FILE_TYPE_CHOICES )
-  arch = models.CharField( max_length=FILE_ARCH_LENGTH, editable=False, choices=FILE_ARCH_CHOICES )
+  type = models.CharField( max_length=FILE_TYPE_LENGTH, editable=False, choices=FILE_TYPES )
+  arch = models.CharField( max_length=FILE_ARCH_LENGTH, editable=False, choices=FILE_ARCHS )
   justification = models.TextField()
   provenance = models.TextField()
   file = models.FileField( editable=False )
-  prod_changecontrol_id = models.CharField( max_length=20, blank=True )
-  ci_at = models.DateTimeField( editable=False, blank=True, null=True )
-  dev_at = models.DateTimeField( editable=False, blank=True, null=True )
-  stage_at = models.DateTimeField( editable=False, blank=True, null=True )
-  prod_at = models.DateTimeField( editable=False, blank=True, null=True )
-  depr_at = models.DateTimeField( editable=False, blank=True, null=True )
+  sha256 = models.CharField( max_length=64, editable=False )
+  release_type = models.ManyToManyField( ReleaseType, through='PackageFileReleaseType' )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
   @property
   def release( self ):
-    if self.depr_at:
-      return 'depr'
-
-    elif self.prod_at and self.stage_at and self.dev_at and self.ci_at:
-      return 'prod'
-
-    elif self.stage_at and self.dev_at and self.ci_at:
-      return 'stage'
-
-    elif self.dev_at and self.ci_at:
-      return 'dev'
-
-    elif self.ci_at:
-      return 'ci'
-
-    else:
-      return 'new'
+    try:
+      return self.release_type.order_by( '-level' )[0]
+    except IndexError:
+      return None
 
   def notify( self, previous_release ):
-    try:
-      Repo.objects.get( release_type=previous_release, distroversion_list=self.distroversion ).notify( self.package )
-    except Repo.DoesNotExist:
-      pass
+    repo_list = Repo.objects.filter( release_type_list__in=( previous_release, self.release ), distroversion_list=self.distroversion )
 
-    try:
-      Repo.objects.get( release_type=self.release, distroversion_list=self.distroversion ).notify( self.package )
-    except Repo.DoesNotExist:
-      pass
+    for repo in repo_list:
+      repo.notify( self.package )
 
   def loadfile( self, file, request_distro ):
     file.file.seek( 0 ) # some upstream process might of left the cursor at the end of the file
@@ -288,6 +265,14 @@ This is the Individual package "file", they can indivdually belong to any type, 
       else:
         return full_distroversion_list
 
+    file.file.seek( 0 )
+    sha256 = hashlib.sha256()
+    while True:
+      buf = file.file.read( 4096 )
+      if not buf:
+        break
+      sha256.update( buf )
+
     # we found one and only one disto, we are taking it
     self.file = file
     self.distroversion_id = distroversion
@@ -295,62 +280,62 @@ This is the Individual package "file", they can indivdually belong to any type, 
     self.type = pkgFile.type
     self.arch = pkgFile.arch
     self.version = pkgFile.version
+    self.sha256 = sha256.hexdigest()
     return True
 
-  def promote( self, _user_, to ):
+  def promote( self, user, to, change_control_id=None ):
     """
-Promote package file to the next release level, to must be one of RELEASE_LEVELS
+Promote package file to the next release level
     """
-    if not _user_.has_perm( 'Repos.promote_packagefile' ):
+    if not user.has_perm( 'Repos.promote_packagefile' ):
       raise PermissionDenied()
 
-    if to not in self.RELEASE_LEVELS:
-      raise Exception( 'Release level "%s" is Invalid' % to )
+    cur_release = None
+    try:
+      cur_release = self.release_type.order_by( '-level' )[0]
+    except IndexError:
+      pass
 
-    previous_release = self.release
+    if cur_release is not None and ( cur_release.level == to.level or cur_release.level >= to.level ):
+      raise Exception( 'Unable to promote from "%s"(%s) to "%s"(%s)' % ( cur_release.description, cur_release.name, to.description, to.name ) )
 
-    if self.release == 'new' and to == 'ci':
-      self.ci_at = datetime.utcnow().replace( tzinfo=utc )
+    if to.change_control_required and change_control_id is None:
+      raise Exception( 'Change Control required to promote to "%s"(%s)' % ( to.description, to.name ) )
 
-    elif self.release == 'ci' and to == 'dev':
-      self.dev_at = datetime.utcnow().replace( tzinfo=utc )
+    pfrt = PackageFileReleaseType()
+    pfrt.package_file = self
+    pfrt.release_type = to
+    pfrt.at = datetime.utcnow().replace( tzinfo=utc )
+    pfrt.change_control_id = change_control_id
+    pfrt.save()
 
-    elif self.release == 'dev' and to == 'stage':
-      self.stage_at = datetime.utcnow().replace( tzinfo=utc )
+    self.notify( cur_release )
 
-    elif self.release == 'stage' and to == 'prod':
-      if not self.prod_changecontrol_id:
-        raise Exception( 'Change Control ID Requred to promote to prod' )
-      self.prod_at = datetime.utcnow().replace( tzinfo=utc )
-
-    else:
-      raise Exception( 'Unable to promote from "%s" to "%s"' % ( self.release, to ) )
-
-    self.save()
-    self.notify( previous_release )
-
-  def deprocate( self, _user_ ):
+  def deprocate( self, user ):
     """
 Deprocate package file.
     """
-    if not _user_.has_perm( 'Repos.promote_packagefile' ):
+    if not user.has_perm( 'Repos.promote_packagefile' ):
       raise PermissionDenied()
 
     previous_release = self.release
 
-    self.depr_at = datetime.utcnow().replace( tzinfo=utc )
+    pfrt = PackageFileReleaseType()
+    pfrt.package_file = self
+    pfrt.release_type = ReleaseType.objects.get( name='depr' )
+    pfrt.at = datetime.utcnow().replace( tzinfo=utc )
+    pfrt.save()
 
-    self.save()
     self.notify( previous_release )
 
   @staticmethod
-  def create( _user_, file, justification, provenance, version=None, ):
+  def create( user, file, justification, provenance, version=None ):
     """
 Create a new PackageFile, note version is the distro version and is only required if it
 can't be automatically detected, in which case the return value of created will be a list of
 possible versions
     """
-    if not _user_.has_perm( 'Repos.create_packagefile' ):
+    if not user.has_perm( 'Repos.create_packagefile' ):
       raise PermissionDenied()
 
     if not version or not version.strip():
@@ -369,7 +354,12 @@ possible versions
 
     if options is True:
       result.save()
-      return True
+      pfrt = PackageFileReleaseType()
+      pfrt.package_file = result
+      pfrt.release_type = ReleaseType.objects.get( name='new' )
+      pfrt.at = datetime.utcnow().replace( tzinfo=utc )
+      pfrt.save()
+      return None
 
     else:
       return options
@@ -400,27 +390,50 @@ possible versions
 
   class API:
     not_allowed_methods = ( 'CREATE', 'DELETE' )
-    constants = ( 'RELEASE_LEVELS', 'FILE_TYPES', 'FILE_ARCHS' )
+    constants = ( 'FILE_TYPES', 'FILE_ARCHS' )
     actions = {
-               'promote': [ { 'type': 'String', 'choices': dict( RELEASE_TYPE_CHOICES ) } ],
-               'deprocate': [],
-               'create': [ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ],
-               'filenameInUse': [ { 'type': 'String' } ]
+               'promote': ( None, ( { 'type': '_USER_' }, { 'type': 'Model', 'model': ReleaseType }, { 'type': 'String' } ) ),
+               'deprocate': ( None, ( { 'type': '_USER_' }, ) ),
+               'create': ( { 'type': 'StringList' }, ( { 'type': '_USER_' }, { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ) ),
+               'filenameInUse': ( { 'type': 'Boolean' }, ( { 'type': 'String' }, ) )
               }
-    properties = [ 'release' ]
+    properties = {
+                   'release': { 'type': 'Model', 'model': ReleaseType }
+                  }
     list_filters = {
                       'package': { 'package': Package },
-                      'repo-sync': { 'repo': Repo, 'package': Package }
+                      'repo': { 'repo': Repo, 'package_list': 'StringList' }
                    }
 
     @staticmethod
-    def buildQS( qs, filter, values ):
+    def buildQS( qs, user, filter, values ):
       if filter == 'package':
         return qs.filter( package=values[ 'package' ] )
 
-      if filter == 'repo-sync':
-        repo_parms = values[ 'repo' ].package_queryset_parms
-        repo_parms = dict( zip( [ i[13:] for i in repo_parms.keys() ], repo_parms.values() ) ) # take off the "packagefile__" prefix
-        return qs.filter( package=values[ 'package'], **repo_parms )
+      if filter == 'repo':
+        # NOTE: the release type filter is not 100% right, it will work find for most cases, but there are times when this dosen't work, ie a repo that omits a middle level, but that should not happen very often, and until someone comes up with a clever way to fix it, we will have to be happy with this for now
+        #   instead of filtering for just the packagefiles with the last releasttype in the list, we are taking the next highest releasetype and removing anything from there up.
+        queryset_parms = {}
+        queryset_parms[ 'distroversion__in' ] = [ i.pk for i in values[ 'repo' ].distroversion_list.all() ]
+        queryset_parms[ 'release_type__in' ] = [ i.pk for i in values[ 'repo' ].release_type_list.all() ]
+
+        if values[ 'package_list' ]: # not None, and not and empty string or empty list
+          queryset_parms[ 'package_id__in' ] = values[ 'package_list' ]
+
+        highest_level = max( [ i.level for i in values[ 'repo' ].release_type_list.all() ] )
+
+        return qs.filter( **queryset_parms ).exclude( release_type__in=[ i.pk for i in ReleaseType.objects.filter( level__gt=highest_level ) ] ).distinct()
 
       raise Exception( 'Invalid filter "%s"' % filter )
+
+class PackageFileReleaseType( models.Model ):
+  package_file = models.ForeignKey( PackageFile, on_delete=models.CASCADE )
+  release_type = models.ForeignKey( ReleaseType, on_delete=models.CASCADE )
+  at = models.DateTimeField( editable=False, auto_now_add=True )
+  change_control_id = models.CharField( max_length=50, blank=True, null=True )
+
+  def __unicode__( self ):
+    return 'PackageFileReleaseType for PackageFile "%s" Release Type "%s" at "%s"' % ( self.package_file, self.release_type, self.at )
+
+  class Meta:
+    unique_together = ( ( 'package_file', 'release_type' ), )

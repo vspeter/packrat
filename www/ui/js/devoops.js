@@ -11,6 +11,8 @@ var packrat;
 var user;
 var token;
 var keepalive_interval;
+var release_types = {};
+var next_release = {};
 
 /*-------------------------------------------
   Dynamically load plugin scripts
@@ -371,8 +373,9 @@ function repoTable()
       },
       "aaData": [],
       'aoColumns': [
+        { 'title': 'Name', 'data': 'name' },
         { 'title': 'Description', 'data': 'description' },
-        { 'title': 'Release', 'data': 'release_type' },
+        { 'title': 'Release', 'data': 'release_type_list' },
         { 'title': 'Manager', 'data': 'manager_type' },
         { 'title': 'Distros', 'data': 'distroversion_list' },
         { 'title': 'Created', 'data': 'created', 'type': 'date' },
@@ -435,8 +438,7 @@ function mirrorTable()
         { 'title': 'Description', 'data': 'description' },
         { 'title': 'Name', 'data': 'name' },
         { 'title': 'Repos', 'data': 'repo_list' },
-        { 'title': 'Last Sync Start', 'data': 'last_sync_start', 'type': 'date' },
-        { 'title': 'Last Sync Complete', 'data': 'last_sync_complete', 'type': 'date' },
+        { 'title': 'Last Heartbeat', 'data': 'last_heartbeat', 'type': 'date' },
         { 'title': 'Last Changed', 'data': 'updated' , 'type': 'date' },
         { 'title': 'uri' , 'data': 'uri', 'visible': false }
       ]
@@ -511,51 +513,33 @@ function packageTable()
       var row = file_table.row( $( this ).parents( 'tr' ) );
       var orig_data = row.data();
       var to;
-      switch( orig_data.release )
+      var cc_id;
+
+      if( orig_data.release == '/api/v1/Repos/ReleaseType:depr:' )
       {
-        case 'new':
-          to = 'ci';
-          break;
-        case 'ci':
-          to = 'dev';
-          break;
-        case 'dev':
-          to = 'stage';
-          break;
-        case 'stage':
-          if( !orig_data.prod_changecontrol_id )
-          {
-            var ccid = window.prompt( 'Please enter the Change Control Number' );
-            if( !ccid )
-              return;
+        window.alert( 'Can not promote a Deprocated File.' );
+        return;
+      }
+      if( orig_data.release == '/api/v1/Repos/ReleaseType:prod:' )
+      {
+        return;
+      }
 
-            $.when( cinp.update( orig_data.uri, { prod_changecontrol_id: ccid } ) ).then(
-              function( data )
-              {
-                row.data( $.extend( {}, data.detail, { uri: orig_data.uri } ) );
-                window.alert( 'Change Control ID applied, re-promote to continue' );
-              }
-            ).fail(
-              function( reason )
-              {
-                window.alert( 'Failed To Apply Change Control ID: ' + reason.msg );
-              }
-            );
-            return;
-          }
-          to = 'prod';
-          break;
-        case 'depr':
-          window.alert( 'Can not promote a Deprocated File.' );
-          return;
-        case 'prod':
-          return;
-        default:
-          window.alert( 'Don\'t know how to promote from release "' + orig_data.release + '"' );
-          return;
-        }
+      to = next_release[ orig_data.release ];
+      if( to === undefined )
+      {
+        window.alert( 'Don\'t know how to promote from release "' + orig_data.release + '"' );
+        return;
+      }
 
-      $.when( packrat.promote( orig_data.uri, to ) ).then(
+      if( release_types[ to ].change_control_required )
+      {
+        cc_id = window.prompt( 'Please enter the Change Control Number' );
+        if( !cc_id )
+          return;
+      }
+
+      $.when( packrat.promote( orig_data.uri, to, cc_id ) ).then(
         function( data )
         {
           row.data( $.extend( {}, data.detail, { uri: orig_data.uri } ) ); // TODO: really should get the uri from the data.detail
@@ -846,6 +830,36 @@ $(document).ready(function () {
   cinp.on_server_error = errorHandler;
 
   packrat = packratBuilder( cinp );
+
+  $.when( packrat.getReleaseTypes() ).then(
+    function( data )
+    {
+      var release_indexes = [];
+      var release_by_index = {};
+      release_types = {};
+      next_release = {};
+      for( var key in data )
+      {
+        var object = data[ key ];
+        release_by_index[ object.level ] = key;
+        release_types[ key ] = object;
+        release_indexes.push( object.level );
+      }
+      release_indexes.sort( function( a, b ) { return b - a; } );
+      var prev = release_by_index[ release_indexes.shift() ];
+      for( key in release_indexes )
+      {
+        var level = release_indexes[ key ];
+        next_release[ release_by_index[ level ] ] = prev;
+        prev = release_by_index[ level ];
+      }
+    }
+  ).fail(
+    function( reason )
+    {
+      window.alert( "Failed to get Release Types (" + reason.code + "): " + reason.msg );
+    }
+  );
 
   loadAjaxContent(ajax_url);
   $('.main-menu').on('click', 'a', function (e) {

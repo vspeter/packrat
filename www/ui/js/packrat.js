@@ -122,6 +122,35 @@ var packratBuilder = {};
       return deferred.promise();
     };
 
+    packrat.getReleaseTypes = function()
+    {
+      var deferred = $.Deferred();
+
+      $.when( cinp.list( '/api/v1/Repos/ReleaseType', null, null, 0, 200 ) ).then(
+        function( data )
+        {
+          $.when( cinp.getObjects( data.list, null, 100 ) ).then(
+            function( data )
+            {
+              deferred.resolve( data );
+            }
+          ).fail(
+            function( reason )
+            {
+              deferred.reject( reason );
+            }
+          );
+        }
+      ).fail(
+        function( reason )
+        {
+          deferred.reject( reason );
+        }
+      );
+
+      return deferred.promise();
+    };
+
     packrat.createPackage = function( name )
     {
       var deferred = $.Deferred();
@@ -170,11 +199,14 @@ var packratBuilder = {};
       return deferred.promise();
     };
 
-    packrat.promote = function( uri, to )
+    packrat.promote = function( uri, to, change_control_id )
     {
+      if( ( change_control_id !== undefined ) && ( !change_control_id.length ) )
+        change_control_id = undefined;
+
       var deferred = $.Deferred();
 
-      $.when( cinp.call( uri + '(promote)', { to: to } ) ).then(
+      $.when( cinp.call( uri + '(promote)', { to: to, change_control_id: change_control_id } ) ).then(
         function( data )
         {
           $.when( cinp.get( uri ) ).then(

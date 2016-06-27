@@ -9,7 +9,7 @@ from cinp.django_plugin import DjangoAPI
 from packrat import views
 
 api = DjangoAPI( '/api/v1/' )
-api.registerApp( 'Repos', 'v1' )
+api.registerApp( 'Repos', 'v1.1' )
 api.registerFileUploader( 'FILES' )
 
 urlpatterns = patterns(
