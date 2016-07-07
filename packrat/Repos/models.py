@@ -85,6 +85,7 @@ This is a Collection of PackageFiles that meant certian requrements, ie: distro,
   """
   MANAGER_TYPES = MANAGER_TYPE_CHOICES
   name = models.CharField( max_length=50, primary_key=True )
+  filesystem_dir = models.CharField( max_length=50 )
   distroversion_list = models.ManyToManyField( DistroVersion )
   manager_type = models.CharField( max_length=MANAGER_TYPE_LENGTH, choices=MANAGER_TYPES )
   description = models.CharField( max_length=200 )
