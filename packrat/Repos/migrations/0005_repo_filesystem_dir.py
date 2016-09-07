@@ -5,7 +5,7 @@ from django.db import models, migrations
 
 def migrate_repo_setdirectory( apps, schema_editor ):
   for repo in apps.get_model( 'Repos', 'Repo' ).objects.all():
-    repo.filesystem_dir = repo.name
+    repo.filesystem_dir = repo.name.replace( '-', '/' )
     repo.save()
 
 class Migration(migrations.Migration):

@@ -181,7 +181,7 @@ This is a Collection of PacageFiles, they share a name.
   updated = models.DateTimeField( editable=False, auto_now=True )
 
   def save( self, *args, **kwargs ):
-    if not re.match( '^[0-9a-zA-Z]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe, also don't allow chars that are used to delimit version and other info
+    if not re.match( '^[0-9a-zA-Z\-]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe, also don't allow chars that are used to delimit version and other info
       raise ValidationError( 'Invalid Package Name' )
 
     super( Package, self ).save( *args, **kwargs )
@@ -335,6 +335,7 @@ Deprocate package file.
 Create a new PackageFile, note version is the distro version and is only required if it
 can't be automatically detected, in which case the return value of created will be a list of
 possible versions
+Return value of None means success
     """
     if not user.has_perm( 'Repos.create_packagefile' ):
       raise PermissionDenied()
