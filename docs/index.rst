@@ -8,6 +8,7 @@ Contents:
 
    overview <overview.rst>
    api <api.rst>
+   source <source.rst>
 
 
 Indices and tables

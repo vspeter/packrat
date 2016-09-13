@@ -26,7 +26,7 @@ docs-distros:
 	echo xenial
 
 docs-requires:
-	echo python3-sphinx texlive-latex-base texlive-latex-extra
+	echo python3-sphinx texlive-latex-base texlive-latex-extra python3-django python3-magic python3-psycopg2
 
 docs: docs-pdf
 
