@@ -9,9 +9,60 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.db import models, connection
 from django.utils.timezone import utc
 
-from Deb import Deb
-from Rpm import Rpm
-from Resource import Resource
+from packrat.Repos.Deb import Deb
+from packrat.Repos.Rpm import Rpm
+from packrat.Repos.Resource import Resource
+
+__doc__ = """
+Packrat Class Relationships
+
+From the Mirror prespective::
+
+               +--------+
+               | Mirror |
+               +--------+
+                 |    |
+ +----------------+  +----------------+
+ |     Repo 1     |  |      Repo N    |
+ +----------------+  +----------------+
+ | List of        |  | List of        |
+ | ReleaseTypes   |  | ReleaseTypes   |
+ |                |  |                |
+ | List of        |  | List of        |
+ | DistroVersions |  | DistroVersions |
+ +----------------+  +----------------+
+         |                    |
+ +----------------+  +----------------+
+ | View of        |  | View of        |
+ | PackageFiles as|  | PackageFiles as|
+ | Filterd by the |  | Filterd by the |
+ | Release/Distro |  | Release/Distro |
+ | Constraints of |  | Constraints of |
+ | the repo       |  | the repo       |
+ +----------------+  +----------------+
+
+
+From the Package perspective::
+
+              +---------+
+              | Package |
+              +---------+
+                |      |
+  +---------------+  +---------------+
+  | PackageFile 1 |  | PackageFile 2 |
+  +---------------+  +---------------+
+  | Verion 1      |  | Version 2     |
+  | DistroVersion |  | DistroVersion |
+  | Arch / Type   |  | Arch / Type   |
+  |               |  |               |
+  | List of       |  | List of       |
+  | ReleaseTypes  |  | ReleaseTypes  |
+  | through       |  | through       |
+  | PackageFile-  |  | PackageFile-  |
+  | ReleaseType   |  | ReleaseType   |
+  +---------------+  +---------------+
+
+"""
 
 DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'centos', 'Centos' ), ( 'rhel', 'RHEL' ), ( 'sles', 'SLES' ), ( 'core', 'CoreOS' ), ( 'none', 'None' ) ) # there is no ubuntu, it shares the same version space as debian
 MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'yast', 'YaST' ), ( 'json', 'JSON' ) )
@@ -25,9 +76,24 @@ FILE_ARCH_LENGTH = 6
 DISTRO_LENGTH = 6
 
 class ReleaseType( models.Model ):
+  """
+  Releases are stages a PackageFile can exist in, for example prod or stage.
+  PackageFiles are promoted from one stage to the next.  At a minnimum you should
+  have a ReleaseType with a name 'depr' with level = 100 and 'new' with 
+  level = 1, change_control_required is ignored for 'new' and 'depr'.
+
+  - name: name of the release, ie: 'prod'
+  - description: short description of the release type, ie: 'Production'
+  - level: a numeric value to help packrat know the direction of promotion.
+    The highest level ReleasetType a Package file is attached to is that
+    PackageFiles curent release level.  Min value is 1, Max value is 100
+  - change_control_required: if True, inorder to be promoted to this Release
+    a Change Control ID is required and must check out before being allowed to
+    promote to this level.
+  """
   name = models.CharField( max_length=10, primary_key=True )
   description = models.CharField( max_length=100 )
-  level = models.IntegerField() # can promote to a higher level, highest level on a package file is the promotion level
+  level = models.IntegerField()
   change_control_required = models.BooleanField( default=False )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
@@ -49,9 +115,16 @@ class ReleaseType( models.Model ):
 
 class DistroVersion( models.Model ):
   """
-This is a type of Distro, ie Centos 6 or Ubuntu 14.04(Trusty)
+  This is a type of Distro, ie Centos 6 or Ubuntu 14.04(Trusty)
+
+  - name: name of the distro version, ie: 'precise', 'sels12'
+  - distro: the distro family this version belongs to, ie 'debian'
+  - version: version identifier, ie: 'precise', '12'
+  - file_type: the type of file expected for this DistroVersion, ie: 'deb', 'rpm'
+  - release_names: a tab delemited list of strings that apear in the file name
+    to help packrat auto detect which DistroVersion a PackageFile belongs to, ie:
+    'xenial', 'rel6'
   """
-  # TODO: make the release_names another model
   DISTROS = DISTRO_CHOICES
   FILE_TYPES = FILE_TYPE_CHOICES
   name = models.CharField( max_length=20, primary_key=True )
@@ -81,7 +154,20 @@ This is a type of Distro, ie Centos 6 or Ubuntu 14.04(Trusty)
 
 class Repo( models.Model ):
   """
-This is a Collection of PackageFiles that meant certian requrements, ie: distro, repo manager, and release type.
+  This is a Collection of PackageFiles that meant certian requrements, ie:
+  distro, repo manager, and release type. This is will authorize any mirrors
+  including this Repo to get a listing of package files.
+
+  NOTE: this dosen't prevent the remote server from downloading an individual
+  file if it allready knows the url, this just controlls the list of files sent.
+
+  - name: name of the repo, ie: 'prod-apt'
+  - filesystem_dir: the name of the directory to put the the PackageFiles belonging
+    to this repo into, ie: 'prod-apt'
+  - distroversion_list: list of the distro versions this repos includes
+  - manager_type: what repo manager to use for this repo, ie: 'apt'
+  - description: short description of the Repo, ie: 'Production Apt'
+  - release_type_list: list of the release types that this repo includes
   """
   MANAGER_TYPES = MANAGER_TYPE_CHOICES
   name = models.CharField( max_length=50, primary_key=True )
@@ -94,6 +180,11 @@ This is a Collection of PackageFiles that meant certian requrements, ie: distro,
   updated = models.DateTimeField( editable=False, auto_now=True )
 
   def poll( self, timeout ):
+    """
+    this function will block for up to timeout seconds waiting for notification
+    that PackageFile change that affects this Repo.  If not change happend
+    returns empty array, otherwise an array of Package names that changed
+    """
     cursor = connection.cursor()
     cursor.execute( 'LISTEN "mirror_repo_%s"' % self.pk )
     conn = cursor.cursor.connection
@@ -117,6 +208,9 @@ This is a Collection of PackageFiles that meant certian requrements, ie: distro,
     return result
 
   def notify( self, package=None ):
+    """
+    send the notify event to anything blocked in the poll
+    """
     if package is None:
       connection.cursor().execute( 'NOTIFY "mirror_repo_%s"' % self.pk )
     else:
@@ -141,8 +235,16 @@ This is a Collection of PackageFiles that meant certian requrements, ie: distro,
 
 class Mirror( models.Model ):
   """
-This is will authorize a remote server to get a listing of package files.  That list is generated via the repo_list.
-NOTE: this dosen't prevent the remote server from downloading an indivvidual file if it allready knows the url, this just controlls the list of files sent.
+  Mirror groups a set of Repos togeather to provide for a client.  A PSK is
+  required to help control access.
+
+  - name: name of the mirror. also effectivly the username for the Mirror,
+    ie: 'prod'
+  - description: short description of the mirror, ie: 'Production'
+  - psk: Preshared Key used for controlling mirror access
+  - last_heartbeat: DateTime stamp of when the mirror last checked in.  Can
+    be used to detect Mirror client that have stopped checking in. This is
+    updated when the client does a full sync.
   """
   name = models.CharField( max_length=50, primary_key=True )
   description = models.CharField( max_length=200 )
@@ -174,7 +276,9 @@ NOTE: this dosen't prevent the remote server from downloading an indivvidual fil
 
 class Package( models.Model ):
   """
-This is a Collection of PacageFiles, they share a name.
+  A collection of PackageFiles
+
+  - name: the common name of the PackageFiles
   """
   name = models.CharField( max_length=200, primary_key=True )
   created = models.DateTimeField( editable=False, auto_now_add=True )
@@ -194,7 +298,27 @@ This is a Collection of PacageFiles, they share a name.
 
 class PackageFile( models.Model ): # TODO: add delete to cleanup the file, django no longer does this for us
   """
-This is the Individual package "file", they can indivdually belong to any type, arch, package, this is the thing that is actually sent to the remote repos
+  This is the Individual package "file", they can indivdually belong to any
+  type, arch, package, this is the thing that is actually sent to the remote repos
+  PackageFile records should only be created with the create static function,
+  this will insure the releations ships with Package, Version, Type, Arch are
+  detectored correctly.  See the create function for more detail. Records
+  should also not have their file links updated, instead create a new record.
+  Updating existing records is blocked.
+
+  - package: The PackageFile group this package belongs to
+  - distroversion: The DistroVersion this PackageFile is associated with.
+  - version: Version of the Package this PacageFile represents, ie '1.2-5'
+  - type: Type of file
+  - arch: Archetuture of the file
+  - justification: User provided field used when auditing package files.  This
+    should detail the justification for this PackageFile's inclusion
+  - provenance: User provided field used when auditing package files.  This
+    should describe the provenance (where the PackageFile and/or it's sources)
+    came from
+  - sha256: hash of the file, given to the client so it can verify package file
+    integrety
+  - release_type: which release levels this package has been promoted to
   """
   FILE_TYPES = FILE_TYPE_CHOICES
   FILE_ARCHS = FILE_ARCH_CHOICES
@@ -219,6 +343,9 @@ This is the Individual package "file", they can indivdually belong to any type, 
       return None
 
   def notify( self, previous_release ):
+    """
+    notify repos that hold this PakcageFile's curent and previous release
+    """
     repo_list = Repo.objects.filter( release_type_list__in=( previous_release, self.release ), distroversion_list=self.distroversion )
 
     for repo in repo_list:
@@ -286,7 +413,9 @@ This is the Individual package "file", they can indivdually belong to any type, 
 
   def promote( self, user, to, change_control_id=None ):
     """
-Promote package file to the next release level
+    Promote package file to the next release level.  Promotions must go to a
+    higher ReleaseType.level.  If to release Type requires change control,
+    change_control_id must be specified.
     """
     if not user.has_perm( 'Repos.promote_packagefile' ):
       raise PermissionDenied()
@@ -314,7 +443,7 @@ Promote package file to the next release level
 
   def deprocate( self, user ):
     """
-Deprocate package file.
+    Deprocate package file.  Forces the target Release type to 'depr'.
     """
     if not user.has_perm( 'Repos.promote_packagefile' ):
       raise PermissionDenied()
@@ -332,10 +461,10 @@ Deprocate package file.
   @staticmethod
   def create( user, file, justification, provenance, version=None ):
     """
-Create a new PackageFile, note version is the distro version and is only required if it
-can't be automatically detected, in which case the return value of created will be a list of
-possible versions
-Return value of None means success
+    Create a new PackageFile, note version is the distro version and is only required if it
+    can't be automatically detected, in which case the return value of created will be a list of
+    possible versions
+    Return value of None means success
     """
     if not user.has_perm( 'Repos.create_packagefile' ):
       raise PermissionDenied()
@@ -368,6 +497,10 @@ Return value of None means success
 
   @staticmethod
   def filenameInUse( file_name ):
+    """
+    returns true if the file_name has allready been used.  Good Idea to call this
+    before uploading files to ensure the file name is unique.
+    """
     try:
       PackageFile.objects.get( file='./%s' % file_name ) #TODO: see ./ comment in create
       return True
@@ -429,6 +562,10 @@ Return value of None means success
       raise Exception( 'Invalid filter "%s"' % filter )
 
 class PackageFileReleaseType( models.Model ):
+  """
+  This is a Helper Table to join PackageFile to ReleaseType.  This stores when
+  the package file was promoted to the ReleaseType
+  """
   package_file = models.ForeignKey( PackageFile, on_delete=models.CASCADE )
   release_type = models.ForeignKey( ReleaseType, on_delete=models.CASCADE )
   at = models.DateTimeField( editable=False, auto_now_add=True )
