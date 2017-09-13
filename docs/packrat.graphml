@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+  <!--Created by yEd 3.14.3-->
+  <key attr.name="Description" attr.type="string" for="graph" id="d0"/>
+  <key for="port" id="d1" yfiles.type="portgraphics"/>
+  <key for="port" id="d2" yfiles.type="portgeometry"/>
+  <key for="port" id="d3" yfiles.type="portuserdata"/>
+  <key attr.name="url" attr.type="string" for="node" id="d4"/>
+  <key attr.name="description" attr.type="string" for="node" id="d5"/>
+  <key for="node" id="d6" yfiles.type="nodegraphics"/>
+  <key for="graphml" id="d7" yfiles.type="resources"/>
+  <key attr.name="url" attr.type="string" for="edge" id="d8"/>
+  <key attr.name="description" attr.type="string" for="edge" id="d9"/>
+  <key for="edge" id="d10" yfiles.type="edgegraphics"/>
+  <graph edgedefault="directed" id="G">
+    <data key="d0"/>
+    <node id="n0" yfiles.foldertype="group">
+      <data key="d4"/>
+      <data key="d5"/>
+      <data key="d6">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="721.9843749999998" width="1234.5615234375" x="-109.98388671874966" y="-414.2578124999996"/>
+              <y:Fill color="#F5F5F5" transparent="false"/>
+              <y:BorderStyle color="#000000" type="dashed" width="1.0"/>
+              <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#EBEBEB" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="21.4609375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="1234.5615234375" x="0.0" y="0.0">Packrat</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15.0" left="15" leftF="15.0" right="15" rightF="15.0" top="15" topF="15.0"/>
+              <y:BorderInsets bottom="0" bottomF="0.0" left="0" leftF="0.0" right="0" rightF="0.0" top="0" topF="0.0"/>
+            </y:GroupNode>
+            <y:GroupNode>
+              <y:Geometry height="50.0" width="50.0" x="476.5" y="-341.234375"/>
+              <y:Fill color="#F5F5F5" transparent="false"/>
+              <y:BorderStyle color="#000000" type="dashed" width="1.0"/>
+              <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#EBEBEB" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="21.4609375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="50.0" x="0.0" y="0.0">1</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="true" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15.0" left="15" leftF="15.0" right="15" rightF="15.0" top="15" topF="15.0"/>
+              <y:BorderInsets bottom="0" bottomF="0.0" left="0" leftF="0.0" right="0" rightF="0.0" top="0" topF="0.0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="n0:"/>
+    </node>
+    <node id="n1" yfiles.foldertype="group">
+      <data key="d4"/>
+      <data key="d5"/>
+      <data key="d6">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="394.31718750000005" width="731.8542968750002" x="367.46972656250034" y="-130.33593749999972"/>
+              <y:Fill color="#F5F5F5" transparent="false"/>
+              <y:BorderStyle color="#000000" type="dashed" width="1.0"/>
+              <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#EBEBEB" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="21.4609375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="731.8542968750002" x="0.0" y="0.0">Collection of Package Files</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15.0" left="15" leftF="15.0" right="15" rightF="15.0" top="15" topF="15.0"/>
+              <y:BorderInsets bottom="16" bottomF="15.528125000000045" left="5" leftF="4.7999999999999545" right="24" rightF="24.40000000000032" top="20" topF="19.828125"/>
+            </y:GroupNode>
+            <y:GroupNode>
+              <y:Geometry height="50.0" width="50.0" x="415.1728515625" y="121.2109375"/>
+              <y:Fill color="#F5F5F5" transparent="false"/>
+              <y:BorderStyle color="#000000" type="dashed" width="1.0"/>
+              <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#EBEBEB" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="21.4609375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="50.0" x="0.0" y="0.0">1</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="true" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15.0" left="15" leftF="15.0" right="15" rightF="15.0" top="15" topF="15.0"/>
+              <y:BorderInsets bottom="0" bottomF="0.0" left="0" leftF="0.0" right="0" rightF="0.0" top="0" topF="0.0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="n1:">
+        <node id="n1::n0">
+          <data key="d5"/>
+          <data key="d6">
+            <y:GenericNode configuration="ShinyPlateNode3">
+              <y:Geometry height="52.0" width="157.0" x="802.7968750000003" y="108.95312500000028"/>
+              <y:Fill color="#FF9900" transparent="false"/>
+              <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="118.3046875" x="19.34765625" y="3.046875">Package File
+package-2.0-1.rpm
+Stage<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+        <node id="n1::n1">
+          <data key="d5"/>
+          <data key="d6">
+            <y:GenericNode configuration="ShinyPlateNode3">
+              <y:Geometry height="52.0" width="157.0" x="802.7968750000003" y="181.45312500000028"/>
+              <y:Fill color="#FF9900" transparent="false"/>
+              <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="116.681640625" x="20.1591796875" y="3.046875">Package File
+package-2.0-1.deb
+Stage<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+        <node id="n1::n2">
+          <data key="d5"/>
+          <data key="d6">
+            <y:GenericNode configuration="ShinyPlateNode3">
+              <y:Geometry height="52.0" width="157.0" x="615.7968750000003" y="181.45312500000028"/>
+              <y:Fill color="#FF9900" transparent="false"/>
+              <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="124.31640625" x="16.341796875" y="3.046875">Package File
+package-1.5-10.deb
+Prod<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+        <node id="n1::n3">
+          <data key="d5"/>
+          <data key="d6">
+            <y:GenericNode configuration="ShinyPlateNode3">
+              <y:Geometry height="52.0" width="157.0" x="615.7968750000003" y="108.95312500000028"/>
+              <y:Fill color="#FF9900" transparent="false"/>
+              <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="125.939453125" x="15.5302734375" y="3.046875">Package File
+package-1.5-10.rpm
+Prod<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+        <node id="n1::n4">
+          <data key="d5"/>
+          <data key="d6">
+            <y:GenericNode configuration="ShinyPlateNode3">
+              <y:Geometry height="52.0" width="157.0" x="428.79687500000034" y="181.45312500000028"/>
+              <y:Fill color="#FF9900" transparent="false"/>
+              <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="118.3046875" x="19.34765625" y="3.046875">Package File
+package-1.2-3.rpm
+Deprocated<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+        <node id="n1::n5">
+          <data key="d5"/>
+          <data key="d6">
+            <y:GenericNode configuration="ShinyPlateNode3">
+              <y:Geometry height="52.0" width="157.0" x="428.79687500000034" y="108.95312500000028"/>
+              <y:Fill color="#FF9900" transparent="false"/>
+              <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="118.3046875" x="19.34765625" y="3.046875">Package File
+package-1.2-3.rpm
+Deprocated<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+        <node id="n1::n6">
+          <data key="d5"/>
+          <data key="d6">
+            <y:GenericNode configuration="ShinyPlateNode3">
+              <y:Geometry height="164.40000000000003" width="612.0" x="417.5968750000003" y="-74.04687499999972"/>
+              <y:Fill color="#FF9900" transparent="false"/>
+              <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="157.65625" modelName="custom" textColor="#000000" visible="true" width="672.654296875" x="-30.3271484375" y="3.371875000000017">Package File
+
+Physical File
+Version of Package ( ie: 1.0-1, 2.3-1, 1.2-5 )
+Type: deb, rpm, resource
+arch: i368, x86_64, all/none
+Promotion Status: New, CI, Dev, Stage, Prod, Depr
+Distro Version: Trusty, Precise, Centos6, Centos7, SLES11, SLES12, etc
+Justification: &lt;free text field to explain the justification for this file&gt;
+Provenance: &lt;free text field to explain where this came from&gt;
+Change Control Id: an id to croxx refrece with the change controll system to authorize promotion to production
+<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <node id="n2">
+      <data key="d5"/>
+      <data key="d6">
+        <y:GenericNode configuration="BevelNode3">
+          <y:Geometry height="107.0" width="419.0" x="-70.35937499999966" y="-277.0468749999997"/>
+          <y:Fill color="#FF9900" transparent="false"/>
+          <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="350.013671875" x="34.4931640625" y="30.546875">Mirror
+
+Named grouping of Repos, with authencation informaiton<y:LabelModel>
+              <y:SmartNodeLabelModel distance="4.0"/>
+            </y:LabelModel>
+            <y:ModelParameter>
+              <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+            </y:ModelParameter>
+          </y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+    <node id="n3">
+      <data key="d6">
+        <y:GenericNode configuration="BevelNode3">
+          <y:Geometry height="126.0" width="298.0" x="-8.609374999999659" y="6.222656250000284"/>
+          <y:Fill color="#FF9900" transparent="false"/>
+          <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="101.78125" modelName="custom" textColor="#000000" visible="true" width="236.4765625" x="30.76171875" y="12.109375">Repo
+
+Named View of package files
+
+Distro Versions: el6, el7, trusy, precise
+Manager Type: Yum, Yast, Apt, JSON
+Release Type: CI, Dev, Stage, Prod
+<y:LabelModel>
+              <y:SmartNodeLabelModel distance="4.0"/>
+            </y:LabelModel>
+            <y:ModelParameter>
+              <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+            </y:ModelParameter>
+          </y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+    <node id="n4">
+      <data key="d6">
+        <y:GenericNode configuration="BevelNode3">
+          <y:Geometry height="85.0" width="519.0" x="474.04687500000034" y="-277.0468749999997"/>
+          <y:Fill color="#FF9900" transparent="false"/>
+          <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" modelName="custom" textColor="#000000" visible="true" width="456.478515625" x="31.2607421875" y="19.546875">Package
+
+a named collection of package files, all package files share the same name<y:LabelModel>
+              <y:SmartNodeLabelModel distance="4.0"/>
+            </y:LabelModel>
+            <y:ModelParameter>
+              <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+            </y:ModelParameter>
+          </y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+    <node id="n5" yfiles.foldertype="group">
+      <data key="d4"/>
+      <data key="d5"/>
+      <data key="d6">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="721.9843749999998" width="747.3640625000005" x="1187.6880716145822" y="-414.2578124999996"/>
+              <y:Fill color="#F5F5F5" transparent="false"/>
+              <y:BorderStyle color="#000000" type="dashed" width="1.0"/>
+              <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#EBEBEB" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="21.4609375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="747.3640625000005" x="0.0" y="0.0">Packrat Agent</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15.0" left="15" leftF="15.0" right="15" rightF="15.0" top="15" topF="15.0"/>
+              <y:BorderInsets bottom="104" bottomF="103.55468749999989" left="90" leftF="90.09488281249992" right="71" rightF="71.01917968750104" top="127" topF="126.99999999999989"/>
+            </y:GroupNode>
+            <y:GroupNode>
+              <y:Geometry height="50.0" width="50.0" x="1581.0679544270822" y="-343.4571868489576"/>
+              <y:Fill color="#F5F5F5" transparent="false"/>
+              <y:BorderStyle color="#000000" type="dashed" width="1.0"/>
+              <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#EBEBEB" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="21.4609375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="50.0" x="0.0" y="0.0">1</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15.0" left="15" leftF="15.0" right="15" rightF="15.0" top="15" topF="15.0"/>
+              <y:BorderInsets bottom="0" bottomF="0.0" left="0" leftF="0.0" right="0" rightF="0.0" top="0" topF="0.0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="n5:">
+        <node id="n5::n0">
+          <data key="d5"/>
+          <data key="d6">
+            <y:SVGNode>
+              <y:Geometry height="103.51126627928124" width="85.32999999999993" x="1528.242954427082" y="63.69185872071904"/>
+              <y:Fill color="#CCCCFF" transparent="false"/>
+              <y:BorderStyle color="#000000" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="17.96875" modelName="custom" textColor="#000000" visible="true" width="92.236328125" x="-3.4531640625000364" y="107.51126627928124">/var/www/repo<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="-0.5" nodeRatioX="0.0" nodeRatioY="0.5" offsetX="0.0" offsetY="4.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+              <y:SVGNodeProperties usingVisualBounds="true"/>
+              <y:SVGModel svgBoundsPolicy="0">
+                <y:SVGContent refid="1"/>
+              </y:SVGModel>
+            </y:SVGNode>
+          </data>
+        </node>
+        <node id="n5::n1">
+          <data key="d5"/>
+          <data key="d6">
+            <y:GenericNode configuration="BevelNode2">
+              <y:Geometry height="202.49999999999994" width="556.2499999999995" x="1292.7829544270821" y="-250.79687499999972"/>
+              <y:Fill color="#FF9900" transparent="false"/>
+              <y:BorderStyle hasColor="false" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="87.8125" modelName="custom" textColor="#000000" visible="true" width="503.96875" x="26.140624999999773" y="57.34374999999997">Connects to packrat as a mirror
+Asks for the repos in that mirror
+for each repo asks for the packages in that mirror
+for each packages retreives the package files that are selected by that Repo
+saves the files to disk and bilds the Repo Metadata as described by the Repo
+All Communication via HTTP, comming from the Agent to Packrat, and is proxyable<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+      </graph>
+    </node>
+    <edge id="e0" source="n4" target="n1">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
+            <y:Point x="733.5468750000003" y="-169.94140624999972"/>
+            <y:Point x="733.5468750000003" y="-169.94140624999972"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e1" source="n2" target="n3">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e2" source="n3" target="n1">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="126.03955078125" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e3" source="n5::n1" target="n2">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
+            <y:Point x="1362.749999999999" y="-468.5071868489573"/>
+            <y:Point x="337.74999999999983" y="-479.7571868489573"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e4" source="n5::n1" target="n1">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="n5::e0" source="n5::n1" target="n5::n0">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e5" source="n5::n1" target="n3">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
+            <y:Point x="313.7499999999997" y="-141.00718684895753"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e6" source="n5::n1" target="n4">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
+            <y:Point x="1018.7499999999993" y="-241.00718684895742"/>
+          </y:Path>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+  </graph>
+  <data key="d7">
+    <y:Resources>
+      <y:Resource id="1">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;svg version="1.1"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	 x="0px" y="0px" width="40px" height="48px" viewBox="0 0 40 48" enable-background="new 0 0 40 48" xml:space="preserve"&gt;
+&lt;defs&gt;
+&lt;/defs&gt;
+&lt;linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="370.2002" y1="655.0938" x2="409.4502" y2="655.0938" gradientTransform="matrix(1 0 0 1 -370.2002 -614.5742)"&gt;
+	&lt;stop  offset="0" style="stop-color:#4D4D4D"/&gt;
+	&lt;stop  offset="0.0558" style="stop-color:#5F5F5F"/&gt;
+	&lt;stop  offset="0.2103" style="stop-color:#8D8D8D"/&gt;
+	&lt;stop  offset="0.3479" style="stop-color:#AEAEAE"/&gt;
+	&lt;stop  offset="0.4623" style="stop-color:#C2C2C2"/&gt;
+	&lt;stop  offset="0.5394" style="stop-color:#C9C9C9"/&gt;
+	&lt;stop  offset="0.6247" style="stop-color:#C5C5C5"/&gt;
+	&lt;stop  offset="0.7072" style="stop-color:#BABABA"/&gt;
+	&lt;stop  offset="0.7885" style="stop-color:#A6A6A6"/&gt;
+	&lt;stop  offset="0.869" style="stop-color:#8B8B8B"/&gt;
+	&lt;stop  offset="0.9484" style="stop-color:#686868"/&gt;
+	&lt;stop  offset="1" style="stop-color:#4D4D4D"/&gt;
+&lt;/linearGradient&gt;
+&lt;path fill="url(#SVGID_1_)" d="M19.625,37.613C8.787,37.613,0,35.738,0,33.425v10c0,2.313,8.787,4.188,19.625,4.188
+	c10.839,0,19.625-1.875,19.625-4.188v-10C39.25,35.738,30.464,37.613,19.625,37.613z"/&gt;
+&lt;linearGradient id="SVGID_2_" gradientUnits="userSpaceOnUse" x1="370.2002" y1="649.0938" x2="409.4502" y2="649.0938" gradientTransform="matrix(1 0 0 1 -370.2002 -614.5742)"&gt;
+	&lt;stop  offset="0" style="stop-color:#B3B3B3"/&gt;
+	&lt;stop  offset="0.0171" style="stop-color:#B6B6B6"/&gt;
+	&lt;stop  offset="0.235" style="stop-color:#D7D7D7"/&gt;
+	&lt;stop  offset="0.4168" style="stop-color:#EBEBEB"/&gt;
+	&lt;stop  offset="0.5394" style="stop-color:#F2F2F2"/&gt;
+	&lt;stop  offset="0.6579" style="stop-color:#EEEEEE"/&gt;
+	&lt;stop  offset="0.7724" style="stop-color:#E3E3E3"/&gt;
+	&lt;stop  offset="0.8853" style="stop-color:#CFCFCF"/&gt;
+	&lt;stop  offset="0.9965" style="stop-color:#B4B4B4"/&gt;
+	&lt;stop  offset="1" style="stop-color:#B3B3B3"/&gt;
+&lt;/linearGradient&gt;
+&lt;path fill="url(#SVGID_2_)" d="M19.625,37.613c10.839,0,19.625-1.875,19.625-4.188l-1.229-2c0,2.168-8.235,3.927-18.396,3.927
+	c-9.481,0-17.396-1.959-18.396-3.927l-1.229,2C0,35.738,8.787,37.613,19.625,37.613z"/&gt;
+&lt;linearGradient id="SVGID_3_" gradientUnits="userSpaceOnUse" x1="371.4297" y1="646" x2="408.2217" y2="646" gradientTransform="matrix(1 0 0 1 -370.2002 -614.5742)"&gt;
+	&lt;stop  offset="0" style="stop-color:#C9C9C9"/&gt;
+	&lt;stop  offset="1" style="stop-color:#808080"/&gt;
+&lt;/linearGradient&gt;
+&lt;ellipse fill="url(#SVGID_3_)" cx="19.625" cy="31.425" rx="18.396" ry="3.926"/&gt;
+&lt;linearGradient id="SVGID_4_" gradientUnits="userSpaceOnUse" x1="370.2002" y1="641.0938" x2="409.4502" y2="641.0938" gradientTransform="matrix(1 0 0 1 -370.2002 -614.5742)"&gt;
+	&lt;stop  offset="0" style="stop-color:#4D4D4D"/&gt;
+	&lt;stop  offset="0.0558" style="stop-color:#5F5F5F"/&gt;
+	&lt;stop  offset="0.2103" style="stop-color:#8D8D8D"/&gt;
+	&lt;stop  offset="0.3479" style="stop-color:#AEAEAE"/&gt;
+	&lt;stop  offset="0.4623" style="stop-color:#C2C2C2"/&gt;
+	&lt;stop  offset="0.5394" style="stop-color:#C9C9C9"/&gt;
+	&lt;stop  offset="0.6247" style="stop-color:#C5C5C5"/&gt;
+	&lt;stop  offset="0.7072" style="stop-color:#BABABA"/&gt;
+	&lt;stop  offset="0.7885" style="stop-color:#A6A6A6"/&gt;
+	&lt;stop  offset="0.869" style="stop-color:#8B8B8B"/&gt;
+	&lt;stop  offset="0.9484" style="stop-color:#686868"/&gt;
+	&lt;stop  offset="1" style="stop-color:#4D4D4D"/&gt;
+&lt;/linearGradient&gt;
+&lt;path fill="url(#SVGID_4_)" d="M19.625,23.613C8.787,23.613,0,21.738,0,19.425v10c0,2.313,8.787,4.188,19.625,4.188
+	c10.839,0,19.625-1.875,19.625-4.188v-10C39.25,21.738,30.464,23.613,19.625,23.613z"/&gt;
+&lt;linearGradient id="SVGID_5_" gradientUnits="userSpaceOnUse" x1="370.2002" y1="635.0938" x2="409.4502" y2="635.0938" gradientTransform="matrix(1 0 0 1 -370.2002 -614.5742)"&gt;
+	&lt;stop  offset="0" style="stop-color:#B3B3B3"/&gt;
+	&lt;stop  offset="0.0171" style="stop-color:#B6B6B6"/&gt;
+	&lt;stop  offset="0.235" style="stop-color:#D7D7D7"/&gt;
+	&lt;stop  offset="0.4168" style="stop-color:#EBEBEB"/&gt;
+	&lt;stop  offset="0.5394" style="stop-color:#F2F2F2"/&gt;
+	&lt;stop  offset="0.6579" style="stop-color:#EEEEEE"/&gt;
+	&lt;stop  offset="0.7724" style="stop-color:#E3E3E3"/&gt;
+	&lt;stop  offset="0.8853" style="stop-color:#CFCFCF"/&gt;
+	&lt;stop  offset="0.9965" style="stop-color:#B4B4B4"/&gt;
+	&lt;stop  offset="1" style="stop-color:#B3B3B3"/&gt;
+&lt;/linearGradient&gt;
+&lt;path fill="url(#SVGID_5_)" d="M19.625,23.613c10.839,0,19.625-1.875,19.625-4.188l-1.229-2c0,2.168-8.235,3.926-18.396,3.926
+	c-9.481,0-17.396-1.959-18.396-3.926l-1.229,2C0,21.738,8.787,23.613,19.625,23.613z"/&gt;
+&lt;linearGradient id="SVGID_6_" gradientUnits="userSpaceOnUse" x1="371.4297" y1="632" x2="408.2217" y2="632" gradientTransform="matrix(1 0 0 1 -370.2002 -614.5742)"&gt;
+	&lt;stop  offset="0" style="stop-color:#C9C9C9"/&gt;
+	&lt;stop  offset="1" style="stop-color:#808080"/&gt;
+&lt;/linearGradient&gt;
+&lt;ellipse fill="url(#SVGID_6_)" cx="19.625" cy="17.426" rx="18.396" ry="3.926"/&gt;
+&lt;linearGradient id="SVGID_7_" gradientUnits="userSpaceOnUse" x1="370.2002" y1="627.5938" x2="409.4502" y2="627.5938" gradientTransform="matrix(1 0 0 1 -370.2002 -614.5742)"&gt;
+	&lt;stop  offset="0" style="stop-color:#4D4D4D"/&gt;
+	&lt;stop  offset="0.0558" style="stop-color:#5F5F5F"/&gt;
+	&lt;stop  offset="0.2103" style="stop-color:#8D8D8D"/&gt;
+	&lt;stop  offset="0.3479" style="stop-color:#AEAEAE"/&gt;
+	&lt;stop  offset="0.4623" style="stop-color:#C2C2C2"/&gt;
+	&lt;stop  offset="0.5394" style="stop-color:#C9C9C9"/&gt;
+	&lt;stop  offset="0.6247" style="stop-color:#C5C5C5"/&gt;
+	&lt;stop  offset="0.7072" style="stop-color:#BABABA"/&gt;
+	&lt;stop  offset="0.7885" style="stop-color:#A6A6A6"/&gt;
+	&lt;stop  offset="0.869" style="stop-color:#8B8B8B"/&gt;
+	&lt;stop  offset="0.9484" style="stop-color:#686868"/&gt;
+	&lt;stop  offset="1" style="stop-color:#4D4D4D"/&gt;
+&lt;/linearGradient&gt;
+&lt;path fill="url(#SVGID_7_)" d="M19.625,10.113C8.787,10.113,0,8.238,0,5.925v10c0,2.313,8.787,4.188,19.625,4.188
+	c10.839,0,19.625-1.875,19.625-4.188v-10C39.25,8.238,30.464,10.113,19.625,10.113z"/&gt;
+&lt;linearGradient id="SVGID_8_" gradientUnits="userSpaceOnUse" x1="370.2002" y1="621.5938" x2="409.4502" y2="621.5938" gradientTransform="matrix(1 0 0 1 -370.2002 -614.5742)"&gt;
+	&lt;stop  offset="0" style="stop-color:#B3B3B3"/&gt;
+	&lt;stop  offset="0.0171" style="stop-color:#B6B6B6"/&gt;
+	&lt;stop  offset="0.235" style="stop-color:#D7D7D7"/&gt;
+	&lt;stop  offset="0.4168" style="stop-color:#EBEBEB"/&gt;
+	&lt;stop  offset="0.5394" style="stop-color:#F2F2F2"/&gt;
+	&lt;stop  offset="0.6579" style="stop-color:#EEEEEE"/&gt;
+	&lt;stop  offset="0.7724" style="stop-color:#E3E3E3"/&gt;
+	&lt;stop  offset="0.8853" style="stop-color:#CFCFCF"/&gt;
+	&lt;stop  offset="0.9965" style="stop-color:#B4B4B4"/&gt;
+	&lt;stop  offset="1" style="stop-color:#B3B3B3"/&gt;
+&lt;/linearGradient&gt;
+&lt;path fill="url(#SVGID_8_)" d="M19.625,10.113c10.839,0,19.625-1.875,19.625-4.188l-1.229-2c0,2.168-8.235,3.926-18.396,3.926
+	c-9.481,0-17.396-1.959-18.396-3.926L0,5.925C0,8.238,8.787,10.113,19.625,10.113z"/&gt;
+&lt;linearGradient id="SVGID_9_" gradientUnits="userSpaceOnUse" x1="371.4297" y1="618.5" x2="408.2217" y2="618.5" gradientTransform="matrix(1 0 0 1 -370.2002 -614.5742)"&gt;
+	&lt;stop  offset="0" style="stop-color:#C9C9C9"/&gt;
+	&lt;stop  offset="1" style="stop-color:#808080"/&gt;
+&lt;/linearGradient&gt;
+&lt;ellipse fill="url(#SVGID_9_)" cx="19.625" cy="3.926" rx="18.396" ry="3.926"/&gt;
+&lt;path opacity="0.24" fill="#FFFFFF" enable-background="new    " d="M31.291,46.792c0,0-4.313,0.578-7.249,0.694
+	C20.917,47.613,15,47.613,15,47.613l-2.443-10.279l-0.119-2.283l-1.231-1.842L9.789,23.024l-0.082-0.119L9.3,20.715l-1.45-1.44
+	L5.329,8.793c0,0,5.296,0.882,7.234,1.07s8.375,0.25,8.375,0.25l3,9.875l-0.25,1.313l1.063,2.168l2.312,9.644l-0.375,1.875
+	l1.627,2.193L31.291,46.792z"/&gt;
+&lt;/svg&gt;
+</y:Resource>
+    </y:Resources>
+  </data>
+</graphml>

@@ -1,0 +1,35 @@
+packrat (0.5-2) trusty; urgency=medium
+
+  * Added Polling for changes in Repos
+  * Modernize initial data / migraiton handeling
+  * setup wizzard
+  * can specify filesystem dir for repo
+
+ -- Peter <peter@blueboy>  Fri, 29 Apr 2016 10:23:36 -0600
+
+packrat (0.4-1) trusty; urgency=medium
+
+  * Zypper renamed YaST
+  * method to check if a filename is use before uploading
+
+ -- Peter <peter@blueboy>  Mon, 03 Aug 2015 14:01:52 -0600
+
+packrat (0.3-1) trusty; urgency=medium
+
+  * .tar.gz handeling fixes
+  * more initial_data fixures
+
+ -- Peter <peter@blueboy>  Tue, 14 Jul 2015 08:04:37 -0600
+
+packrat (0.2-1) trusty; urgency=medium
+
+  * Added Distros CoreOS and None
+  * change PDisk to Resource
+
+ -- Peter <peter@blueboy>  Fri, 03 Jul 2015 11:45:58 -0600
+
+packrat (0.1) trusty; urgency=medium
+
+  * Initial release.
+
+ -- Peter <peter@blueboy>  Mon, 25 May 2015 23:03:03 -0600

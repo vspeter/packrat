@@ -1,0 +1,58 @@
+<div id="messages" class="container-fluid">
+  <!--Start Breadcrumb-->
+  <div class="row">
+    <div id="breadcrumb" class="col-xs-12">
+      <a href="#" class="show-sidebar">
+        <i class="fa fa-bars"></i>
+      </a>
+      <ol class="breadcrumb pull-left">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="#">Packages</a></li>
+      </ol>
+    </div>
+  </div>
+  <!--End Breadcrumb-->
+
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="row">
+        <ul id="messages-menu" class="nav msg-menu">
+        </ul>
+        <div id="messages-list" class="col-xs-10 col-xs-offset-2" >
+          <div class="box-content no-padding">
+            <div style="height: 80px;"/>
+          <table class="table table-bordered table-striped table-hover table-heading table-datatable" id="packagefiles-table">
+          </table>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+$( document ).ready(
+  function()
+  {
+    // Add class for correctly view of messages page
+    $( '#content' ).addClass( 'full-content' );
+
+    // Run script for change menu width
+    MessagesMenuWidth();
+    $( '#content' ).on( 'click', '[id^=package-]',
+      function( e )
+      {
+        e.preventDefault();
+        $( '[id^=package-]' ).removeClass( 'active' );
+        $( this ).addClass( 'active' );
+        loadPackageFiles( $( this ).attr( 'uri' ) );
+      }
+    );
+
+    loadDataTablesScripts( packageTable );
+
+    loadPackageList();
+
+    $( 'html' ).animate( { scrollTop: 0 }, 'slow' );
+  }
+);
+</script>

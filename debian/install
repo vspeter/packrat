@@ -1,0 +1,4 @@
+www/*		/var/www/packrat
+packrat.conf	/etc/apache2/sites-available
+master.conf.sample	/etc/packrat
+local/* /usr/local/packrat
