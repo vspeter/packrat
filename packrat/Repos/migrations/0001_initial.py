@@ -1,152 +1,146 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
-from django.core import serializers
-
-def load_repos( apps, schema_editor ):
-  Repo = apps.get_model( "Repos", "Repo" )
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=1, manager_type='apt', release_type='ci', description='APT - CI' )
-  r.distroversion_list = [ 'precise', 'trusty', 'xenial' ]
-  r.save()
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=2, manager_type='apt', release_type='dev', description='APT - Dev' )
-  r.distroversion_list = [ 'precise', 'trusty', 'xenial' ]
-  r.save()
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=3, manager_type='apt', release_type='stage', description='APT - Stage' )
-  r.distroversion_list = [ 'precise', 'trusty', 'xenial' ]
-  r.save()
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=4, manager_type='apt', release_type='prod', description='APT - Prod' )
-  r.distroversion_list = [ 'precise', 'trusty', 'xenial' ]
-  r.save()
-
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=8, manager_type='yum', release_type='ci', description='YUM - CI' )
-  r.distroversion_list = [ 'centos6', 'centos7', 'sles11', 'sles12' ]
-  r.save()
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=7, manager_type='yum', release_type='dev', description='YUM - Dev' )
-  r.distroversion_list = [ 'centos6', 'centos7', 'sles11', 'sles12' ]
-  r.save()
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=6, manager_type='yum', release_type='stage', description='YUM - Stage' )
-  r.distroversion_list = [ 'centos6', 'centos7', 'sles11', 'sles12' ]
-  r.save()
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=5, manager_type='yum', release_type='prod', description='YUM - Prod' )
-  r.distroversion_list = [ 'centos6', 'centos7', 'sles11', 'sles12' ]
-  r.save()
-
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=9, manager_type='json', release_type='ci', description='JSON - CI' )
-  r.distroversion_list = [ 'resource' ]
-  r.save()
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=10, manager_type='json', release_type='dev', description='JSON - Dev' )
-  r.distroversion_list = [ 'resource' ]
-  r.save()
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=11, manager_type='json', release_type='stage', description='JSON - Stage' )
-  r.distroversion_list = [ 'resource' ]
-  r.save()
-  r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', pk=12, manager_type='json', release_type='prod', description='JSON - Prod' )
-  r.distroversion_list = [ 'resource' ]
-  r.save()
+from django.db import migrations, models
 
 
+def load_repos( app, schema_editor ):
+  Repo = app.get_model( 'Repos', 'Repo' )
 
-def load_distro_versions( apps, schema_editor ):
+  release_list = ( 'dev', 'stage', 'prod' )
+
+  for release in release_list:
+    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='APT - {0}'.format( release.title() ), manager_type='apt', name='apt-{0}'.format( release ), filesystem_dir='apt-{0}'.format( release ) )
+    r.distroversion_list = [ 'precise', 'trusty', 'xenial' ]
+    r.full_clean()
+    r.save()
+
+  for release in release_list:
+    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='YUM - {0}'.format( release.title() ), manager_type='yum', name='yum-{0}'.format( release ), filesystem_dir='yum-{0}'.format( release ) )
+    r.distroversion_list = [ 'centos6', 'centos7', 'sles11', 'sles12' ]
+    r.full_clean()
+    r.save()
+
+  for release in release_list:
+    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='JSON - {0}'.format( release.title() ), manager_type='json', name='json-{0}'.format( release ), filesystem_dir='json-{0}'.format( release ) )
+    r.distroversion_list = [ 'resource' ]
+    r.full_clean()
+    r.save()
+
+  for release in release_list:
+    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='Docker - {0}'.format( release.title() ), manager_type='docker', name='docker-{0}'.format( release ), filesystem_dir='docker-{0}'.format( release ) )
+    r.distroversion_list = [ 'docker' ]
+    r.full_clean()
+    r.save()
+
+  for release in release_list:
+    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='PYPI  - {0}'.format( release.title() ), manager_type='pypi', name='pypi-{0}'.format( release ), filesystem_dir='pypi-{0}'.format( release ) )
+    r.distroversion_list = [ 'python' ]
+    r.full_clean()
+    r.save()
+
+
+def load_distro_versions( app, schema_editor ):
+  DistroVersion = app.get_model( 'Repos', 'DistroVersion' )
+
+  for version in ( 'precise', 'trusty', 'xenial' ):
+    d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=version, file_type='deb', version=version, release_names=version, distro='debian' )
+    d.full_clean()
+    d.save()
+
+  for version, name in ( ( 'el6', '6' ), ( 'el7', '7' ) ):
+    d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=version, file_type='rpm', version=version, release_names=name, distro='centos' )
+    d.full_clean()
+    d.save()
+
+  for version, name in ( ( 'sles11', '11' ), ( 'sles12', '12' ) ):
+    d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=version, file_type='rpm', version=version, release_names=name, distro='sles' )
+    d.full_clean()
+    d.save()
+
+  d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='resource', file_type='rsc', distro='none' )
+  d.full_clean()
+  d.save()
+
+  d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='docker', file_type='docker', distro='none' )
+  d.full_clean()
+  d.save()
+
+  d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='pypi', file_type='python', distro='none' )
+  d.full_clean()
+  d.save()
+
+
+def create_release_types( app, schema_editor ):
   fixture = """
-[
+  [
   {
     "fields": {
+      "description": "New",
+      "level": 0,
+      "change_control_required": false,
       "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z",
-      "file_type": "deb",
-      "version": "precise",
-      "release_names": "precise",
-      "distro": "debian"
+      "created": "2013-01-01T01:01:00Z"
     },
-    "model": "Repos.distroversion",
-    "pk": "precise"
+    "model": "Repos.releasetype",
+    "pk": "new"
   },
   {
     "fields": {
+      "description": "CI",
+      "level": 20,
+      "change_control_required": false,
       "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z",
-      "file_type": "deb",
-      "version": "trusty",
-      "release_names": "trusty",
-      "distro": "debian"
+      "created": "2013-01-01T01:01:00Z"
     },
-    "model": "Repos.distroversion",
-    "pk": "trusty"
+    "model": "Repos.releasetype",
+    "pk": "ci"
   },
   {
     "fields": {
+      "description": "Development",
+      "level": 40,
+      "change_control_required": false,
       "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z",
-      "file_type": "deb",
-      "version": "xenial",
-      "release_names": "xenial",
-      "distro": "debian"
+      "created": "2013-01-01T01:01:00Z"
     },
-    "model": "Repos.distroversion",
-    "pk": "xenial"
+    "model": "Repos.releasetype",
+    "pk": "dev"
   },
   {
     "fields": {
+      "description": "Staging",
+      "level": 60,
+      "change_control_required": false,
       "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z",
-      "file_type": "rpm",
-      "version": "6",
-      "release_names": "el6",
-      "distro": "centos"
+      "created": "2013-01-01T01:01:00Z"
     },
-    "model": "Repos.distroversion",
-    "pk": "centos6"
+    "model": "Repos.releasetype",
+    "pk": "stage"
   },
   {
     "fields": {
+      "description": "Production",
+      "level": 80,
+      "change_control_required": true,
       "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z",
-      "file_type": "rpm",
-      "version": "7",
-      "release_names": "el7",
-      "distro": "centos"
+      "created": "2013-01-01T01:01:00Z"
     },
-    "model": "Repos.distroversion",
-    "pk": "centos7"
+    "model": "Repos.releasetype",
+    "pk": "prod"
   },
   {
     "fields": {
+      "description": "Deprocated",
+      "level": 100,
+      "change_control_required": false,
       "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z",
-      "file_type": "rpm",
-      "version": "11",
-      "release_names": "sles11",
-      "distro": "sles"
+      "created": "2013-01-01T01:01:00Z"
     },
-    "model": "Repos.distroversion",
-    "pk": "sles11"
-  },
-  {
-    "fields": {
-      "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z",
-      "file_type": "rpm",
-      "version": "12",
-      "release_names": "sles12",
-      "distro": "sles"
-    },
-    "model": "Repos.distroversion",
-    "pk": "sles12"
-  },
-  {
-    "fields": {
-      "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z",
-      "file_type": "rsc",
-      "version": "",
-      "release_names": "",
-      "distro": "none"
-    },
-    "model": "Repos.distroversion",
-    "pk": "resource"
+    "model": "Repos.releasetype",
+    "pk": "depr"
   }
-]
+  ]
   """
   objects = serializers.deserialize( 'json', fixture, ignorenonexistent=True)
   for obj in objects:
@@ -162,99 +156,112 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DistroVersion',
             fields=[
-                ('name', models.CharField(max_length=20, serialize=False, primary_key=True)),
-                ('distro', models.CharField(max_length=6, choices=[(b'debian', b'Debian'), (b'centos', b'Centos'), (b'rhel', b'RHEL'), (b'sles', b'SLES')])),
-                ('version', models.CharField(max_length=10)),
-                ('file_type', models.CharField(max_length=3, choices=[(b'deb', b'deb'), (b'rpm', b'RPM'), (b'pdisk', b'Plato Disk')])),
-                ('release_names', models.CharField(max_length=100, blank=True)),
+                ('name', models.CharField(serialize=False, max_length=20, primary_key=True)),
+                ('distro', models.CharField(choices=[('debian', 'Debian'), ('centos', 'Centos'), ('rhel', 'RHEL'), ('sles', 'SLES'), ('core', 'CoreOS'), ('none', 'None')], max_length=6)),
+                ('version', models.CharField(blank=True, null=True, max_length=10)),
+                ('file_type', models.CharField(choices=[('deb', 'deb'), ('rpm', 'RPM'), ('rsc', 'Resource'), ('docker', 'Docker'), ('python', 'Python')], max_length=6)),
+                ('release_names', models.CharField(blank=True, help_text='tab delimited list of things like el5, trusty, something that is in filename that tells what version it belongs to', max_length=100)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='Mirror',
             fields=[
-                ('name', models.CharField(max_length=50, serialize=False, primary_key=True)),
+                ('name', models.CharField(serialize=False, max_length=50, primary_key=True)),
                 ('description', models.CharField(max_length=200)),
                 ('psk', models.CharField(max_length=100)),
-                ('last_sync_start', models.DateTimeField(null=True, editable=False, blank=True)),
-                ('last_sync_complete', models.DateTimeField(null=True, editable=False, blank=True)),
+                ('last_heartbeat', models.DateTimeField(blank=True, null=True, editable=False)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='Package',
             fields=[
-                ('name', models.CharField(max_length=200, serialize=False, primary_key=True)),
+                ('name', models.CharField(serialize=False, max_length=200, primary_key=True)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='PackageFile',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(auto_created=True, serialize=False, primary_key=True, verbose_name='ID')),
                 ('version', models.CharField(max_length=50, editable=False)),
-                ('type', models.CharField(max_length=3, editable=False, choices=[(b'deb', b'deb'), (b'rpm', b'RPM'), (b'pdisk', b'Plato Disk')])),
-                ('arch', models.CharField(max_length=6, editable=False, choices=[(b'x86_64', b'x86_64'), (b'i386', b'i386'), (b'all', b'All')])),
+                ('type', models.CharField(choices=[('deb', 'deb'), ('rpm', 'RPM'), ('rsc', 'Resource'), ('docker', 'Docker'), ('python', 'Python')], max_length=6, editable=False)),
+                ('arch', models.CharField(choices=[('x86_64', 'x86_64'), ('i386', 'i386'), ('all', 'All')], max_length=6, editable=False)),
                 ('justification', models.TextField()),
                 ('provenance', models.TextField()),
-                ('file', models.FileField(upload_to=b'', editable=False)),
-                ('prod_changecontrol_id', models.CharField(max_length=20, blank=True)),
-                ('ci_at', models.DateTimeField(null=True, editable=False, blank=True)),
-                ('dev_at', models.DateTimeField(null=True, editable=False, blank=True)),
-                ('stage_at', models.DateTimeField(null=True, editable=False, blank=True)),
-                ('prod_at', models.DateTimeField(null=True, editable=False, blank=True)),
-                ('depr_at', models.DateTimeField(null=True, editable=False, blank=True)),
+                ('file', models.FileField(upload_to='', editable=False)),
+                ('sha256', models.CharField(max_length=64, editable=False)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
-                ('distroversion', models.ForeignKey(editable=False, to='Repos.DistroVersion')),
-                ('package', models.ForeignKey(editable=False, to='Repos.Package')),
+                ('distroversion', models.ForeignKey(to='Repos.DistroVersion', editable=False)),
+                ('package', models.ForeignKey(to='Repos.Package', editable=False)),
             ],
-            options={
-                'default_permissions': ('change', 'promote', 'create'),
-            },
-            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='PackageFileReleaseType',
+            fields=[
+                ('id', models.AutoField(auto_created=True, serialize=False, primary_key=True, verbose_name='ID')),
+                ('at', models.DateTimeField(auto_now_add=True)),
+                ('change_control_id', models.CharField(blank=True, null=True, max_length=50)),
+                ('package_file', models.ForeignKey(to='Repos.PackageFile')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='ReleaseType',
+            fields=[
+                ('name', models.CharField(serialize=False, max_length=10, primary_key=True)),
+                ('description', models.CharField(max_length=100)),
+                ('level', models.IntegerField()),
+                ('change_control_required', models.BooleanField(default=False)),
+                ('created', models.DateTimeField(auto_now_add=True)),
+                ('updated', models.DateTimeField(auto_now=True)),
+            ],
         ),
         migrations.CreateModel(
             name='Repo',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('manager_type', models.CharField(max_length=6, choices=[(b'apt', b'APT'), (b'yum', b'YUM'), (b'zypper', b'Zypper')])),
+                ('name', models.CharField(serialize=False, max_length=50, primary_key=True)),
+                ('filesystem_dir', models.CharField(unique=True, max_length=50)),
+                ('manager_type', models.CharField(choices=[('apt', 'APT'), ('yum', 'YUM'), ('yast', 'YaST'), ('json', 'JSON'), ('docker', 'Docker'), ('pypi', 'PyPi')], max_length=6)),
                 ('description', models.CharField(max_length=200)),
-                ('release_type', models.CharField(max_length=5, choices=[(b'ci', b'CI'), (b'dev', b'Development'), (b'stage', b'Staging'), (b'prod', b'Production'), (b'depr', b'Deprocated')])),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
                 ('distroversion_list', models.ManyToManyField(to='Repos.DistroVersion')),
+                ('release_type_list', models.ManyToManyField(to='Repos.ReleaseType')),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
-        migrations.AlterUniqueTogether(
-            name='packagefile',
-            unique_together=set([('package', 'distroversion', 'version', 'type', 'arch')]),
+        migrations.AddField(
+            model_name='packagefilereleasetype',
+            name='release_type',
+            field=models.ForeignKey(to='Repos.ReleaseType'),
+        ),
+        migrations.AddField(
+            model_name='packagefile',
+            name='release_type',
+            field=models.ManyToManyField(through='Repos.PackageFileReleaseType', to='Repos.ReleaseType'),
         ),
         migrations.AddField(
             model_name='mirror',
             name='repo_list',
             field=models.ManyToManyField(to='Repos.Repo'),
-            preserve_default=True,
         ),
         migrations.AlterUniqueTogether(
             name='distroversion',
             unique_together=set([('distro', 'version', 'file_type')]),
         ),
+        migrations.AlterUniqueTogether(
+            name='packagefilereleasetype',
+            unique_together=set([('package_file', 'release_type')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='packagefile',
+            unique_together=set([('package', 'distroversion', 'version', 'type', 'arch')]),
+        ),
         migrations.RunPython( load_repos ),
-        migrations.RunPython( load_distro_versions )
+        migrations.RunPython( load_distro_versions ),
+        migrations.RunPython( create_release_types ),
     ]

@@ -4,6 +4,7 @@ import re
 
 from django.core.exceptions import ValidationError
 
+
 class Rpm( object ):
   @classmethod
   def load( cls, file ):

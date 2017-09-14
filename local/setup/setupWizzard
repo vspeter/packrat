@@ -58,7 +58,7 @@ set -x
 if [ "x$POSTGRES_LOCAL" == "xy" ];
 then
   echo "Installing postgres..."
-  aptitude install -y postgresql-9.3
+  aptitude install -y postgresql
   echo "Creating database..."
   su postgres -c "echo \"CREATE ROLE packrat WITH PASSWORD 'packrat' NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN;\" | psql"
   su postgres -c "createdb -O packrat packrat"

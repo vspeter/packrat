@@ -3,6 +3,7 @@ import os
 
 from django.core.exceptions import ValidationError
 
+
 class Deb( object ):
   @classmethod
   def load( cls, file ):

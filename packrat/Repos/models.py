@@ -3,12 +3,12 @@ import errno
 import time
 import hashlib
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError
 from django.db import models, connection
-from django.utils.timezone import utc
 
+from cinp.orm_django import DjangoCInP as CInP
 from packrat.Repos.Deb import Deb
 from packrat.Repos.Rpm import Rpm
 from packrat.Repos.Resource import Resource
@@ -64,22 +64,26 @@ From the Package perspective::
 
 """
 
-DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'centos', 'Centos' ), ( 'rhel', 'RHEL' ), ( 'sles', 'SLES' ), ( 'core', 'CoreOS' ), ( 'none', 'None' ) ) # there is no ubuntu, it shares the same version space as debian
-MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'yast', 'YaST' ), ( 'json', 'JSON' ) )
-FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'RPM' ), ( 'rsc', 'Resource' ) )
+DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'centos', 'Centos' ), ( 'rhel', 'RHEL' ), ( 'sles', 'SLES' ), ( 'core', 'CoreOS' ), ( 'none', 'None' ) )  # there is no ubuntu, it shares the same version space as debian
+MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'yast', 'YaST' ), ( 'json', 'JSON' ), ( 'docker', 'Docker' ), ( 'pypi', 'PyPi' ) )
+FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'RPM' ), ( 'rsc', 'Resource' ), ( 'docker', 'Docker' ), ( 'python', 'Python' ) )
 FILE_ARCH_CHOICES = ( ( 'x86_64', 'x86_64' ), ( 'i386', 'i386' ), ( 'all', 'All' ) )
 
 # if these are changed (or any other field length), make sure to update the sqlite db in packrat-agent
 MANAGER_TYPE_LENGTH = 6
-FILE_TYPE_LENGTH = 3
+FILE_TYPE_LENGTH = 6
 FILE_ARCH_LENGTH = 6
 DISTRO_LENGTH = 6
 
+cinp = CInP( 'Repo', '0.2' )
+
+
+@cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE', 'UPDATE' ) )
 class ReleaseType( models.Model ):
   """
   Releases are stages a PackageFile can exist in, for example prod or stage.
   PackageFiles are promoted from one stage to the next.  At a minnimum you should
-  have a ReleaseType with a name 'depr' with level = 100 and 'new' with 
+  have a ReleaseType with a name 'depr' with level = 100 and 'new' with
   level = 1, change_control_required is ignored for 'new' and 'depr'.
 
   - name: name of the release, ie: 'prod'
@@ -98,21 +102,29 @@ class ReleaseType( models.Model ):
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
-  def save( self, *args, **kwargs ):
+  def clean( self, *args, **kwargs ):
+    super().clean( *args, **kwargs )
+    errors = {}
+
     if self.level < 1 or self.level > 100:
-      raise ValidationError( 'Level must be from 1 to 100 inclusive.' )
+      errors[ 'level' ] = 'Must be from 1 to 100'
 
     if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
-      raise ValidationError( 'Invalid ReleaseType Name' )
+      errors[ 'name' ] = 'Invalid'
 
-    super( ReleaseType, self ).save( *args, **kwargs )
+    if errors:
+      raise ValidationError( errors )
 
-  def __unicode__( self ):
+  @cinp.check_auth()
+  @staticmethod
+  def checkAuth( user, method, id_list, action=None ):
+    return True
+
+  def __str__( self ):
     return 'ReleaseType "%s"(%s)' % ( self.description, self.name )
 
-  class API:
-    not_allowed_methods = ( 'CREATE', 'DELETE', 'UPDATE' )
 
+@cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_list=( 'DISTROS', 'FILE_TYPES' ) )
 class DistroVersion( models.Model ):
   """
   This is a type of Distro, ie Centos 6 or Ubuntu 14.04(Trusty)
@@ -128,30 +140,36 @@ class DistroVersion( models.Model ):
   DISTROS = DISTRO_CHOICES
   FILE_TYPES = FILE_TYPE_CHOICES
   name = models.CharField( max_length=20, primary_key=True )
-  distro = models.CharField( max_length=DISTRO_LENGTH, choices=DISTROS ) # TODO: convert into another model
-  version = models.CharField( max_length=10 )
+  distro = models.CharField( max_length=DISTRO_LENGTH, choices=DISTROS )  # TODO: convert into another model
+  version = models.CharField( max_length=10, null=True, blank=True )
   file_type = models.CharField( max_length=FILE_TYPE_LENGTH, choices=FILE_TYPES )
   release_names = models.CharField( max_length=100, blank=True, help_text='tab delimited list of things like el5, trusty, something that is in filename that tells what version it belongs to' )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
-  def save( self, *args, **kwargs ):
+  @cinp.check_auth()
+  @staticmethod
+  def checkAuth( user, method, id_list, action=None ):
+    return True
+
+  def clean( self, *args, **kwargs ):
+    super().clean( *args, **kwargs )
+    errors = {}
+
     if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
-      raise ValidationError( 'Invalid DistroVersion Name' )
+      errors[ 'name' ] = 'Invalid'
 
-    super( DistroVersion, self ).save( *args, **kwargs )
-
-  def __unicode__( self ):
-    return 'Version "%s" of "%s"' % ( self.version, self.distro )
+    if errors:
+      raise ValidationError( errors )
 
   class Meta:
     unique_together = ( 'distro', 'version', 'file_type' )
 
-  class API:
-    not_allowed_methods = ( 'CREATE', 'DELETE', 'UPDATE' )
-    constants = ( 'DISTROS', 'FILE_TYPES' )
+  def __str__( self ):
+    return 'Version "%s" of "%s"' % ( self.version, self.distro )
 
 
+@cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_list=( 'MANAGER_TYPES', ) )
 class Repo( models.Model ):
   """
   This is a Collection of PackageFiles that meant certian requrements, ie:
@@ -171,7 +189,7 @@ class Repo( models.Model ):
   """
   MANAGER_TYPES = MANAGER_TYPE_CHOICES
   name = models.CharField( max_length=50, primary_key=True )
-  filesystem_dir = models.CharField( max_length=50 )
+  filesystem_dir = models.CharField( max_length=50, unique=True )  # TODO: validate this, must be fs safe
   distroversion_list = models.ManyToManyField( DistroVersion )
   manager_type = models.CharField( max_length=MANAGER_TYPE_LENGTH, choices=MANAGER_TYPES )
   description = models.CharField( max_length=200 )
@@ -179,6 +197,7 @@ class Repo( models.Model ):
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
+  @cinp.action( return_type={ 'type': 'String', 'is_array': True }, paramater_type_list=[ { 'type': 'Integer' } ] )
   def poll( self, timeout ):
     """
     this function will block for up to timeout seconds waiting for notification
@@ -193,7 +212,7 @@ class Repo( models.Model ):
       select.select( [ conn ], [], [], timeout )
     except select.error as e:
       if e[0] == errno.EINTR:
-        time.sleep( timeout ) # Self DOS Preventor
+        time.sleep( timeout )  # Self DOS Preventor
       else:
         raise e
 
@@ -201,8 +220,8 @@ class Repo( models.Model ):
 
     result = []
     while conn.notifies:
-      notify = conn.notifies.pop() # hopfully notify.channel = the LISTEN name, can't do anything about it if it isn't at this point
-      if notify.payload: # is '' if there is not a payload
+      notify = conn.notifies.pop()  # hopfully notify.channel = the LISTEN name, can't do anything about it if it isn't at this point
+      if notify.payload:  # is '' if there is not a payload
         result.append( notify.payload )
 
     return result
@@ -216,23 +235,26 @@ class Repo( models.Model ):
     else:
       connection.cursor().execute( 'NOTIFY "mirror_repo_%s", \'%s\'' % ( self.pk, package.pk ) )
 
-  def save( self, *args, **kwargs ):
+  @cinp.check_auth()
+  @staticmethod
+  def checkAuth( user, method, id_list, action=None ):
+    return True
+
+  def clean( self, *args, **kwargs ):
+    super().clean( *args, **kwargs )
+    errors = {}
+
     if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
-      raise ValidationError( 'Invalid Repo Name' )
+      errors[ 'name' ] = 'Invalid'
 
-    super( Repo, self ).save( *args, **kwargs )
+    if errors:
+      raise ValidationError( errors )
 
-  def __unicode__( self ):
+  def __str__( self ):
     return 'Repo "%s"' % self.description
 
-  class API:
-    not_allowed_methods = ( 'CREATE', 'DELETE', 'UPDATE' )
-    constants = ( 'MANAGER_TYPES', )
-    actions = {
-                'poll': ( { 'type': 'StringList' }, ( { 'type': 'Integer' }, ) )
-              }
 
-
+@cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE', 'UPDATE' ) )
 class Mirror( models.Model ):
   """
   Mirror groups a set of Repos togeather to provide for a client.  A PSK is
@@ -254,26 +276,32 @@ class Mirror( models.Model ):
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
-  def save( self, *args, **kwargs ):
-    if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
-      raise ValidationError( 'Invalid Mirror Name' )
-
-    super( Mirror, self ).save( *args, **kwargs )
-
-  def __unicode__( self ):
-    return 'Mirror "%s"' % self.description
-
-  def heartbeat( self, user ): #TODO: make sure it's the right user for the Mirror
-    self.last_heartbeat = datetime.utcnow().replace( tzinfo=utc )
+  @cinp.action()
+  def heartbeat( self ):  # TODO: make sure it's the right user for the Mirror
+    self.last_heartbeat = datetime.now( timezone.utc )
+    self.full_clean()
     self.save()
 
-  class API:
-    not_allowed_methods = ( 'CREATE', 'DELETE', 'UPDATE' )
-    actions = {
-                'heartbeat': ( None, ( { 'type': '_USER_' }, ) )
-              }
+  @cinp.check_auth()
+  @staticmethod
+  def checkAuth( user, method, id_list, action=None ):
+    return True
+
+  def clean( self, *args, **kwargs ):
+    super().clean( *args, **kwargs )
+    errors = {}
+
+    if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
+      errors[ 'name' ] = 'Invalid'
+
+    if errors:
+      raise ValidationError( errors )
+
+  def __str__( self ):
+    return 'Mirror "%s"' % self.description
 
 
+@cinp.model( not_allowed_method_list=( 'DELETE', 'UPDATE' ) )
 class Package( models.Model ):
   """
   A collection of PackageFiles
@@ -284,19 +312,27 @@ class Package( models.Model ):
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
-  def save( self, *args, **kwargs ):
+  @cinp.check_auth()
+  @staticmethod
+  def checkAuth( user, method, id_list, action=None ):
+    return True
+
+  def clean( self, *args, **kwargs ):
+    super().clean( *args, **kwargs )
+    errors = {}
+
     if not re.match( '^[0-9a-zA-Z\-]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe, also don't allow chars that are used to delimit version and other info
-      raise ValidationError( 'Invalid Package Name' )
+      errors[ 'name' ] = 'Invalid'
 
-    super( Package, self ).save( *args, **kwargs )
+    if errors:
+      raise ValidationError( errors )
 
-  def __unicode__( self ):
+  def __str__( self ):
     return 'Package "%s"' % self.name
 
-  class API:
-    not_allowed_methods = ( 'DELETE', 'UPDATE' )
 
-class PackageFile( models.Model ): # TODO: add delete to cleanup the file, django no longer does this for us
+@cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE' ), constant_list=( 'FILE_TYPES', 'FILE_ARCHS' ), property_list=( 'release', ) )
+class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, django no longer does this for us
   """
   This is the Individual package "file", they can indivdually belong to any
   type, arch, package, this is the thing that is actually sent to the remote repos
@@ -352,7 +388,7 @@ class PackageFile( models.Model ): # TODO: add delete to cleanup the file, djang
       repo.notify( self.package )
 
   def loadfile( self, file, request_distro ):
-    file.file.seek( 0 ) # some upstream process might of left the cursor at the end of the file
+    file.file.seek( 0 )  # some upstream process might of left the cursor at the end of the file
 
     pkgFile = None
     for loader in ( Deb, Rpm, Resource ):
@@ -411,15 +447,13 @@ class PackageFile( models.Model ): # TODO: add delete to cleanup the file, djang
     self.sha256 = sha256.hexdigest()
     return True
 
-  def promote( self, user, to, change_control_id=None ):
+  @cinp.action( paramater_type_list=[ { 'type': 'Model', 'model': ReleaseType }, { 'type': 'String' } ] )
+  def promote( self, to, change_control_id=None ):
     """
     Promote package file to the next release level.  Promotions must go to a
     higher ReleaseType.level.  If to release Type requires change control,
     change_control_id must be specified.
     """
-    if not user.has_perm( 'Repos.promote_packagefile' ):
-      raise PermissionDenied()
-
     cur_release = None
     try:
       cur_release = self.release_type.order_by( '-level' )[0]
@@ -435,45 +469,43 @@ class PackageFile( models.Model ): # TODO: add delete to cleanup the file, djang
     pfrt = PackageFileReleaseType()
     pfrt.package_file = self
     pfrt.release_type = to
-    pfrt.at = datetime.utcnow().replace( tzinfo=utc )
+    pfrt.at = datetime.now( timezone.utc )
     pfrt.change_control_id = change_control_id
+    pfrt.full_clean()
     pfrt.save()
 
     self.notify( cur_release )
 
-  def deprocate( self, user ):
+  @cinp.action()
+  def deprocate( self ):
     """
     Deprocate package file.  Forces the target Release type to 'depr'.
     """
-    if not user.has_perm( 'Repos.promote_packagefile' ):
-      raise PermissionDenied()
-
     previous_release = self.release
 
     pfrt = PackageFileReleaseType()
     pfrt.package_file = self
     pfrt.release_type = ReleaseType.objects.get( name='depr' )
-    pfrt.at = datetime.utcnow().replace( tzinfo=utc )
+    pfrt.at = datetime.now( timezone.utc )
+    pfrt.full_clean()
     pfrt.save()
 
     self.notify( previous_release )
 
+  @cinp.action( return_type={ 'type': 'String', 'is_array': True }, paramater_type_list=[ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ] )
   @staticmethod
-  def create( user, file, justification, provenance, version=None ):
+  def create( file, justification, provenance, version=None ):
     """
     Create a new PackageFile, note version is the distro version and is only required if it
     can't be automatically detected, in which case the return value of created will be a list of
     possible versions
     Return value of None means success
     """
-    if not user.has_perm( 'Repos.create_packagefile' ):
-      raise PermissionDenied()
-
     if not version or not version.strip():
       version = None
 
     try:
-      PackageFile.objects.get( file='./%s' % file.name ) #TODO: Figure out where the ./ is comming from and get rid of it, make sure to update the clean up script
+      PackageFile.objects.get( file='./%s' % file.name )  # TODO: Figure out where the ./ is comming from and get rid of it, make sure to update the clean up script
       raise Exception( 'File name "%s" allready used' % file.name )
     except PackageFile.DoesNotExist:
       pass
@@ -484,17 +516,20 @@ class PackageFile( models.Model ): # TODO: add delete to cleanup the file, djang
     options = result.loadfile( file, version )
 
     if options is True:
+      result.full_clean()
       result.save()
       pfrt = PackageFileReleaseType()
       pfrt.package_file = result
       pfrt.release_type = ReleaseType.objects.get( name='new' )
-      pfrt.at = datetime.utcnow().replace( tzinfo=utc )
+      pfrt.at = datetime.now( timezone.utc )
+      pfrt.full_clean()
       pfrt.save()
       return None
 
     else:
       return options
 
+  @cinp.action( return_type={ 'type': 'Boolean' }, paramater_type_list=[ { 'type': 'String' } ] )
   @staticmethod
   def filenameInUse( file_name ):
     """
@@ -502,64 +537,64 @@ class PackageFile( models.Model ): # TODO: add delete to cleanup the file, djang
     before uploading files to ensure the file name is unique.
     """
     try:
-      PackageFile.objects.get( file='./%s' % file_name ) #TODO: see ./ comment in create
+      PackageFile.objects.get( file='./%s' % file_name )  # TODO: see ./ comment in create
       return True
     except PackageFile.DoesNotExist:
       pass
 
     return False
 
-  def save( self, *args, **kwargs ):
+  @cinp.list_filter( name='package', paramater_type_list=[ { 'type': 'Model', 'model': Package } ] )
+  @staticmethod
+  def filter_package( package ):
+    return PackageFile.filter( package=package )
+
+  @cinp.list_filter( name='repo', paramater_type_list=[ { 'type': 'Model', 'model': Repo }, { 'type': 'String', 'is_array': True } ] )
+  @staticmethod
+  def filter_repo( repo, package_list ):
+    # NOTE: the release type filter is not 100% right, it will work find for most cases, but there are times when this dosen't work, ie a repo that omits a middle level, but that should not happen very often, and until someone comes up with a clever way to fix it, we will have to be happy with this for now
+    #   instead of filtering for just the packagefiles with the last releasttype in the list, we are taking the next highest releasetype and removing anything from there up.
+    queryset_parms = {}
+    queryset_parms[ 'distroversion__in' ] = [ i.pk for i in repo.distroversion_list.all() ]
+    queryset_parms[ 'release_type__in' ] = [ i.pk for i in repo.release_type_list.all() ]
+
+    if package_list:  # not None, and not and empty string or empty list
+      queryset_parms[ 'package_id__in' ] = package_list
+
+    highest_level = max( [ i.level for i in repo.release_type_list.all() ] )
+
+    return PackageFile.filter( **queryset_parms ).exclude( release_type__in=[ i.pk for i in ReleaseType.objects.filter( level__gt=highest_level ) ] ).distinct()
+
+  @cinp.check_auth()
+  @staticmethod
+  def checkAuth( user, method, id_list, action=None ):
+    # promote
+    # deprocate
+    # if not user.has_perm( 'Repos.promote_packagefile' ):
+    #   raise PermissionDenied()
+
+    # create
+    # if not user.has_perm( 'Repos.create_packagefile' ):
+    #   raise PermissionDenied()
+
+    return True
+
+  def clean( self, *args, **kwargs ):
+    super().clean( *args, **kwargs )
+    errors = {}
+
     if self.pk and self.file._file:
-      raise ValidationError( 'Not Allowed to update the file.' )
+      self[ 'file' ] = 'Not Allowed to update the file'
 
-    super( PackageFile, self ).save( *args, **kwargs )
-
-  def __unicode__( self ):
-    return 'PackageFile "%s"' % ( self.file.name )
+      if errors:
+        raise ValidationError( errors )
 
   class Meta:
     unique_together = ( 'package', 'distroversion', 'version', 'type', 'arch' )
 
-    default_permissions = ( 'change', 'promote', 'create' )
+  def __str__( self ):
+    return 'PackageFile "%s"' % ( self.file.name )
 
-  class API:
-    not_allowed_methods = ( 'CREATE', 'DELETE' )
-    constants = ( 'FILE_TYPES', 'FILE_ARCHS' )
-    actions = {
-               'promote': ( None, ( { 'type': '_USER_' }, { 'type': 'Model', 'model': ReleaseType }, { 'type': 'String' } ) ),
-               'deprocate': ( None, ( { 'type': '_USER_' }, ) ),
-               'create': ( { 'type': 'StringList' }, ( { 'type': '_USER_' }, { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ) ),
-               'filenameInUse': ( { 'type': 'Boolean' }, ( { 'type': 'String' }, ) )
-              }
-    properties = {
-                   'release': { 'type': 'Model', 'model': ReleaseType }
-                  }
-    list_filters = {
-                      'package': { 'package': Package },
-                      'repo': { 'repo': Repo, 'package_list': 'StringList' }
-                   }
-
-    @staticmethod
-    def buildQS( qs, user, filter, values ):
-      if filter == 'package':
-        return qs.filter( package=values[ 'package' ] )
-
-      if filter == 'repo':
-        # NOTE: the release type filter is not 100% right, it will work find for most cases, but there are times when this dosen't work, ie a repo that omits a middle level, but that should not happen very often, and until someone comes up with a clever way to fix it, we will have to be happy with this for now
-        #   instead of filtering for just the packagefiles with the last releasttype in the list, we are taking the next highest releasetype and removing anything from there up.
-        queryset_parms = {}
-        queryset_parms[ 'distroversion__in' ] = [ i.pk for i in values[ 'repo' ].distroversion_list.all() ]
-        queryset_parms[ 'release_type__in' ] = [ i.pk for i in values[ 'repo' ].release_type_list.all() ]
-
-        if values[ 'package_list' ]: # not None, and not and empty string or empty list
-          queryset_parms[ 'package_id__in' ] = values[ 'package_list' ]
-
-        highest_level = max( [ i.level for i in values[ 'repo' ].release_type_list.all() ] )
-
-        return qs.filter( **queryset_parms ).exclude( release_type__in=[ i.pk for i in ReleaseType.objects.filter( level__gt=highest_level ) ] ).distinct()
-
-      raise Exception( 'Invalid filter "%s"' % filter )
 
 class PackageFileReleaseType( models.Model ):
   """
@@ -571,8 +606,8 @@ class PackageFileReleaseType( models.Model ):
   at = models.DateTimeField( editable=False, auto_now_add=True )
   change_control_id = models.CharField( max_length=50, blank=True, null=True )
 
-  def __unicode__( self ):
+  def __str__( self ):
     return 'PackageFileReleaseType for PackageFile "%s" Release Type "%s" at "%s"' % ( self.package_file, self.release_type, self.at )
 
   class Meta:
-    unique_together = ( ( 'package_file', 'release_type' ), )
+    unique_together = ( 'package_file', 'release_type' )
