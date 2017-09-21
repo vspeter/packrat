@@ -89,7 +89,7 @@ class Session( models.Model ):
     try:
       user = User.objects.get( username=username )
     except User.DoesNotExist:
-      raise ValueError( 'User Does Not Exist' )
+      raise ValueError( 'Invalid Password' )
 
     password = hashlib.sha256( password.encode( 'utf-8' ) ).hexdigest()
     if password != user.password:

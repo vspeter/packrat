@@ -64,6 +64,8 @@ From the Package perspective::
 
 """
 
+name_regex = re.compile( '^[0-9a-zA-Z\-_]+$' )  # possible to be using in a filesystem, must be filesystem safe, also don't allow chars that are used to delimit version and other info
+
 DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'centos', 'Centos' ), ( 'rhel', 'RHEL' ), ( 'sles', 'SLES' ), ( 'core', 'CoreOS' ), ( 'none', 'None' ) )  # there is no ubuntu, it shares the same version space as debian
 MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'yast', 'YaST' ), ( 'json', 'JSON' ), ( 'docker', 'Docker' ), ( 'pypi', 'PyPi' ) )
 FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'RPM' ), ( 'rsc', 'Resource' ), ( 'docker', 'Docker' ), ( 'python', 'Python' ) )
@@ -97,7 +99,7 @@ class ReleaseType( models.Model ):
   """
   name = models.CharField( max_length=10, primary_key=True )
   description = models.CharField( max_length=100 )
-  level = models.IntegerField()
+  level = models.IntegerField( unique=True )
   change_control_required = models.BooleanField( default=False )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
@@ -106,10 +108,14 @@ class ReleaseType( models.Model ):
     super().clean( *args, **kwargs )
     errors = {}
 
-    if self.level < 1 or self.level > 100:
-      errors[ 'level' ] = 'Must be from 1 to 100'
+    if self.level is None or self.level < 2 or self.level > 99:
+      if not( ( self.level == 1 and self.name == 'new' ) or ( self.level == 100 and self.name == 'depr' ) ):
+        errors[ 'level' ] = 'Must be from 2 to 99'
 
-    if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
+    if ( self.name == 'new' and self.level != 1 ) or ( self.name == 'depr' and self.level != 100 ):
+      errors[ 'name' ] = '"new" must be level 1 and "depr" must be level 100'
+
+    if not name_regex.match( self.name ):
       errors[ 'name' ] = 'Invalid'
 
     if errors:
@@ -156,7 +162,7 @@ class DistroVersion( models.Model ):
     super().clean( *args, **kwargs )
     errors = {}
 
-    if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
+    if not name_regex.match( self.name ):
       errors[ 'name' ] = 'Invalid'
 
     if errors:
@@ -186,6 +192,7 @@ class Repo( models.Model ):
   - manager_type: what repo manager to use for this repo, ie: 'apt'
   - description: short description of the Repo, ie: 'Production Apt'
   - release_type_list: list of the release types that this repo includes
+  - show_only_latest: if True to only expose the highest numberd versoin of each package,
   """
   MANAGER_TYPES = MANAGER_TYPE_CHOICES
   name = models.CharField( max_length=50, primary_key=True )
@@ -194,6 +201,7 @@ class Repo( models.Model ):
   manager_type = models.CharField( max_length=MANAGER_TYPE_LENGTH, choices=MANAGER_TYPES )
   description = models.CharField( max_length=200 )
   release_type_list = models.ManyToManyField( ReleaseType )
+  show_only_latest = models.BooleanField( default=True )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
@@ -244,7 +252,7 @@ class Repo( models.Model ):
     super().clean( *args, **kwargs )
     errors = {}
 
-    if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
+    if not name_regex.match( self.name ):
       errors[ 'name' ] = 'Invalid'
 
     if errors:
@@ -291,7 +299,7 @@ class Mirror( models.Model ):
     super().clean( *args, **kwargs )
     errors = {}
 
-    if not re.match( '^[0-9a-zA-Z\-_]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe
+    if not name_regex.match( self.name ):
       errors[ 'name' ] = 'Invalid'
 
     if errors:
@@ -307,8 +315,10 @@ class Package( models.Model ):
   A collection of PackageFiles
 
   - name: the common name of the PackageFiles
+  - deprocated_count: the number of deprocated versions to keep
   """
   name = models.CharField( max_length=200, primary_key=True )
+  deprocated_count = models.IntegerField( default=10 )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
@@ -321,7 +331,7 @@ class Package( models.Model ):
     super().clean( *args, **kwargs )
     errors = {}
 
-    if not re.match( '^[0-9a-zA-Z\-]+$', self.name ):  # possible to be using in a filesystem, must be filesystem safe, also don't allow chars that are used to delimit version and other info
+    if not name_regex.match( self.name ):
       errors[ 'name' ] = 'Invalid'
 
     if errors:
@@ -447,7 +457,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     self.sha256 = sha256.hexdigest()
     return True
 
-  @cinp.action( paramater_type_list=[ { 'type': 'Model', 'model': ReleaseType }, { 'type': 'String' } ] )
+  @cinp.action( paramater_type_list=[ { 'type': 'Model', 'model': 'packrat.Repos.models.ReleaseType' }, { 'type': 'String' } ] )
   def promote( self, to, change_control_id=None ):
     """
     Promote package file to the next release level.  Promotions must go to a
@@ -544,12 +554,12 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
     return False
 
-  @cinp.list_filter( name='package', paramater_type_list=[ { 'type': 'Model', 'model': Package } ] )
+  @cinp.list_filter( name='package', paramater_type_list=[ { 'type': 'Model', 'model': 'packrat.Repos.models.Package' } ] )
   @staticmethod
   def filter_package( package ):
     return PackageFile.filter( package=package )
 
-  @cinp.list_filter( name='repo', paramater_type_list=[ { 'type': 'Model', 'model': Repo }, { 'type': 'String', 'is_array': True } ] )
+  @cinp.list_filter( name='repo', paramater_type_list=[ { 'type': 'Model', 'model': 'packrat.Repos.models.Repo' }, { 'type': 'String', 'is_array': True } ] )
   @staticmethod
   def filter_repo( repo, package_list ):
     # NOTE: the release type filter is not 100% right, it will work find for most cases, but there are times when this dosen't work, ie a repo that omits a middle level, but that should not happen very often, and until someone comes up with a clever way to fix it, we will have to be happy with this for now
@@ -596,6 +606,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     return 'PackageFile "%s"' % ( self.file.name )
 
 
+@cinp.model( )
 class PackageFileReleaseType( models.Model ):
   """
   This is a Helper Table to join PackageFile to ReleaseType.  This stores when
@@ -606,8 +617,13 @@ class PackageFileReleaseType( models.Model ):
   at = models.DateTimeField( editable=False, auto_now_add=True )
   change_control_id = models.CharField( max_length=50, blank=True, null=True )
 
-  def __str__( self ):
-    return 'PackageFileReleaseType for PackageFile "%s" Release Type "%s" at "%s"' % ( self.package_file, self.release_type, self.at )
+  @cinp.check_auth()
+  @staticmethod
+  def checkAuth( user, method, id_list, action=None ):
+    return True
 
   class Meta:
     unique_together = ( 'package_file', 'release_type' )
+
+  def __str__( self ):
+    return 'PackageFileReleaseType for PackageFile "%s" Release Type "%s" at "%s"' % ( self.package_file, self.release_type, self.at )

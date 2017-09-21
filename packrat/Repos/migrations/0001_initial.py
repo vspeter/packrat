@@ -7,35 +7,40 @@ from django.db import migrations, models
 def load_repos( app, schema_editor ):
   Repo = app.get_model( 'Repos', 'Repo' )
 
-  release_list = ( 'dev', 'stage', 'prod' )
+  release_list = ( ( 'dev', [ 'dev', 'stage', 'prod' ] ), ( 'stage', [ 'stage', 'prod' ] ), ( 'prod', [ 'prod' ] ) )
 
-  for release in release_list:
+  for release, release_type_list in release_list:
     r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='APT - {0}'.format( release.title() ), manager_type='apt', name='apt-{0}'.format( release ), filesystem_dir='apt-{0}'.format( release ) )
     r.distroversion_list = [ 'precise', 'trusty', 'xenial' ]
+    r.release_type_list = release_type_list
     r.full_clean()
     r.save()
 
-  for release in release_list:
+  for release, release_type_list in release_list:
     r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='YUM - {0}'.format( release.title() ), manager_type='yum', name='yum-{0}'.format( release ), filesystem_dir='yum-{0}'.format( release ) )
     r.distroversion_list = [ 'centos6', 'centos7', 'sles11', 'sles12' ]
+    r.release_type_list = release_type_list
     r.full_clean()
     r.save()
 
-  for release in release_list:
-    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='JSON - {0}'.format( release.title() ), manager_type='json', name='json-{0}'.format( release ), filesystem_dir='json-{0}'.format( release ) )
+  for release, release_type_list in release_list:
+    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='JSON - {0}'.format( release.title() ), manager_type='json', name='json-{0}'.format( release ), filesystem_dir='json-{0}'.format( release ), show_only_latest=False )
     r.distroversion_list = [ 'resource' ]
+    r.release_type_list = release_type_list
     r.full_clean()
     r.save()
 
-  for release in release_list:
-    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='Docker - {0}'.format( release.title() ), manager_type='docker', name='docker-{0}'.format( release ), filesystem_dir='docker-{0}'.format( release ) )
+  for release, release_type_list in release_list:
+    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='Docker - {0}'.format( release.title() ), manager_type='docker', name='docker-{0}'.format( release ), filesystem_dir='docker-{0}'.format( release ), show_only_latest=False )
     r.distroversion_list = [ 'docker' ]
+    r.release_type_list = release_type_list
     r.full_clean()
     r.save()
 
-  for release in release_list:
-    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='PYPI  - {0}'.format( release.title() ), manager_type='pypi', name='pypi-{0}'.format( release ), filesystem_dir='pypi-{0}'.format( release ) )
-    r.distroversion_list = [ 'python' ]
+  for release, release_type_list in release_list:
+    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='PYPI - {0}'.format( release.title() ), manager_type='pypi', name='pypi-{0}'.format( release ), filesystem_dir='pypi-{0}'.format( release ), show_only_latest=False )
+    r.distroversion_list = [ 'pypi' ]
+    r.release_type_list = release_type_list
     r.full_clean()
     r.save()
 
@@ -48,8 +53,8 @@ def load_distro_versions( app, schema_editor ):
     d.full_clean()
     d.save()
 
-  for version, name in ( ( 'el6', '6' ), ( 'el7', '7' ) ):
-    d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=version, file_type='rpm', version=version, release_names=name, distro='centos' )
+  for version, release_name, name in ( ( 'el6', '6', 'centos6' ), ( 'el7', '7', 'centos7' ) ):
+    d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=name, file_type='rpm', version=version, release_names=release_name, distro='centos' )
     d.full_clean()
     d.save()
 
@@ -71,80 +76,43 @@ def load_distro_versions( app, schema_editor ):
   d.save()
 
 
-def create_release_types( app, schema_editor ):
-  fixture = """
-  [
-  {
-    "fields": {
-      "description": "New",
-      "level": 0,
-      "change_control_required": false,
-      "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z"
-    },
-    "model": "Repos.releasetype",
-    "pk": "new"
-  },
-  {
-    "fields": {
-      "description": "CI",
-      "level": 20,
-      "change_control_required": false,
-      "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z"
-    },
-    "model": "Repos.releasetype",
-    "pk": "ci"
-  },
-  {
-    "fields": {
-      "description": "Development",
-      "level": 40,
-      "change_control_required": false,
-      "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z"
-    },
-    "model": "Repos.releasetype",
-    "pk": "dev"
-  },
-  {
-    "fields": {
-      "description": "Staging",
-      "level": 60,
-      "change_control_required": false,
-      "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z"
-    },
-    "model": "Repos.releasetype",
-    "pk": "stage"
-  },
-  {
-    "fields": {
-      "description": "Production",
-      "level": 80,
-      "change_control_required": true,
-      "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z"
-    },
-    "model": "Repos.releasetype",
-    "pk": "prod"
-  },
-  {
-    "fields": {
-      "description": "Deprocated",
-      "level": 100,
-      "change_control_required": false,
-      "updated": "2013-01-01T01:01:00Z",
-      "created": "2013-01-01T01:01:00Z"
-    },
-    "model": "Repos.releasetype",
-    "pk": "depr"
-  }
-  ]
-  """
-  objects = serializers.deserialize( 'json', fixture, ignorenonexistent=True)
-  for obj in objects:
-    obj.save()
+def load_release_types( app, schema_editor ):
+  ReleaseType = app.get_model( 'Repos', 'ReleaseType' )
+
+  type_list = ( ( 'new', 'New', 1 ), ( 'dev', 'Development', 20 ), ( 'stage', 'Staging', 40 ), ( 'prod', 'Production', 60 ), ( 'depr', 'Deprocated', 100 ) )
+
+  for name, description, level in type_list:
+    r = ReleaseType( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=name, level=level, change_control_required=( name == 'prod' ), description=description )
+    r.full_clean()
+    r.save()
+
+
+def load_mirrors( app, schema_editor ):
+  Mirror = app.get_model( 'Repos', 'Mirror' )
+
+  m = Mirror( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='prod', description='Production', psk='prod' )
+  repo_list = []
+  for release in ( 'prod', ):
+    repo_list += [ 'apt-{0}'.format( release ), 'yum-{0}'.format( release ), 'json-{0}'.format( release ), 'docker-{0}'.format( release ), 'pypi-{0}'.format( release ) ]
+  m.repo_list = repo_list
+  m.full_clean()
+  m.save()
+
+  m = Mirror( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='stage', description='Staging', psk='stage' )
+  repo_list = []
+  for release in ( 'stage', ):
+    repo_list += [ 'apt-{0}'.format( release ), 'yum-{0}'.format( release ), 'json-{0}'.format( release ), 'docker-{0}'.format( release ), 'pypi-{0}'.format( release ) ]
+  m.repo_list = repo_list
+  m.full_clean()
+  m.save()
+
+  m = Mirror( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='dev', description='Developent', psk='dev' )
+  repo_list = []
+  for release in ( 'dev', ):
+    repo_list += [ 'apt-{0}'.format( release ), 'yum-{0}'.format( release ), 'json-{0}'.format( release ), 'docker-{0}'.format( release ), 'pypi-{0}'.format( release ) ]
+  m.repo_list = repo_list
+  m.full_clean()
+  m.save()
 
 
 class Migration(migrations.Migration):
@@ -180,6 +148,7 @@ class Migration(migrations.Migration):
             name='Package',
             fields=[
                 ('name', models.CharField(serialize=False, max_length=200, primary_key=True)),
+                ('deprocated_count', models.IntegerField( default=10 )),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
             ],
@@ -215,7 +184,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('name', models.CharField(serialize=False, max_length=10, primary_key=True)),
                 ('description', models.CharField(max_length=100)),
-                ('level', models.IntegerField()),
+                ('level', models.IntegerField(unique=True)),
                 ('change_control_required', models.BooleanField(default=False)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
@@ -230,6 +199,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(max_length=200)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
+                ('show_only_latest', models.BooleanField(default=True)),
                 ('distroversion_list', models.ManyToManyField(to='Repos.DistroVersion')),
                 ('release_type_list', models.ManyToManyField(to='Repos.ReleaseType')),
             ],
@@ -263,5 +233,6 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython( load_repos ),
         migrations.RunPython( load_distro_versions ),
-        migrations.RunPython( create_release_types ),
+        migrations.RunPython( load_release_types ),
+        migrations.RunPython( load_mirrors ),
     ]
