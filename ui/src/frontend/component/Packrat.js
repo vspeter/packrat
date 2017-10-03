@@ -30,9 +30,19 @@ class Packrat
     return this.cinp.getFilteredObjects( '/api/v1/Repo/Repo' );
   };
 
+  getMirrorList = () =>
+  {
+    return this.cinp.getFilteredObjects( '/api/v1/Repo/Mirror' );
+  };
+
   getRepo = ( id ) =>
   {
     return this.cinp.get( '/api/v1/Repo/Repo:' + id + ':' );
+  };
+
+  getMirror = ( id ) =>
+  {
+    return this.cinp.getFilteredObjects( '/api/v1/Repo/Mirror:' + id + ':' );
   };
 
 }

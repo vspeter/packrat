@@ -1,6 +1,8 @@
 import React from 'react';
 import { Layout, NavDrawer, Panel, Sidebar, Chip, FontIcon, AppBar, Navigation, Button } from 'react-toolbox';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import Packrat from './Packrat';
+import ServerError from './ServerError';
 import Home from './Home';
 import Repo from './Repo';
 import Mirror from './Mirror';
@@ -52,7 +54,10 @@ class App extends React.Component
           <div ref="content">
             <Route exact={true} path="/" component={ Home }/>
             <Route path="/repo/:id" render={ ( { match } ) => ( <Repo id={ match.params.id } getDetail={ this.packrat.getRepo } /> ) } />
-            <Route exact={true} path="/repos" render={ () => ( <Repo listGet={ this.packrat.getRepoList } /> ) } />
+            <Route path="/mirror/:id" render={ ( { match } ) => ( <Mirror id={ match.params.id } getDetail={ this.packrat.getMirror } /> ) } />
+
+            <Route exact={true} path="/repos" render={ () => ( <Repo getList={ this.packrat.getRepoList } /> ) } />
+            <Route exact={true} path="/mirrors" render={ () => ( <Mirror getList={ this.packrat.getMirrorList } /> ) } />
           </div>
         </Panel>
       </Layout>
