@@ -196,10 +196,10 @@ class Repo( models.Model ):
   """
   MANAGER_TYPES = MANAGER_TYPE_CHOICES
   name = models.CharField( max_length=50, primary_key=True )
+  description = models.CharField( max_length=200 )
   filesystem_dir = models.CharField( max_length=50, unique=True )  # TODO: validate this, must be fs safe
   distroversion_list = models.ManyToManyField( DistroVersion )
   manager_type = models.CharField( max_length=MANAGER_TYPE_LENGTH, choices=MANAGER_TYPES )
-  description = models.CharField( max_length=200 )
   release_type_list = models.ManyToManyField( ReleaseType )
   show_only_latest = models.BooleanField( default=True )
   created = models.DateTimeField( editable=False, auto_now_add=True )
@@ -309,7 +309,7 @@ class Mirror( models.Model ):
     return 'Mirror "%s"' % self.description
 
 
-@cinp.model( not_allowed_method_list=( 'DELETE', 'UPDATE' ) )
+@cinp.model( not_allowed_method_list=( 'DELETE', 'CALL' ) )
 class Package( models.Model ):
   """
   A collection of PackageFiles
