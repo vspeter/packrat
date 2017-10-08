@@ -13,7 +13,10 @@ test-distros:
 	echo xenial
 
 test-requires:
-	echo python3 python3-django python3-cinp
+	echo python3 python3-django python3-cinp python3-pip
+
+test-setup:
+	pip3 install cinp
 
 test:
 	py.test-3 -x --cov=packrat --cov-report html --cov-report term --ds=packrat.settings -vv packrat
