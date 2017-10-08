@@ -9,9 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models, connection
 
 from cinp.orm_django import DjangoCInP as CInP
-from packrat.Repos.Deb import Deb
-from packrat.Repos.Rpm import Rpm
-from packrat.Repos.Resource import Resource
+from packrat.Repos.PackageInfo import infoDetect
 
 __doc__ = """
 Packrat Class Relationships
@@ -397,65 +395,37 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     for repo in repo_list:
       repo.notify( self.package )
 
-  def loadfile( self, file, request_distro ):
-    file.file.seek( 0 )  # some upstream process might of left the cursor at the end of the file
+  def loadfile( self, target_file, distroversion ):
+    info = infoDetect( target_file.name )
 
-    pkgFile = None
-    for loader in ( Deb, Rpm, Resource ):
-      pkgFile = loader.load( file )
-      if pkgFile is not None:
-        break
+    if info is None:
+      raise ValueError( 'Unable to Determine File Type' )
 
-    if not pkgFile:
-      raise ValidationError( 'Unable to Determine File Type' )
+    info.validate( target_file )
 
     try:
-      package = Package.objects.get( pk=pkgFile.package )
+      package = Package.objects.get( pk=info.package )
     except Package.DoesNotExist:
-      raise ValidationError( 'Unable to find package "%s"' % pkgFile.package )
+      raise ValueError( 'Unable to find package "%s"' % info.package )
 
-    distroversion = None
-    distroversion_list = []
-    full_distroversion_list = []
-    for tmp in DistroVersion.objects.filter( file_type=pkgFile.type ):
-      full_distroversion_list.append( tmp.pk )
-      for name in tmp.release_names.split( '\t' ):
-        if name in pkgFile.version:
-          distroversion_list.append( tmp.pk )
+    if distroversion not in info.distroversion_list:
+      raise ValueError( 'DistroVersion "{0}" is not an option for this file'.format( distroversion ) )
 
-    if request_distro:
-      if request_distro in full_distroversion_list:
-        distroversion = request_distro
-
-    elif len( distroversion_list ) == 1:
-      distroversion = distroversion_list[0]
-
-    elif len( full_distroversion_list ) == 1:
-      distroversion = full_distroversion_list[0]
-
-    if not distroversion:  # confused, punt to the caller
-      if distroversion_list:
-        return distroversion_list
-      else:
-        return full_distroversion_list
-
-    file.file.seek( 0 )
+    target_file.file.seek( 0 )
     sha256 = hashlib.sha256()
     while True:
-      buf = file.file.read( 4096 )
+      buf = target_file.file.read( 4096 )
       if not buf:
         break
       sha256.update( buf )
 
-    # we found one and only one disto, we are taking it
-    self.file = file
+    self.file = target_file
     self.distroversion_id = distroversion
     self.package = package
-    self.type = pkgFile.type
-    self.arch = pkgFile.arch
-    self.version = pkgFile.version
+    self.type = info.type
+    self.arch = info.arch
+    self.version = info.version
     self.sha256 = sha256.hexdigest()
-    return True
 
   @cinp.action( paramater_type_list=[ { 'type': 'Model', 'model': 'packrat.Repos.models.ReleaseType' }, { 'type': 'String' } ] )
   def promote( self, to, change_control_id=None ):
@@ -502,42 +472,43 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
     self.notify( previous_release )
 
-  @cinp.action( return_type={ 'type': 'String', 'is_array': True }, paramater_type_list=[ { 'type': 'File' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ] )
+  @cinp.action( return_type={ 'type': 'String', 'is_array': True }, paramater_type_list=[ { 'type': 'String' } ] )
   @staticmethod
-  def create( file, justification, provenance, version=None ):
+  def distroversion_options( filename ):
     """
-    Create a new PackageFile, note version is the distro version and is only required if it
-    can't be automatically detected, in which case the return value of created will be a list of
-    possible versions
-    Return value of None means success
+    returns a list of possible DistroVersions for this filename
     """
-    if not version or not version.strip():
-      version = None
+    info = infoDetect( filename )
 
+    if info is None:
+      raise ValueError( 'Unable to Determine File Type' )
+
+    return info.distroversion_list
+
+  @cinp.action( paramater_type_list=[ { 'type': 'File', 'allowed_scheme_list': [ 'djfh' ] }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ] )
+  @staticmethod
+  def create( file, justification, provenance, distroversion ):
+    """
+    Create a new PackageFile
+    """
     try:
-      PackageFile.objects.get( file='./%s' % file.name )  # TODO: Figure out where the ./ is comming from and get rid of it, make sure to update the clean up script
-      raise Exception( 'File name "%s" allready used' % file.name )
+     PackageFile.objects.get( file='./%s' % file.name )  # TODO: Figure out where the ./ is comming from and get rid of it, make sure to update the clean up script
+     raise ValueError( 'File name "%s" allready used' % file.name )
     except PackageFile.DoesNotExist:
-      pass
+     pass
 
     result = PackageFile()
     result.justification = justification
     result.provenance = provenance
-    options = result.loadfile( file, version )
-
-    if options is True:
-      result.full_clean()
-      result.save()
-      pfrt = PackageFileReleaseType()
-      pfrt.package_file = result
-      pfrt.release_type = ReleaseType.objects.get( name='new' )
-      pfrt.at = datetime.now( timezone.utc )
-      pfrt.full_clean()
-      pfrt.save()
-      return None
-
-    else:
-      return options
+    result.loadfile( file, distroversion )
+    result.full_clean()
+    result.save()
+    pfrt = PackageFileReleaseType()
+    pfrt.package_file = result
+    pfrt.release_type = ReleaseType.objects.get( name='new' )
+    pfrt.at = datetime.now( timezone.utc )
+    pfrt.full_clean()
+    pfrt.save()
 
   @cinp.action( return_type={ 'type': 'Boolean' }, paramater_type_list=[ { 'type': 'String' } ] )
   @staticmethod
