@@ -13,7 +13,7 @@ test-distros:
 	echo xenial
 
 test-requires:
-	echo python3 python3-django python3-cinp python3-pip
+	echo python3 python3-django python3-cinp python3-pip python3-pytest
 
 test-setup:
 	pip3 install cinp

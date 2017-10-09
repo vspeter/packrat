@@ -4,9 +4,12 @@ import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import Packrat from './Packrat';
 import ServerError from './ServerError';
 import Home from './Home';
+import Package from './Package';
 import Repo from './Repo';
 import Mirror from './Mirror';
-import Package from './Package';
+import DistroVersion from './DistroVersion';
+import ReleaseType from './ReleaseType';
+
 
 class App extends React.Component
 {
@@ -42,9 +45,11 @@ class App extends React.Component
         <NavDrawer pinned={this.state.leftDrawerVisable}>
           <Navigation type="vertical">
             <Link to="/"><Button icon="home">Home</Button></Link>
-            <Link to="/repos"><Button icon="storage">Repos</Button></Link>
-            <Link to="/mirrors"><Button icon="dvr">Mirrors</Button></Link>
             <Link to="/packages"><Button icon="folder">Packages</Button></Link>
+            <Link to="/mirrors"><Button icon="dvr">Mirrors</Button></Link>
+            <Link to="/repos"><Button icon="storage">Repos</Button></Link>
+            <Link to="/distroversions"><Button icon="storage">Distro Versions</Button></Link>
+            <Link to="/releasetypes"><Button icon="storage">Release Types</Button></Link>
           </Navigation>
         </NavDrawer>
         <Panel>
@@ -53,11 +58,16 @@ class App extends React.Component
           </AppBar>
           <div ref="content">
             <Route exact={true} path="/" component={ Home }/>
+            <Route path="/package/:id" render={ ( { match } ) => ( <Package id={ match.params.id } getDetail={ this.packrat.getPackage } /> ) } />
             <Route path="/repo/:id" render={ ( { match } ) => ( <Repo id={ match.params.id } getDetail={ this.packrat.getRepo } /> ) } />
             <Route path="/mirror/:id" render={ ( { match } ) => ( <Mirror id={ match.params.id } getDetail={ this.packrat.getMirror } /> ) } />
-
+            <Route path="/distroversion/:id" render={ ( { match } ) => ( <DistroVersion id={ match.params.id } getDetail={ this.packrat.getDistroVersion } /> ) } />
+            <Route path="/releasetype/:id" render={ ( { match } ) => ( <ReleaseType id={ match.params.id } getDetail={ this.packrat.getReleaseType } /> ) } />
+            <Route exact={true} path="/packages" render={ () => ( <Package getList={ this.packrat.getPackageList } createPackage={ this.packrat.createPackage }/> ) } />
             <Route exact={true} path="/repos" render={ () => ( <Repo getList={ this.packrat.getRepoList } /> ) } />
             <Route exact={true} path="/mirrors" render={ () => ( <Mirror getList={ this.packrat.getMirrorList } /> ) } />
+            <Route exact={true} path="/distroversions" render={ () => ( <DistroVersion getList={ this.packrat.getDistroVersionList } /> ) } />
+            <Route exact={true} path="/releasetypes" render={ () => ( <ReleaseType getList={ this.packrat.getReleaseTypeList } /> ) } />
           </div>
         </Panel>
       </Layout>

@@ -4,11 +4,11 @@ import { Table, TableHead, TableRow, TableCell } from 'react-toolbox';
 import { Link } from 'react-router-dom';
 
 
-class Mirror extends React.Component
+class ReleaseType extends React.Component
 {
   state = {
-      mirror_list: [],
-      mirror: null
+      releasetype_list: [],
+      releasetype: null
   };
 
   componentDidMount()
@@ -18,7 +18,7 @@ class Mirror extends React.Component
 
   componentWillReceiveProps( newProps )
   {
-    this.setState( { mirror_list: [], mirror: null } );
+    this.setState( { releasetype_list: [], releasetype: null } );
     this.update( newProps );
   }
 
@@ -30,7 +30,7 @@ class Mirror extends React.Component
        .then( ( result ) =>
         {
           var data = result.data;
-          this.setState( { mirror: data } );
+          this.setState( { releasetype: data } );
         } );
     }
     else
@@ -38,19 +38,20 @@ class Mirror extends React.Component
       props.getList()
         .then( ( result ) =>
         {
-          var mirror_list = [];
+          var releasetype_list = [];
           for ( var name in result.data )
           {
-            var mirror = result.data[ name ];
+            var releasetype = result.data[ name ];
             name = CInP.extractIds( name )[0];
-            mirror_list.push( { name: name,
-                              description: mirror.description,
-                              created: mirror.created,
-                              updated: mirror.updated,
+            releasetype_list.push( { name: name,
+                              description: releasetype.description,
+                              level: releasetype.level,
+                              created: releasetype.created,
+                              updated: releasetype.updated,
                             } );
           }
 
-          this.setState( { mirror_list: mirror_list } );
+          this.setState( { releasetype_list: releasetype_list } );
         } );
     }
   }
@@ -59,21 +60,21 @@ class Mirror extends React.Component
   {
     if( this.props.id !== undefined )
     {
-      var mirror = this.state.mirror;
+      var releasetype = this.state.releasetype;
       return (
         <div>
-          <h3>Mirror Detail</h3>
-          { mirror !== null &&
+          <h3>ReleaseType Detail</h3>
+          { releasetype !== null &&
             <div>
               <table>
                 <thead/>
                 <tbody>
-                  <tr><th>Name</th><td>{ mirror.name }</td></tr>
-                  <tr><th>Description</th><td>{ mirror.description }</td></tr>
-                  <tr><th>Repos</th><td><ul>{ mirror.repo_list.map( ( item, index ) => <li key={ index }><Link to={ '/repo/' + CInP.extractIds( item ) }>{ item }</Link></li> ) }</ul></td></tr>
-                  <tr><th>Last Heartbeat</th><td>{ mirror.last_heartbeat }</td></tr>
-                  <tr><th>Created</th><td>{ mirror.created }</td></tr>
-                  <tr><th>Updated</th><td>{ mirror.updated }</td></tr>
+                  <tr><th>Name</th><td>{ releasetype.name }</td></tr>
+                  <tr><th>Description</th><td>{ releasetype.description }</td></tr>
+                  <tr><th>Level</th><td>{ releasetype.level }</td></tr>
+                  <tr><th>Change Control Required</th><td>{ releasetype.change_control_required }</td></tr>
+                  <tr><th>Created</th><td>{ releasetype.created }</td></tr>
+                  <tr><th>Updated</th><td>{ releasetype.updated }</td></tr>
                 </tbody>
               </table>
             </div>
@@ -87,13 +88,15 @@ class Mirror extends React.Component
         <TableHead>
           <TableCell>Name</TableCell>
           <TableCell>Description</TableCell>
+          <TableCell>Level</TableCell>
           <TableCell>Created</TableCell>
           <TableCell>Updated</TableCell>
         </TableHead>
-        { this.state.mirror_list.map( ( item ) => (
+        { this.state.releasetype_list.map( ( item ) => (
           <TableRow key={ item.name } >
-            <TableCell><Link to={ '/mirror/' + item.name }>{ item.name }</Link></TableCell>
+            <TableCell><Link to={ '/releasetype/' + item.name }>{ item.name }</Link></TableCell>
             <TableCell>{ item.description }</TableCell>
+            <TableCell>{ item.level }</TableCell>
             <TableCell>{ item.created }</TableCell>
             <TableCell>{ item.updated }</TableCell>
           </TableRow>
@@ -104,4 +107,4 @@ class Mirror extends React.Component
   }
 };
 
-export default Mirror;
+export default ReleaseType;

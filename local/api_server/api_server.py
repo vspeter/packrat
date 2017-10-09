@@ -11,7 +11,7 @@ import logging
 
 from gunicorn.app.base import BaseApplication
 from cinp.server_werkzeug import WerkzeugServer
-from cinp.django_file_handler import upload_handler
+#from cinp.django_file_handler import upload_handler
 
 from packrat.User.models import getUser
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
   app.registerNamespace( '/', 'packrat.User' )
   app.registerNamespace( '/', 'packrat.Repos' )
 
-  app.registerPathHandler( '/upload', upload_handler )
+  #app.registerPathHandler( '/upload', upload_handler )
 
   logger.info( 'Validating...' )
   app.validate()
