@@ -75,7 +75,7 @@ FILE_TYPE_LENGTH = 6
 FILE_ARCH_LENGTH = 6
 DISTRO_LENGTH = 6
 
-cinp = CInP( 'Repo', '0.2' )
+cinp = CInP( 'Repo', '1.5' )
 
 
 @cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE', 'UPDATE' ) )
@@ -396,12 +396,10 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
       repo.notify( self.package )
 
   def loadfile( self, target_file, distroversion ):
-    info = infoDetect( target_file.name )
+    info = infoDetect( target_file )
 
     if info is None:
       raise ValueError( 'Unable to Determine File Type' )
-
-    info.validate( target_file )
 
     try:
       package = Package.objects.get( pk=info.package )
@@ -472,13 +470,13 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
     self.notify( previous_release )
 
-  @cinp.action( return_type={ 'type': 'String', 'is_array': True }, paramater_type_list=[ { 'type': 'String' } ] )
+  @cinp.action( return_type={ 'type': 'String', 'is_array': True }, paramater_type_list=[ { 'type': 'File', 'allowed_scheme_list': [ 'djfh' ] } ] )
   @staticmethod
-  def distroversion_options( filename ):
+  def distroversion_options( file ):
     """
     returns a list of possible DistroVersions for this filename
     """
-    info = infoDetect( filename )
+    info = infoDetect( file )
 
     if info is None:
       raise ValueError( 'Unable to Determine File Type' )
@@ -528,7 +526,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
   @cinp.list_filter( name='package', paramater_type_list=[ { 'type': 'Model', 'model': 'packrat.Repos.models.Package' } ] )
   @staticmethod
   def filter_package( package ):
-    return PackageFile.filter( package=package )
+    return PackageFile.objects.filter( package=package )
 
   @cinp.list_filter( name='repo', paramater_type_list=[ { 'type': 'Model', 'model': 'packrat.Repos.models.Repo' }, { 'type': 'String', 'is_array': True } ] )
   @staticmethod
@@ -544,7 +542,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
     highest_level = max( [ i.level for i in repo.release_type_list.all() ] )
 
-    return PackageFile.filter( **queryset_parms ).exclude( release_type__in=[ i.pk for i in ReleaseType.objects.filter( level__gt=highest_level ) ] ).distinct()
+    return PackageFile.objects.filter( **queryset_parms ).exclude( release_type__in=[ i.pk for i in ReleaseType.objects.filter( level__gt=highest_level ) ] ).distinct()
 
   @cinp.check_auth()
   @staticmethod

@@ -1,15 +1,22 @@
 import magic
 import os
 import re
+# import io
 
+from gzip import GzipFile
+from tarfile import TarFile
 from django.apps import apps
 
 PACKAGE_INFO_REGISTRY = []
 
 
-def infoDetect( filename ):
+def infoDetect( target_file ):
+  magic_helper = magic.open( 0 )
+  magic_helper.load()
+
   for info in PACKAGE_INFO_REGISTRY:
-    result = info.detect( filename )
+    print( info )
+    result = info.detect( target_file, magic_helper )
     if result is not None:
       return result
 
@@ -42,14 +49,11 @@ class PackageInfo():
     else:
       return full_list
 
-  def validate( self, file ):
-    pass
-
 
 class Deb( PackageInfo ):
   @classmethod
-  def detect( cls, filename ):
-    ( filename, extension ) = os.path.splitext( os.path.basename( filename ) )
+  def detect( cls, target_file, magic_helper ):
+    ( filename, extension ) = os.path.splitext( os.path.basename( target_file.name ) )
     if extension != '.deb':
       return None
 
@@ -64,26 +68,25 @@ class Deb( PackageInfo ):
     elif arch not in ( 'i386', 'all' ):
       raise ValueError( 'Unrecognized deb Arch' )
 
-    return cls( filename, package, arch, version, 'deb' )
-
-  def validate( self, file ):
-    m = magic.open( 0 )
-    m.load()
     try:
-      magic_type = m.descriptor( os.dup( file.file.fileno() ) )
+      magic_type = magic_helper.descriptor( os.dup( target_file.file.fileno() ) )
     except Exception as e:
       raise Exception( 'Error getting magic: %s' % e)
 
-    if magic_type != 'Debian binary package (format 2.0)':
-      raise ValueError( 'Invalid Debian Package' )
+    print( '__{0}__'.format( magic_type))
+
+    if magic_type != b'Debian binary package (format 2.0)':
+      return None
+
+    return cls( filename, package, arch, version, 'deb' )
 
 PACKAGE_INFO_REGISTRY.append( Deb )
 
 
 class RPM( PackageInfo ):
   @classmethod
-  def detect( cls, filename ):
-    ( filename, extension ) = os.path.splitext( os.path.basename( filename ) )
+  def detect( cls, target_file, magic_helper ):
+    ( filename, extension ) = os.path.splitext( os.path.basename( target_file.name ) )
 
     if extension != '.rpm':
       return None
@@ -99,27 +102,101 @@ class RPM( PackageInfo ):
     elif arch not in ( 'i386', 'x86_64' ):
       raise ValueError( 'Unrecognized rpm Arch' )
 
-    return cls( filename, package, arch, '%s-%s' % ( version, release ), 'rpm' )
-
-  def validate( self, file ):
-    m = magic.open( 0 )
-    m.load()
     try:
-      magic_type = m.descriptor( os.dup( file.file.fileno() ) )
+      magic_type = magic_helper.descriptor( os.dup( target_file.file.fileno() ) )
     except Exception as e:
       raise Exception( 'Error getting magic: %s' % e)
 
     if magic_type not in ( 'RPM v3.0 bin noarch', 'RPM v3.0 bin i386/x86_64' ):
-      raise ValueError( 'Not Valid RPM type' )
+      return None
+
+    return cls( filename, package, arch, '%s-%s' % ( version, release ), 'rpm' )
 
 PACKAGE_INFO_REGISTRY.append( RPM )
+
+
+class Docker( PackageInfo ):
+  @classmethod
+  def detect( cls, target_file, magic_helper ):
+    ( filename, extension ) = os.path.splitext( os.path.basename( target_file.name ) )
+
+    if extension != '.tar':
+      return None
+
+    # TODO: get the info from  the manifest
+    try:
+      ( package, version ) = filename.split( '_' )
+    except ValueError:
+      raise ValueError( 'Unrecognized Docker Container file name Format' )
+
+    try:
+      magic_type = magic_helper.descriptor( os.dup( target_file.file.fileno() ) )
+    except Exception as e:
+      raise Exception( 'Error getting magic: %s' % e)
+
+    if not magic_type.startswith( b'POSIX tar archive' ):
+      return None
+
+    tarfile = TarFile( fileobj=target_file.file, mode='r' )
+
+    info = tarfile.extractfile( 'manifest.json' )
+    tarfile.close()
+    target_file.file.seek( 0 )
+
+    if info is None:
+      return None
+
+    return cls( filename, package, 'all', version, 'docker' )
+
+
+PACKAGE_INFO_REGISTRY.append( Docker )
+
+
+class Python( PackageInfo ):
+  @classmethod
+  def detect( cls, target_file, magic_helper ):
+    filename = os.path.basename( target_file.name )
+
+    if not filename.endswith( '.tar.gz'):
+      return None
+
+    ( filename, extension ) = os.path.splitext( filename )  # one for .gz
+    ( filename, extension ) = os.path.splitext( filename )  # second for .tar
+
+    try:
+      ( package, version ) = filename.split( '-' )  # ie: cinp-0.9.2.tar.gz
+    except ValueError:
+      raise ValueError( 'Unrecognized Python Container file name Format' )
+
+    try:
+      magic_type = magic_helper.descriptor( os.dup( target_file.file.fileno() ) )
+    except Exception as e:
+      raise Exception( 'Error getting magic: %s' % e)
+
+    if not magic_type.startswith( b'gzip compressed data' ):
+      return None
+
+    gzfile = GzipFile( fileobj=target_file.file, mode='r' )
+    tarfile = TarFile( fileobj=gzfile, mode='r' )
+
+    info = tarfile.extractfile( '{0}/PKG-INFO'.format( filename ) )
+    tarfile.close()
+    gzfile.close()
+    target_file.file.seek( 0 )
+
+    if info is None:
+      return None
+
+    return cls( filename, package, 'all', version, 'python' )
+
+PACKAGE_INFO_REGISTRY.append( Python )
 
 
 # Resource must be last, being it will catch anything with a '_' in the filename
 class Resource( PackageInfo ):  # This will take *anything* that has one (and only one) "_" in the file name to delinitate the package and version,  we are not doing any type checking
   @classmethod
-  def detect( cls, filename ):  # compare with packrat-agent/packratAgent/Json.py -> _splitFileName
-    filename = os.path.basename( filename )
+  def detect( cls, target_file, magic_helper ):  # compare with packrat-agent/packratAgent/Json.py -> _splitFileName
+    filename = os.path.basename( target_file.name )
 
     if filename.endswith( ( '.tar.gz', '.tar.bz2', '.tar.xz', 'img.gz', 'img.bz2', 'img.xz' ) ):
       ( filename, _, _ ) = filename.rsplit( '.', 2 )

@@ -11,9 +11,10 @@ import logging
 
 from gunicorn.app.base import BaseApplication
 from cinp.server_werkzeug import WerkzeugServer
-#from cinp.django_file_handler import upload_handler
+from cinp.django_file_handler import upload_handler
 
 from packrat.User.models import getUser
+from packrat.files_handler import files_handler
 
 DEBUG = True
 
@@ -44,13 +45,14 @@ if __name__ == '__main__':
   app.registerNamespace( '/', 'packrat.User' )
   app.registerNamespace( '/', 'packrat.Repos' )
 
-  #app.registerPathHandler( '/upload', upload_handler )
+  app.registerPathHandler( '/upload', upload_handler )
+  app.registerPathHandler( '/files', files_handler )  # TODO: In prod  this should be handeled by the static web server
 
   logger.info( 'Validating...' )
   app.validate()
 
   logger.info( 'Starting Server...' )
-  GunicornApp( app, { 'bind': '0.0.0.0:8888', 'loglevel': 'info' } ).run()
+  GunicornApp( app, { 'bind': '0.0.0.0:8888', 'loglevel': 'info', 'workers': 10 } ).run()
   logger.info( 'Server Done...' )
   logger.info( 'Shutting Down...' )
   logger.info( 'Done!' )
