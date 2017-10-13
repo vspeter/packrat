@@ -1,6 +1,7 @@
 import React from 'react';
 import CInP from './cinp';
 import AddPackageDialog from './AddPackageDialog';
+import PackageFile from './PackageFile';
 import { Table, TableHead, TableRow, TableCell } from 'react-toolbox';
 import { Link } from 'react-router-dom';
 
@@ -74,6 +75,8 @@ class Package extends React.Component
                   <tr><th>Updated</th><td>{ package_.updated }</td></tr>
                 </tbody>
               </table>
+              <h3>Files</h3>
+              <PackageFile package_id={ this.props.id } getList={ this.props.packrat.getPackageFileList } packrat={ this.props.packrat } />
             </div>
           }
         </div>
@@ -82,7 +85,7 @@ class Package extends React.Component
 
     return (
       <div>
-        <AddPackageDialog createPackage={ this.props.createPackage } />
+        <AddPackageDialog packrat={ this.props.packrat } update={ () => { this.update( this.props ) } }/>
         <Table selectable={ false } multiSelectable={ false }>
           <TableHead>
             <TableCell>Name</TableCell>

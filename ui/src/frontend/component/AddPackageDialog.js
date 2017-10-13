@@ -23,8 +23,24 @@ class AddPackageDialog extends React.Component
   };
 
   save = () => {
-    var rc = this.props.createPackage( this.state.name );
-    alert( rc );
+    this.props.packrat.createPackage( this.state.name, 10 ).then(
+      ( data ) =>
+      {
+        alert( 'Package Created' );
+        this.close();
+        this.props.update();
+      }, ( err ) =>
+      {
+        if( err.reason == 'Invalid Request' )
+        {
+          this.props.packrat.cinp.server_error_handler( 'Error Creating Package', JSON.stringify( err.detail ) );
+        }
+        else
+        {
+          this.props.packrat.cinp.server_error_handler( 'Error Creating Package', JSON.stringify( err ) );
+        }
+      }
+    )
   }
 
   actions = [
@@ -43,7 +59,7 @@ class AddPackageDialog extends React.Component
           title='Add Package'
         >
         <Input type='text' label='Name' name='name' value={ this.state.name } onChange={this.handleChange.bind(this, 'name')} maxLength={200} />
-        <Button onClick={ this.save }>Save</Button>
+        <Button onClick={ this.save }>Create</Button>
         </Dialog>
         <Button onClick={ this.show }>Create Package</Button>
       </div>

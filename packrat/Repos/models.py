@@ -362,7 +362,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     came from
   - sha256: hash of the file, given to the client so it can verify package file
     integrety
-  - release_type: which release levels this package has been promoted to
+  - release_type_list: which release levels this package has been promoted to
   """
   FILE_TYPES = FILE_TYPE_CHOICES
   FILE_ARCHS = FILE_ARCH_CHOICES
@@ -375,14 +375,14 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
   provenance = models.TextField()
   file = models.FileField( editable=False )
   sha256 = models.CharField( max_length=64, editable=False )
-  release_type = models.ManyToManyField( ReleaseType, through='PackageFileReleaseType' )
+  release_type_list = models.ManyToManyField( ReleaseType, through='PackageFileReleaseType' )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
   @property
   def release( self ):
     try:
-      return self.release_type.order_by( '-level' )[0]
+      return self.release_type_list.order_by( '-level' )[0].name
     except IndexError:
       return None
 
@@ -434,7 +434,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     """
     cur_release = None
     try:
-      cur_release = self.release_type.order_by( '-level' )[0]
+      cur_release = self.release_type_list.order_by( '-level' )[0]
     except IndexError:
       pass
 
@@ -535,14 +535,14 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     #   instead of filtering for just the packagefiles with the last releasttype in the list, we are taking the next highest releasetype and removing anything from there up.
     queryset_parms = {}
     queryset_parms[ 'distroversion__in' ] = [ i.pk for i in repo.distroversion_list.all() ]
-    queryset_parms[ 'release_type__in' ] = [ i.pk for i in repo.release_type_list.all() ]
+    queryset_parms[ 'release_type_list__in' ] = [ i.pk for i in repo.release_type_list.all() ]
 
     if package_list:  # not None, and not and empty string or empty list
       queryset_parms[ 'package_id__in' ] = package_list
 
     highest_level = max( [ i.level for i in repo.release_type_list.all() ] )
 
-    return PackageFile.objects.filter( **queryset_parms ).exclude( release_type__in=[ i.pk for i in ReleaseType.objects.filter( level__gt=highest_level ) ] ).distinct()
+    return PackageFile.objects.filter( **queryset_parms ).exclude( release_type_list__in=[ i.pk for i in ReleaseType.objects.filter( level__gt=highest_level ) ] ).distinct()
 
   @cinp.check_auth()
   @staticmethod

@@ -211,7 +211,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='packagefile',
-            name='release_type',
+            name='release_type_list',
             field=models.ManyToManyField(through='Repos.PackageFileReleaseType', to='Repos.ReleaseType'),
         ),
         migrations.AddField(

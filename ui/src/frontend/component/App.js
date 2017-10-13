@@ -5,10 +5,12 @@ import Packrat from './Packrat';
 import ServerError from './ServerError';
 import Home from './Home';
 import Package from './Package';
+import PackageFile from './PackageFile';
 import Repo from './Repo';
 import Mirror from './Mirror';
 import DistroVersion from './DistroVersion';
 import ReleaseType from './ReleaseType';
+import AddPackageFile from './AddPackageFile';
 
 
 class App extends React.Component
@@ -21,6 +23,7 @@ class App extends React.Component
   {
     super();
     this.packrat = new Packrat( 'http://127.0.0.1:8888' );
+    //this.packrat = new Packrat( 'http://192.168.13.100:8888' );
     this.packrat.cinp.server_error_handler = this.serverError;
   }
 
@@ -48,8 +51,9 @@ class App extends React.Component
             <Link to="/packages"><Button icon="folder">Packages</Button></Link>
             <Link to="/mirrors"><Button icon="dvr">Mirrors</Button></Link>
             <Link to="/repos"><Button icon="storage">Repos</Button></Link>
-            <Link to="/distroversions"><Button icon="storage">Distro Versions</Button></Link>
-            <Link to="/releasetypes"><Button icon="storage">Release Types</Button></Link>
+            <Link to="/distroversions"><Button icon="group_work">Distro Versions</Button></Link>
+            <Link to="/releasetypes"><Button icon="list">Release Types</Button></Link>
+            <Link to="/addpackagefile"><Button icon="note_add">Add Package File</Button></Link>
           </Navigation>
         </NavDrawer>
         <Panel>
@@ -58,16 +62,18 @@ class App extends React.Component
           </AppBar>
           <div ref="content">
             <Route exact={true} path="/" component={ Home }/>
-            <Route path="/package/:id" render={ ( { match } ) => ( <Package id={ match.params.id } getDetail={ this.packrat.getPackage } /> ) } />
+            <Route path="/package/:id" render={ ( { match } ) => ( <Package id={ match.params.id } getDetail={ this.packrat.getPackage } packrat={ this.packrat } /> ) } />
+            <Route path="/packagefile/:id" render={ ( { match } ) => ( <PackageFile id={ match.params.id } getDetail={ this.packrat.getPackageFile } packrat={ this.packrat } /> ) } />
             <Route path="/repo/:id" render={ ( { match } ) => ( <Repo id={ match.params.id } getDetail={ this.packrat.getRepo } /> ) } />
             <Route path="/mirror/:id" render={ ( { match } ) => ( <Mirror id={ match.params.id } getDetail={ this.packrat.getMirror } /> ) } />
             <Route path="/distroversion/:id" render={ ( { match } ) => ( <DistroVersion id={ match.params.id } getDetail={ this.packrat.getDistroVersion } /> ) } />
             <Route path="/releasetype/:id" render={ ( { match } ) => ( <ReleaseType id={ match.params.id } getDetail={ this.packrat.getReleaseType } /> ) } />
-            <Route exact={true} path="/packages" render={ () => ( <Package getList={ this.packrat.getPackageList } createPackage={ this.packrat.createPackage }/> ) } />
+            <Route exact={true} path="/packages" render={ () => ( <Package getList={ this.packrat.getPackageList } packrat={ this.packrat }/> ) } />
             <Route exact={true} path="/repos" render={ () => ( <Repo getList={ this.packrat.getRepoList } /> ) } />
             <Route exact={true} path="/mirrors" render={ () => ( <Mirror getList={ this.packrat.getMirrorList } /> ) } />
             <Route exact={true} path="/distroversions" render={ () => ( <DistroVersion getList={ this.packrat.getDistroVersionList } /> ) } />
             <Route exact={true} path="/releasetypes" render={ () => ( <ReleaseType getList={ this.packrat.getReleaseTypeList } /> ) } />
+            <Route exact={true} path="/addpackagefile" render={ () => ( <AddPackageFile packrat={ this.packrat } /> ) } />
           </div>
         </Panel>
       </Layout>

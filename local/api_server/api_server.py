@@ -52,7 +52,8 @@ if __name__ == '__main__':
   app.validate()
 
   logger.info( 'Starting Server...' )
-  GunicornApp( app, { 'bind': '0.0.0.0:8888', 'loglevel': 'info', 'workers': 10 } ).run()
+  #GunicornApp( app, { 'bind': '192.168.13.100:8888', 'loglevel': 'info', 'workers': 10 } ).run()
+  GunicornApp( app, { 'bind': '127.0.0.1:8888', 'loglevel': 'info', 'workers': 10 } ).run()
   logger.info( 'Server Done...' )
   logger.info( 'Shutting Down...' )
   logger.info( 'Done!' )
