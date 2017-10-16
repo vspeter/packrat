@@ -13,10 +13,13 @@ test-distros:
 	echo xenial
 
 test-requires:
-	echo python3 python3-django python3-cinp python3-pip python3-pytest python3-pytest-cov python3-pytest-django
+	echo python3 python3-django python3-psycopg2 python3-dateutil python3-magic postgresql-client postgresql python3-pip python3-pytest python3-pytest-cov python3-pytest-django
 
 test-setup:
-	pip3 install cinp
+	pip3 --proxy=http://192.168.200.53:3128 install cinp
+	pip3 install -e .
+	cp master.conf.sample packrat/settings.py
+	su postgres -c"psql -c \"CREATE ROLE packrat WITH LOGIN PASSWORD 'packrat' CREATEDB\""
 
 test:
 	py.test-3 -x --cov=packrat --cov-report html --cov-report term --ds=packrat.settings -vv packrat
