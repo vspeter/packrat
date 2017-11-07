@@ -23,7 +23,6 @@ class App extends React.Component
   {
     super();
     this.packrat = new Packrat( 'http://127.0.0.1:8888' );
-    //this.packrat = new Packrat( 'http://192.168.13.100:8888' );
     this.packrat.cinp.server_error_handler = this.serverError;
   }
 

@@ -1,5 +1,7 @@
 *.pyc
 
+build
+
 www/files/*
 www/static/*
 

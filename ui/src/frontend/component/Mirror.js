@@ -45,6 +45,7 @@ class Mirror extends React.Component
             name = CInP.extractIds( name )[0];
             mirror_list.push( { name: name,
                               description: mirror.description,
+                              last_heartbeat: mirror.last_heartbeat,
                               created: mirror.created,
                               updated: mirror.updated,
                             } );
@@ -87,6 +88,7 @@ class Mirror extends React.Component
         <TableHead>
           <TableCell>Name</TableCell>
           <TableCell>Description</TableCell>
+          <TableCell>Last Heartbeat</TableCell>
           <TableCell>Created</TableCell>
           <TableCell>Updated</TableCell>
         </TableHead>
@@ -94,6 +96,7 @@ class Mirror extends React.Component
           <TableRow key={ item.name } >
             <TableCell><Link to={ '/mirror/' + item.name }>{ item.name }</Link></TableCell>
             <TableCell>{ item.description }</TableCell>
+            <TableCell>{ item.last_heartbeat }</TableCell>
             <TableCell>{ item.created }</TableCell>
             <TableCell>{ item.updated }</TableCell>
           </TableRow>
