@@ -58,14 +58,14 @@ set -x
 if [ "x$POSTGRES_LOCAL" == "xy" ];
 then
   echo "Installing postgres..."
-  aptitude install -y postgresql-9.3
+  aptitude install -y postgresql
   echo "Creating database..."
   su postgres -c "echo \"CREATE ROLE packrat WITH PASSWORD 'packrat' NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN;\" | psql"
   su postgres -c "createdb -O packrat packrat"
 fi
 
 echo "Populating db..."
-/usr/local/packrat/util/manage.py syncdb --noinput
+/usr/local/packrat/util/manage.py migrate
 
 echo "Creating super user..."
 /usr/local/packrat/util/manage.py createsuperuser --noinput --username=root --email=test@test.com

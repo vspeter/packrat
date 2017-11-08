@@ -8,18 +8,35 @@ clean:
 full-clean: clean
 	dh_clean
 
+
+test-distros:
+	echo xenial
+
+test-requires:
+	echo python3 python3-django python3-psycopg2 python3-dateutil python3-magic postgresql-client postgresql python3-pip python3-pytest python3-pytest-cov python3-pytest-django
+
+test-setup:
+	pip3 --proxy=http://192.168.200.53:3128 install cinp
+	pip3 install -e .
+	cp master.conf.sample packrat/settings.py
+	su postgres -c"psql -c \"CREATE ROLE packrat WITH LOGIN PASSWORD 'packrat' CREATEDB\""
+
+test:
+	py.test-3 -x --cov=packrat --cov-report html --cov-report term --ds=packrat.settings -vv packrat
+
+
 dpkg-distros:
-	echo trusty
+	echo xenial
 
 dpkg-requires:
-	echo dpkg-dev debhelper cdbs python-dev python-setuptools
+	echo dpkg-dev debhelper cdbs python3-dev python3-setuptools
 
 dpkg:
 	dpkg-buildpackage -b -us -uc
 	touch dpkg
 
 dpkg-file:
-	@echo $(shell ls ../packrat_*.deb):trusty
+	@echo $(shell ls ../packrat_*.deb):xenial
 
 
 docs-distros:

@@ -1,6 +1,14 @@
 *.pyc
 
+build
+
 www/files/*
 www/static/*
 
 docs/build
+
+packrat.egg-info
+
+.coverage
+htmlcov
+.cache
