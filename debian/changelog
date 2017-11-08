@@ -1,8 +1,10 @@
-packrat (0.6-1xenial1) xenial; urgency=medium
+packrat (0.6-1) xenial; urgency=medium
 
   * Updated to publically available CInP
   * PackageFile create broken up so distroversion can
     be discovered seperatly
+  * preliminary support for python(PyPi)
+  * preliminary support for containers (docker)
   * New UI
 
  -- Peter <peter@xps13-01>  Sat, 07 Oct 2017 18:56:18 -0600
