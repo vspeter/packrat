@@ -2,9 +2,9 @@ Source: packrat
 Section: nonfree/autobots
 Priority: optional
 Maintainer: Peter Howe <peter.howe@emc.com>
-Build-Depends: cdbs (>= 0.4.90), debhelper (>= 7), python (>= 2.7), python-dev (>=2.7), python-setuptools (>=0.6)
+Build-Depends: cdbs (>= 0.4.90), debhelper (>= 7), python3 (>= 3.4), python3-dev (>=3.4), python3-setuptools (>=20.0), lsb-release
 Standards-Version: 3.8.3
-X-Python-Version: >= 2.7
+X-Python-Version: >= 3.4
 
 Package: packrat
 Architecture: all
