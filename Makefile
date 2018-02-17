@@ -1,12 +1,42 @@
-all:
+all: ui
 
 clean:
 	$(RM) -r build
 	$(RM) dpkg
 	$(RM) -r docs/build
+	$(RM) -r ui/build
 
 full-clean: clean
 	dh_clean
+
+ui_files := $(foreach file,$(wildcard ui/src/www/*),ui/build/$(notdir $(file)))
+
+ui: ui/build/bundle.js $(ui_files)
+
+ui/build/bundle.js: $(wildcard ui/src/frontend/component/*) ui/src/frontend/index.js
+	cd ui && npm run build
+
+ui/build/%:
+	cp ui/src/www/$(notdir $@) $@
+
+install:
+	mkdir -p $(DESTDIR)var/www/packrat/api
+	mkdir -p $(DESTDIR)var/www/packrat/ui
+	mkdir -p $(DESTDIR)etc/apache2/sites-available
+	mkdir -p $(DESTDIR)etc/packrat
+	mkdir -p $(DESTDIR)usr/local/packrat/cron
+	mkdir -p $(DESTDIR)usr/local/packrat/setup
+	mkdir -p $(DESTDIR)usr/local/packrat/util
+
+	install -m 644 api/packrat.wsgi $(DESTDIR)var/www/packrat/api
+	install -m 644 ui/build/* $(DESTDIR)var/www/packrat/ui
+	install -m 644 apache.conf $(DESTDIR)etc/apache2/sites-available/packrat.conf
+	install -m 644 master.conf.sample $(DESTDIR)etc/packrat
+	install -m 755 local/cron/* $(DESTDIR)usr/local/packrat/cron
+	install -m 755 local/setup/* $(DESTDIR)usr/local/packrat/setup
+	install -m 755 local/util/* $(DESTDIR)usr/local/packrat/util
+
+	echo "window.API_HOST = 'http://' + window.location.hostname;" > $(DESTDIR)var/www/packrat/ui/env.js
 
 
 test-distros:
@@ -59,4 +89,4 @@ docs-pdf:
 	mv docs/build/latex/CInP.pdf .
 
 
-.PHONY: all install clean dpkg-distros dpkg-requires dpkg-file
+.PHONY: all ui install clean dpkg-distros dpkg-requires dpkg-file

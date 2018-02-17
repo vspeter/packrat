@@ -10,11 +10,8 @@ import sys
 import logging
 
 from gunicorn.app.base import BaseApplication
-from cinp.server_werkzeug import WerkzeugServer
-from cinp.django_file_handler import upload_handler
 
-from packrat.User.models import getUser
-from packrat.files_handler import files_handler
+from packrat.app import get_app
 
 DEBUG = True
 
@@ -32,6 +29,7 @@ class GunicornApp( BaseApplication ):
   def load( self ):
     return self.application
 
+
 if __name__ == '__main__':
   logging.basicConfig()
   logger = logging.getLogger()
@@ -39,17 +37,7 @@ if __name__ == '__main__':
   logger.info( 'Starting up...' )
 
   logger.debug( 'Creating Server...' )
-  app = WerkzeugServer( root_path='/api/v1/', root_version='1.0', debug=DEBUG, get_user=getUser, cors_allow_list=[ '*' ] )
-  logger.debug( 'Registering Models...' )
-
-  app.registerNamespace( '/', 'packrat.User' )
-  app.registerNamespace( '/', 'packrat.Repos' )
-
-  app.registerPathHandler( '/upload', upload_handler )
-  app.registerPathHandler( '/files', files_handler )  # TODO: In prod  this should be handeled by the static web server
-
-  logger.info( 'Validating...' )
-  app.validate()
+  app = get_app( DEBUG )
 
   logger.info( 'Starting Server...' )
   GunicornApp( app, { 'bind': '127.0.0.1:8888', 'loglevel': 'info', 'workers': 10 } ).run()

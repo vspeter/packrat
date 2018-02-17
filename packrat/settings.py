@@ -1,7 +1,3 @@
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-import os
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'vgmxo603zkfltt(3oq(#%eewe=@dr-g$$r-9a_o!oh6@rr3h#m'
 
@@ -63,10 +59,14 @@ USE_TZ = True
 
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0
 
-MEDIA_URL = '/files/'
-# MEDIA_ROOT = '/var/www/packrat/files'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'www/files')  # for Dev work
 
-STATIC_URL = '/static/'
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
+MEDIA_URL = '/files/'
+# MEDIA_ROOT = '/var/www/packrat/api/files'
+MEDIA_ROOT = os.path.join( BASE_DIR, 'www/files' )  # for Dev work
+
+# STATIC_URL = '/static/'
 # STATIC_ROOT = '/var/www/packrat/static'
-STATIC_ROOT = os.path.join(BASE_DIR, 'www/static')  # for Dev work
+# STATIC_ROOT = os.path.join(BASE_DIR, 'www/static')  # for Dev work
