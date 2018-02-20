@@ -33,7 +33,6 @@ case "$1" in
 
         a2ensite packrat.conf
         a2enmod	wsgi
-        a2dismod python
 
         /etc/init.d/apache2 restart
 
