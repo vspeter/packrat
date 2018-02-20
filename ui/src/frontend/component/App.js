@@ -22,7 +22,7 @@ class App extends React.Component
   constructor()
   {
     super();
-    this.packrat = new Packrat( 'http://127.0.0.1:8888' );
+    this.packrat = new Packrat( window.API_HOST );
     this.packrat.cinp.server_error_handler = this.serverError;
   }
 
