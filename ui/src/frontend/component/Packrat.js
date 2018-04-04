@@ -105,7 +105,7 @@ class Packrat
 
     return new Promise( ( resolve, reject ) =>
     {
-      fetch( this.cinp.host + '/upload', request ).then(
+      fetch( this.cinp.host + '/api/upload', request ).then(
         ( response ) =>
         {
           if ( response.status != 202 )

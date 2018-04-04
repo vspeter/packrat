@@ -78,7 +78,7 @@ DISTRO_LENGTH = 6
 cinp = CInP( 'Repo', '1.5' )
 
 
-@cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE', 'UPDATE' ) )
+@cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ) )
 class ReleaseType( models.Model ):
   """
   Releases are stages a PackageFile can exist in, for example prod or stage.
@@ -128,7 +128,7 @@ class ReleaseType( models.Model ):
     return 'ReleaseType "%s"(%s)' % ( self.description, self.name )
 
 
-@cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_list=( 'DISTROS', 'FILE_TYPES' ) )
+@cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_set_map={ 'distro': DISTRO_CHOICES, 'file_type': FILE_TYPE_CHOICES } )
 class DistroVersion( models.Model ):
   """
   This is a type of Distro, ie Centos 6 or Ubuntu 14.04(Trusty)
@@ -141,12 +141,10 @@ class DistroVersion( models.Model ):
     to help packrat auto detect which DistroVersion a PackageFile belongs to, ie:
     'xenial', 'rel6'
   """
-  DISTROS = DISTRO_CHOICES
-  FILE_TYPES = FILE_TYPE_CHOICES
   name = models.CharField( max_length=20, primary_key=True )
-  distro = models.CharField( max_length=DISTRO_LENGTH, choices=DISTROS )  # TODO: convert into another model
+  distro = models.CharField( max_length=DISTRO_LENGTH, choices=DISTRO_CHOICES )  # TODO: convert into another model
   version = models.CharField( max_length=10, null=True, blank=True )
-  file_type = models.CharField( max_length=FILE_TYPE_LENGTH, choices=FILE_TYPES )
+  file_type = models.CharField( max_length=FILE_TYPE_LENGTH, choices=FILE_TYPE_CHOICES )
   release_names = models.CharField( max_length=100, blank=True, help_text='tab delimited list of things like el5, trusty, something that is in filename that tells what version it belongs to' )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
@@ -173,7 +171,7 @@ class DistroVersion( models.Model ):
     return 'Version "%s" of "%s"' % ( self.version, self.distro )
 
 
-@cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_list=( 'MANAGER_TYPES', ) )
+@cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_set_map={ 'manager_type': MANAGER_TYPE_CHOICES } )
 class Repo( models.Model ):
   """
   This is a Collection of PackageFiles that meant certian requrements, ie:
@@ -192,12 +190,11 @@ class Repo( models.Model ):
   - release_type_list: list of the release types that this repo includes
   - show_only_latest: if True to only expose the highest numberd versoin of each package,
   """
-  MANAGER_TYPES = MANAGER_TYPE_CHOICES
   name = models.CharField( max_length=50, primary_key=True )
   description = models.CharField( max_length=200 )
   filesystem_dir = models.CharField( max_length=50, unique=True )  # TODO: validate this, must be fs safe
   distroversion_list = models.ManyToManyField( DistroVersion )
-  manager_type = models.CharField( max_length=MANAGER_TYPE_LENGTH, choices=MANAGER_TYPES )
+  manager_type = models.CharField( max_length=MANAGER_TYPE_LENGTH, choices=MANAGER_TYPE_CHOICES )
   release_type_list = models.ManyToManyField( ReleaseType )
   show_only_latest = models.BooleanField( default=True )
   created = models.DateTimeField( editable=False, auto_now_add=True )
@@ -260,7 +257,7 @@ class Repo( models.Model ):
     return 'Repo "%s"' % self.description
 
 
-@cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE', 'UPDATE' ) )
+@cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ) )
 class Mirror( models.Model ):
   """
   Mirror groups a set of Repos togeather to provide for a client.  A PSK is
@@ -307,7 +304,7 @@ class Mirror( models.Model ):
     return 'Mirror "%s"' % self.description
 
 
-@cinp.model( not_allowed_method_list=( 'DELETE', 'CALL' ) )
+@cinp.model( not_allowed_verb_list=( 'DELETE', 'CALL' ) )
 class Package( models.Model ):
   """
   A collection of PackageFiles
@@ -339,7 +336,7 @@ class Package( models.Model ):
     return 'Package "%s"' % self.name
 
 
-@cinp.model( not_allowed_method_list=( 'CREATE', 'DELETE' ), constant_list=( 'FILE_TYPES', 'FILE_ARCHS' ), property_list=( 'release', ) )
+@cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE' ), constant_set_map={ 'type': FILE_TYPE_CHOICES, 'arch': FILE_ARCH_CHOICES }, property_list=( 'release', ) )
 class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, django no longer does this for us
   """
   This is the Individual package "file", they can indivdually belong to any
@@ -364,13 +361,11 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     integrety
   - release_type_list: which release levels this package has been promoted to
   """
-  FILE_TYPES = FILE_TYPE_CHOICES
-  FILE_ARCHS = FILE_ARCH_CHOICES
   package = models.ForeignKey( Package, editable=False, on_delete=models.CASCADE )
   distroversion = models.ForeignKey( DistroVersion, editable=False, on_delete=models.CASCADE )
   version = models.CharField( max_length=50, editable=False )
-  type = models.CharField( max_length=FILE_TYPE_LENGTH, editable=False, choices=FILE_TYPES )
-  arch = models.CharField( max_length=FILE_ARCH_LENGTH, editable=False, choices=FILE_ARCHS )
+  type = models.CharField( max_length=FILE_TYPE_LENGTH, editable=False, choices=FILE_TYPE_CHOICES )
+  arch = models.CharField( max_length=FILE_ARCH_LENGTH, editable=False, choices=FILE_ARCH_CHOICES )
   justification = models.TextField()
   provenance = models.TextField()
   file = models.FileField( editable=False )

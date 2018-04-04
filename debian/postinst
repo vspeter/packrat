@@ -24,9 +24,9 @@ case "$1" in
         then
           cp /etc/packrat/master.conf.sample /etc/packrat/master.conf
         fi
-        if [ ! -h /usr/lib/python2.7/dist-packages/packrat/settings.py ] ;
+        if [ ! -h /usr/lib/python3/dist-packages/packrat/settings.py ] ;
         then
-          ln -sf /etc/packrat/master.conf /usr/lib/python2.7/dist-packages/packrat/settings.py
+          ln -sf /etc/packrat/master.conf /usr/lib/python3/dist-packages/packrat/settings.py
         fi
 
         /etc/init.d/cron reload
@@ -36,7 +36,11 @@ case "$1" in
 
         /etc/init.d/apache2 restart
 
-        chown www-data.www-data /var/www/packrat/files
+        if [ ! -d /var/www/packrat/api/files ] ;
+        then
+          mkdir /var/www/packrat/api/files
+          chown www-data.www-data /var/www/packrat/api/files
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
