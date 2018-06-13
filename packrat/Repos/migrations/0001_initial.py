@@ -11,7 +11,7 @@ def load_repos( app, schema_editor ):
 
   for release, release_type_list in release_list:
     r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='APT - {0}'.format( release.title() ), manager_type='apt', name='apt-{0}'.format( release ), filesystem_dir='apt-{0}'.format( release ) )
-    r.distroversion_list = [ 'precise', 'trusty', 'xenial' ]
+    r.distroversion_list = [ 'precise', 'trusty', 'xenial', 'bionic' ]
     r.release_type_list = release_type_list
     r.full_clean()
     r.save()
