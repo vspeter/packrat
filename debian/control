@@ -8,6 +8,6 @@ X-Python3-Version: >= 3.4
 
 Package: packrat
 Architecture: any
-Depends: python3 (>= 3.4), python3-django, python3-simplejson, apache2, libapache2-mod-wsgi-py3, postgresql-client, python3-werkzeug, python3-psycopg2, python3-magic, python3-cinp (>= 0.9), ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Depends: python3 (>= 3.4), python3-django, apache2, libapache2-mod-wsgi-py3, postgresql-client, python3-werkzeug, python3-psycopg2, python3-magic, python3-cinp (>= 0.9), ${misc:Depends}, ${python3:Depends}
 Description: Packrat
   Packrat
