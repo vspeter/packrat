@@ -6,7 +6,7 @@ then
   exit 1
 fi
 
-if [ -f /usr/local/packrat/setup/setupCompleted ];
+if [ -f /usr/lib/packrat/setup/setupCompleted ];
 then
   echo "The setup wizzard has allready be run..."
   echo "It is not safe to run setupWizard again."
@@ -65,13 +65,13 @@ then
 fi
 
 echo "Populating db..."
-/usr/local/packrat/util/manage.py migrate
+/usr/lib/packrat/util/manage.py migrate
 
 echo "Creating super user..."
-/usr/local/packrat/util/manage.py createsuperuser --noinput --username=root --email=test@test.com
+/usr/lib/packrat/util/manage.py createsuperuser --noinput --username=root --email=test@test.com
 
 echo "Creating basic objects..."
-/usr/local/packrat/setup/setupHelper.py
+/usr/lib/packrat/setup/setupHelper.py
 
 echo "Done!"
-touch /usr/local/packrat/setup/setupCompleted
+touch /usr/lib/packrat/setup/setupCompleted
