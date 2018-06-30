@@ -48,7 +48,7 @@ def load_repos( app, schema_editor ):
 def load_distro_versions( app, schema_editor ):
   DistroVersion = app.get_model( 'Repos', 'DistroVersion' )
 
-  for version in ( 'precise', 'trusty', 'xenial' ):
+  for version in ( 'precise', 'trusty', 'xenial', 'bionic' ):
     d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=version, file_type='deb', version=version, release_names=version, distro='debian' )
     d.full_clean()
     d.save()
