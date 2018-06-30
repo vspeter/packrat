@@ -14,7 +14,7 @@ install: install-ui
 	install -m 644 master.conf.sample $(DESTDIR)/etc/packrat
 	install -m 755 lib/cron/* $(DESTDIR)/usr/lib/packrat/cron
 	install -m 755 lib/util/* $(DESTDIR)/usr/lib/packrat/util
-	install -m 755 lib/setup/* $(DESTDIR)/usr/lib/apache2/packrat/setup
+	install -m 755 lib/setup/* $(DESTDIR)/usr/lib/packrat/setup
 
 	./setup.py install --root $(DESTDIR) --install-purelib=/usr/lib/python3/dist-packages/ --prefix=/usr --no-compile -O0
 
@@ -41,9 +41,9 @@ ui/build/%:
 	cp ui/src/www/$(notdir $@) $@
 
 install-ui: build-ui
-	mkdir -p $(DESTDIR)/var/www/contractor/ui/
-	install -m 644 ui/build/* $(DESTDIR)/var/www/contractor/ui/
-	echo "window.API_HOST = 'http://' + window.location.hostname;" > $(DESTDIR)var/www/packrat/ui/env.js
+	mkdir -p $(DESTDIR)/var/www/packrat/ui/
+	install -m 644 ui/build/* $(DESTDIR)/var/www/packrat/ui/
+	echo "window.API_HOST = 'http://' + window.location.hostname;" > $(DESTDIR)/var/www/packrat/ui/env.js
 
 clean-ui:
 	$(RM) -fr ui/build
