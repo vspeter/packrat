@@ -65,7 +65,7 @@ class CInP
 
     if( encodedData !== undefined )
     {
-      request.headers[ 'Content-Length' ] = encodedData.length.toString();
+      request.headers[ 'Content-Length'] = encodedData.length.toString();
       request.headers[ 'Content-Type' ] = 'application/json';
       request.body = encodedData;
     }

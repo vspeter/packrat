@@ -23,8 +23,6 @@ clean: clean-ui
 	$(RM) -r build
 	$(RM) dpkg
 	$(RM) -r docs/build
-
-full-clean: clean
 	dh_clean
 
 .PHONY:: all install clean full-clean
@@ -43,7 +41,7 @@ ui/build/%:
 install-ui: build-ui
 	mkdir -p $(DESTDIR)/var/www/packrat/ui/
 	install -m 644 ui/build/* $(DESTDIR)/var/www/packrat/ui/
-	echo "window.API_HOST = 'http://' + window.location.hostname;" > $(DESTDIR)/var/www/packrat/ui/env.js
+	echo "window.API_BASE_URI = 'http://' + window.location.hostname;" > $(DESTDIR)/var/www/packrat/ui/env.js
 
 clean-ui:
 	$(RM) -fr ui/build

@@ -4,7 +4,7 @@ SECRET_KEY = 'vgmxo603zkfltt(3oq(#%eewe=@dr-g$$r-9a_o!oh6@rr3h#m'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = False
 
 TEMPLATE_DIRS = (
 )
