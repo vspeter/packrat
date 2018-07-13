@@ -1,7 +1,7 @@
 Source: packrat
 Section: multiverse/python
 Priority: optional
-Maintainer: Peter Howe <peter.howe@emc.com>
+Maintainer: Peter Howe <peter.howe@virtustream.com>
 Build-Depends: debhelper (>= 7), python3 (>= 3.4), python3-dev (>=3.4), python3-setuptools (>= 20.0), npm (>= 3.5), nodejs-legacy (>= 4.2.6~dfsg), lsb-release
 Standards-Version: 3.8.3
 X-Python3-Version: >= 3.4

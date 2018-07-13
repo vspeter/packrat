@@ -11,7 +11,7 @@ def load_repos( app, schema_editor ):
 
   for release, release_type_list in release_list:
     r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='APT - {0}'.format( release.title() ), manager_type='apt', name='apt-{0}'.format( release ), filesystem_dir='apt-{0}'.format( release ) )
-    r.distroversion_list = [ 'precise', 'trusty', 'xenial', 'bionic' ]
+    r.distroversion_list = [ 'trusty', 'xenial', 'bionic' ]
     r.release_type_list = release_type_list
     r.full_clean()
     r.save()
@@ -48,7 +48,7 @@ def load_repos( app, schema_editor ):
 def load_distro_versions( app, schema_editor ):
   DistroVersion = app.get_model( 'Repos', 'DistroVersion' )
 
-  for version in ( 'precise', 'trusty', 'xenial', 'bionic' ):
+  for version in ( 'trusty', 'xenial', 'bionic' ):
     d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=version, file_type='deb', version=version, release_names=version, distro='debian' )
     d.full_clean()
     d.save()
