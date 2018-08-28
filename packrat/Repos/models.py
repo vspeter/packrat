@@ -310,7 +310,7 @@ class Package( models.Model ):
   A collection of PackageFiles
 
   - name: the common name of the PackageFiles
-  - deprocated_count: the number of deprocated versions to keep
+  - deprocated_count: the number of deprocated files to keep, oldest according to the created field are removed first
   """
   name = models.CharField( max_length=200, primary_key=True )
   deprocated_count = models.IntegerField( default=10 )
