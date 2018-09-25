@@ -76,6 +76,7 @@ class Deb( PackageInfo ):
 
     return cls( filename, package, arch, version, 'deb' )
 
+
 PACKAGE_INFO_REGISTRY.append( Deb )
 
 
@@ -111,6 +112,7 @@ class RPM( PackageInfo ):
       return None
 
     return cls( filename, package, arch, '%s-%s' % ( version, release ), 'rpm' )
+
 
 PACKAGE_INFO_REGISTRY.append( RPM )
 
@@ -189,6 +191,7 @@ class Python( PackageInfo ):
 
     return cls( filename, package, 'all', version, 'python' )
 
+
 PACKAGE_INFO_REGISTRY.append( Python )
 
 
@@ -212,5 +215,6 @@ class Resource( PackageInfo ):  # This will take *anything* that has one (and on
       return None
 
     return cls( filename, package, 'all', version, 'rsc' )
+
 
 PACKAGE_INFO_REGISTRY.append( Resource )

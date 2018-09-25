@@ -53,7 +53,7 @@ def load_distro_versions( app, schema_editor ):
     d.full_clean()
     d.save()
 
-  for version, release_name, name in ( ( 'el6', '6', 'centos6' ), ( 'el7', '7', 'centos7' ) ):
+  for version, release_name, name in ( ( '6', 'el6', 'centos6' ), ( '7', 'el7', 'centos7' ) ):
     d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=name, file_type='rpm', version=version, release_names=release_name, distro='centos' )
     d.full_clean()
     d.save()
