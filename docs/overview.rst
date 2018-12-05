@@ -19,7 +19,7 @@ Installing the Package
 Copy the packrag-X.X.X.dpkg file to your desired Packrat master server and
 install it.  After it is installed, run::
 
-  /usr/local/packrat/setup/setupWizzard
+  /usr/lib/packrat/setup/setupWizzard
 
 to setup up the database.
 

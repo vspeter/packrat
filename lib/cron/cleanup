@@ -1,0 +1,26 @@
+#!/usr/bin/python3
+import os
+
+os.environ.setdefault( "DJANGO_SETTINGS_MODULE", "packrat.settings" )
+
+import django
+django.setup()
+
+from django.conf import settings
+from packrat.Repos.models import Package, PackageFile
+
+# clean up deprocated files
+for package in Package.objects.all():
+  deprocated_list = list( package.packagefile_set.all().filter( release_type_list__name='depr' ).order_by( 'created' ) )
+  while len( deprocated_list ) > package.deprocated_count:
+    package_file = deprocated_list.pop( 0 )
+    print( 'Deleting Deprocated "{0}"...'.format( package_file ) )
+    package_file.delete()
+
+# clean up files that are not refrenced
+good_list = [ i[0][2:] for i in PackageFile.objects.all().values_list( 'file' ) ]  # take off the ./
+
+for filename in os.listdir( settings.MEDIA_ROOT ):
+  if filename not in good_list:
+    print( 'Removing "{0}"...'.format( filename ) )
+    os.unlink( os.path.join( settings.MEDIA_ROOT, filename ) )

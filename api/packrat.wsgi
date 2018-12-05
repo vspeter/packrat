@@ -10,6 +10,7 @@ if not os.path.isdir( FILE_STORAGE ):
 import django
 django.setup()
 
+from django.conf import settings
 from packrat.app import get_app
 
-application = get_app( False )
+application = get_app( settings.DEBUG )

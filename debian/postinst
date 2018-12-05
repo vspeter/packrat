@@ -38,7 +38,7 @@ case "$1" in
 
         if [ ! -d /var/www/packrat/api/files ] ;
         then
-          mkdir /var/www/packrat/api/files
+          mkdir -p /var/www/packrat/api/files
           chown www-data.www-data /var/www/packrat/api/files
         fi
     ;;

@@ -2,9 +2,9 @@
 SECRET_KEY = 'vgmxo603zkfltt(3oq(#%eewe=@dr-g$$r-9a_o!oh6@rr3h#m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = False
 
 TEMPLATE_DIRS = (
 )
@@ -12,14 +12,14 @@ TEMPLATE_DIRS = (
 # Application definition
 
 INSTALLED_APPS = (
+    'packrat.User',
+    'packrat.Repos',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'packrat.User',
-    'packrat.Repos',
 )
 
 MIDDLEWARE_CLASSES = (

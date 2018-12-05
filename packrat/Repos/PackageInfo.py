@@ -1,7 +1,6 @@
 import magic
 import os
 import re
-# import io
 
 from gzip import GzipFile
 from tarfile import TarFile
@@ -15,7 +14,6 @@ def infoDetect( target_file ):
   magic_helper.load()
 
   for info in PACKAGE_INFO_REGISTRY:
-    print( info )
     result = info.detect( target_file, magic_helper )
     if result is not None:
       return result
@@ -73,12 +71,11 @@ class Deb( PackageInfo ):
     except Exception as e:
       raise Exception( 'Error getting magic: %s' % e)
 
-    print( '__{0}__'.format( magic_type))
-
     if magic_type != b'Debian binary package (format 2.0)':
       return None
 
     return cls( filename, package, arch, version, 'deb' )
+
 
 PACKAGE_INFO_REGISTRY.append( Deb )
 
@@ -91,11 +88,15 @@ class RPM( PackageInfo ):
     if extension != '.rpm':
       return None
 
+    # <name>-<version>-<release>.<architecture>.rpm for binaries.
     # TODO: get these from the rpm file
     try:
       ( package, version, release, arch ) = re.match( '(.+)-([^-]+)-([^-]+)\.(\w+)', filename ).groups()
     except ValueError:
       raise ValueError( 'Unrecognized rpm file name Format' )
+
+    if arch == 'src':
+      raise ValueError( 'Source rpms are not supported' )
 
     if arch == 'noarch':
       arch = 'all'
@@ -107,10 +108,11 @@ class RPM( PackageInfo ):
     except Exception as e:
       raise Exception( 'Error getting magic: %s' % e)
 
-    if magic_type not in ( 'RPM v3.0 bin noarch', 'RPM v3.0 bin i386/x86_64' ):
+    if magic_type not in ( b'RPM v3.0 bin noarch', b'RPM v3.0 bin i386/x86_64' ):
       return None
 
     return cls( filename, package, arch, '%s-%s' % ( version, release ), 'rpm' )
+
 
 PACKAGE_INFO_REGISTRY.append( RPM )
 
@@ -189,6 +191,7 @@ class Python( PackageInfo ):
 
     return cls( filename, package, 'all', version, 'python' )
 
+
 PACKAGE_INFO_REGISTRY.append( Python )
 
 
@@ -212,5 +215,6 @@ class Resource( PackageInfo ):  # This will take *anything* that has one (and on
       return None
 
     return cls( filename, package, 'all', version, 'rsc' )
+
 
 PACKAGE_INFO_REGISTRY.append( Resource )
