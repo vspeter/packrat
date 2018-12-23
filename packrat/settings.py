@@ -12,14 +12,14 @@ TEMPLATE_DIRS = (
 # Application definition
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
+    'packrat.User',
+    'packrat.Repo',
+    'packrat.Package',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'packrat.User',
-    'packrat.Repos',
 )
 
 MIDDLEWARE_CLASSES = (

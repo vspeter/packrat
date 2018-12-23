@@ -125,7 +125,7 @@ class Docker( PackageInfo ):
     if extension != '.tar':
       return None
 
-    # TODO: get the info from  the manifest
+    # TODO: get the info from the manifest
     try:
       ( package, version ) = filename.split( '_' )
     except ValueError:
@@ -193,6 +193,26 @@ class Python( PackageInfo ):
 
 
 PACKAGE_INFO_REGISTRY.append( Python )
+
+
+class OVA( PackageInfo ):
+  @classmethod
+  def detect( cls, target_file, magic_helper ):
+    ( filename, extension ) = os.path.splitext( os.path.basename( target_file.name ) )
+
+    if extension != '.ova':
+      return None
+
+    # TODO: get the info from the ovf
+    try:
+      ( package, version ) = filename.split( '_' )
+    except ValueError:
+      raise ValueError( 'Unrecognized OVA file name Format' )
+
+    return cls( filename, package, 'all', version, 'ova' )
+
+
+PACKAGE_INFO_REGISTRY.append( OVA )
 
 
 # Resource must be last, being it will catch anything with a '_' in the filename

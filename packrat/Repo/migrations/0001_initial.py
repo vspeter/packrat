@@ -44,6 +44,13 @@ def load_repos( app, schema_editor ):
     r.full_clean()
     r.save()
 
+  for release, release_type_list in release_list:
+    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='OVA - {0}'.format( release.title() ), manager_type='ova', name='ova-{0}'.format( release ), filesystem_dir='ova-{0}'.format( release ), show_only_latest=False )
+    r.distroversion_list = [ 'ova' ]
+    r.release_type_list = release_type_list
+    r.full_clean()
+    r.save()
+
 
 def load_distro_versions( app, schema_editor ):
   DistroVersion = app.get_model( 'Repos', 'DistroVersion' )
@@ -75,11 +82,15 @@ def load_distro_versions( app, schema_editor ):
   d.full_clean()
   d.save()
 
+  d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='ova', file_type='ova', distro='none' )
+  d.full_clean()
+  d.save()
 
-def load_release_types( app, schema_editor ):
-  ReleaseType = app.get_model( 'Repos', 'ReleaseType' )
 
-  type_list = ( ( 'new', 'New', 1 ), ( 'dev', 'Development', 20 ), ( 'stage', 'Staging', 40 ), ( 'prod', 'Production', 60 ), ( 'depr', 'Deprocated', 100 ) )
+def load_tags( app, schema_editor ):
+  ReleaseType = app.get_model( 'Repos', 'Tag' )
+
+  type_list = (  )
 
   for name, description, level in type_list:
     r = ReleaseType( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=name, level=level, change_control_required=( name == 'prod' ), description=description )

@@ -7,6 +7,8 @@ from django.db import models
 
 from cinp.orm_django import DjangoCInP as CInP
 
+from packrat.Repos.models import Tag
+
 
 def getUser( auth_id, auth_token ):
   if auth_id is None or auth_token is None:
@@ -29,7 +31,16 @@ def getUser( auth_id, auth_token ):
 # TODO: this has many security issues, spend some time and think this out better
 # TODO: should probably rename it auth as well, will also eventually need SSO abilities
 
-cinp = CInP( 'User', '0.1' )
+"""
+
+TODO:
+  rename auth
+
+  add tracking logging, or some place to send tracking info
+
+"""
+
+cinp = CInP( 'User', '2.0' )
 
 
 @cinp.model( property_list=[ 'isActive' ], not_allowed_verb_list=[ 'LIST', 'DELETE', 'CREATE', 'CALL' ], hide_field_list=[ 'password' ] )
@@ -37,8 +48,8 @@ class User( models.Model ):
   username = models.CharField( max_length=40, primary_key=True )
   password = models.CharField( editable=False, max_length=64 )
   nick_name = models.CharField( max_length=100, null=True, blank=True )
-  can_promote = models.BooleanField( default=False )
   can_create = models.BooleanField( default=False )
+  allowed_tags = models.ManyToManyField( Tag )
   superuser = models.BooleanField( default=False, editable=False )
   updated = models.DateTimeField( editable=False, auto_now=True )
   created = models.DateTimeField( editable=False, auto_now_add=True )
