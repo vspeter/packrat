@@ -5,7 +5,11 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from cinp.orm_django import DjangoCInP as CInP
-from packrat.Repos.PackageInfo import infoDetect
+
+from packrat.Attrib.models import Tag, DistroVersion
+from packrat.Repo.models import Repo
+from packrat.lib.info import infoDetect
+from packrat.fields import name_regex, USERNAME_LENGTH, FILE_TYPE_CHOICES, FILE_ARCH_CHOICES, FILE_TYPE_LENGTH, FILE_ARCH_LENGTH
 
 
 """
@@ -24,17 +28,19 @@ class Package( models.Model ):
   A collection of PackageFiles
 
   - name: the common name of the PackageFiles
-  - deprocated_count: the number of deprocated files to keep, oldest according to the created field are removed first
+  - deprocated_count: the number of deprocated files to keep, oldest according to the deprocated_at field are removed first
+  - failed_count: the number of failed files to keep, oldest according to the failed_at field are removed first
   """
   name = models.CharField( max_length=200, primary_key=True )
-  deprocated_count = models.IntegerField( default=10 )
+  deprocated_count = models.IntegerField( default=20 )
+  failed_count = models.IntegerField( default=10 )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
 
   @cinp.check_auth()
   @staticmethod
   def checkAuth( user, method, id_list, action=None ):
-    return True
+    return cinp.basic_auth_check( user, method, Package )
 
   def clean( self, *args, **kwargs ):
     super().clean( *args, **kwargs )
@@ -50,7 +56,7 @@ class Package( models.Model ):
     return 'Package "%s"' % self.name
 
 
-@cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE' ), constant_set_map={ 'type': FILE_TYPE_CHOICES, 'arch': FILE_ARCH_CHOICES }, property_list=( 'release', ) )
+@cinp.model( not_allowed_verb_list=( 'CREATE', 'UPDATE', 'DELETE' ), constant_set_map={ 'type': FILE_TYPE_CHOICES, 'arch': FILE_ARCH_CHOICES }, property_list=( 'tags', ) )
 class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, django no longer does this for us
   """
   This is the Individual package "file", they can indivdually belong to any
@@ -63,7 +69,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
   - package: The PackageFile group this package belongs to
   - distroversion: The DistroVersion this PackageFile is associated with.
-  - version: Version of the Package this PacageFile represents, ie '1.2-5'
+  - version: Version of the Package this PacageFile represents, ie: '1.2-5'
   - type: Type of file
   - arch: Archetuture of the file
   - justification: User provided field used when auditing package files.  This
@@ -140,7 +146,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     self.version = info.version
     self.sha256 = sha256.hexdigest()
 
-  @cinp.action( paramater_type_list=[ { 'type': '_USER_' }, { 'type': 'Model', 'model': 'packrat.Repos.models.Tag' }, { 'type': 'String' } ] )
+  @cinp.action( paramater_type_list=[ { 'type': '_USER_' }, { 'type': 'Model', 'model': Tag }, { 'type': 'String' } ] )
   def tag( self, user, tag, change_control_id=None ):
     """
     Tag package file.  If to release Type requires change control,
@@ -238,12 +244,12 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
     return False
 
-  @cinp.list_filter( name='package', paramater_type_list=[ { 'type': 'Model', 'model': 'packrat.Repos.models.Package' } ] )
+  @cinp.list_filter( name='package', paramater_type_list=[ { 'type': 'Model', 'model': Package } ] )
   @staticmethod
   def filter_package( package ):
     return PackageFile.objects.filter( package=package )
 
-  @cinp.list_filter( name='repo', paramater_type_list=[ { 'type': 'Model', 'model': 'packrat.Repos.models.Repo' }, { 'type': 'String', 'is_array': True } ] )
+  @cinp.list_filter( name='repo', paramater_type_list=[ { 'type': 'Model', 'model': Repo }, { 'type': 'String', 'is_array': True } ] )
   @staticmethod
   def filter_repo( repo, package_list ):
     queryset_parms = {}
@@ -258,6 +264,19 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
   @cinp.check_auth()
   @staticmethod
   def checkAuth( user, method, id_list, action=None ):
+    if not cinp.basic_auth_check( user, method, PackageFile ):
+      return False
+
+    if method == 'CALL':
+      if action == 'deprocate' and not user.has_perm( 'Package.can_deprocate' ):
+        return False
+
+      if action == 'fail' and not user.has_perm( 'Package.can_fail' ):
+        return False
+
+      if action == 'deprocate' and not user.has_perm( 'Package.can_deprocate' ):
+        return False
+
     # promote
     # deprocate
     # if not user.has_perm( 'Repos.promote_packagefile' ):
@@ -281,12 +300,19 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
   class Meta:
     unique_together = ( 'package', 'distroversion', 'version', 'type', 'arch' )
+    default_permissions = ( 'add', )
+    permissions = (
+                    ( 'can_fail', 'Can Mark a Package File as Failed' ),
+                    ( 'can_unfail', 'Can Un-Mark a Package File as Failed' ),
+                    ( 'can_deprocate', 'Can Mark a Package File as Deprocated' ),
+                    ( 'can_undeprocate', 'Can Un-Mark a Package File as Deprocated' )
+    )
 
   def __str__( self ):
     return 'PackageFile "%s"' % ( self.file.name )
 
 
-@cinp.model( )
+@cinp.model( not_allowed_verb_list=( 'CREATE', 'UPDATE', 'DELETE', 'CALL' ) )
 class PackageFileTag( models.Model ):
   """
   This is a Helper Table to join PackageFile to Tag.  This stores when
@@ -301,10 +327,11 @@ class PackageFileTag( models.Model ):
   @cinp.check_auth()
   @staticmethod
   def checkAuth( user, method, id_list, action=None ):
-    return True
+    return cinp.basic_auth_check( user, method, PackageFileTag )
 
   class Meta:
     unique_together = ( 'package_file', 'release_type' )
+    default_permissions = ()
 
   def __str__( self ):
-    return 'PackageFileReleaseType for PackageFile "%s" Release Type "%s" at "%s"' % ( self.package_file, self.release_type, self.at )
+    return 'PackageFileTag for PackageFile "%s" Release Type "%s" at "%s"' % ( self.package_file, self.release_type, self.at )

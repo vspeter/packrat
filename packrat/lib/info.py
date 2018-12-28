@@ -4,7 +4,8 @@ import re
 
 from gzip import GzipFile
 from tarfile import TarFile
-from django.apps import apps
+
+from packrat.Attrib.models import DistroVersion
 
 PACKAGE_INFO_REGISTRY = []
 
@@ -32,8 +33,6 @@ class PackageInfo():
 
   @property
   def distroversion_list( self ):
-    DistroVersion = apps.get_model( 'Repos.DistroVersion' )
-
     full_list = []
     match_list = []
     for tmp in DistroVersion.objects.filter( file_type=self.type ):

@@ -11,10 +11,16 @@ from packrat.Repos.models import Package, PackageFile
 
 # clean up deprocated files
 for package in Package.objects.all():
-  deprocated_list = list( package.packagefile_set.all().filter( release_type_list__name='depr' ).order_by( 'created' ) )
+  deprocated_list = list( package.packagefile_set.all().filter( deprocated_at__isnull=False ).order_by( 'deprocated_at' ) )
   while len( deprocated_list ) > package.deprocated_count:
     package_file = deprocated_list.pop( 0 )
     print( 'Deleting Deprocated "{0}"...'.format( package_file ) )
+    package_file.delete()
+
+  failed_list = list( package.packagefile_set.all().filter( failed_at__isnull=False ).order_by( 'failed_at' ) )
+  while len( failed_list ) > package.failed_count:
+    package_file = failed_list.pop( 0 )
+    print( 'Deleting Failed "{0}"...'.format( package_file ) )
     package_file.delete()
 
 # clean up files that are not refrenced
