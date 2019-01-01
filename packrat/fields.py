@@ -4,10 +4,10 @@ name_regex = re.compile( '^[0-9a-zA-Z\-_]+$' )  # possible to be using in a file
 
 USERNAME_LENGTH = 40
 
-FILE_ARCH_CHOICES = ( ( 'x86_64', 'x86_64' ), ( 'i386', 'i386' ), ( 'all', 'All' ) )
+FILE_ARCH_CHOICES = ( ( 'x86_64', 'x86_64' ), ( 'i386', 'i386' ), ( 'arm64', 'ARM64' ), ( 'all', 'All' ) )  # these names follow the Debian arch names
 FILE_TYPE_CHOICES = ( ( 'deb', 'deb' ), ( 'rpm', 'RPM' ), ( 'rsc', 'Resource' ), ( 'ova', 'OVA' ), ( 'docker', 'Docker' ), ( 'python', 'Python' ) )
-DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'centos', 'Centos' ), ( 'rhel', 'RHEL' ), ( 'sles', 'SLES' ), ( 'core', 'CoreOS' ), ( 'none', 'None' ) )  # there is no ubuntu, it shares the same version space as debian
-MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'yast', 'YaST' ), ( 'json', 'JSON' ), ( 'docker', 'Docker' ), ( 'pypi', 'PyPi' ) )
+DISTRO_CHOICES = ( ( 'debian', 'Debian' ), ( 'rhel', 'RHEL' ), ( 'sles', 'SLES' ), ( 'none', 'None' ) )  # there is no ubuntu, it shares the same version space as debian
+MANAGER_TYPE_CHOICES = ( ( 'apt', 'APT' ), ( 'yum', 'YUM' ), ( 'json', 'JSON' ), ( 'docker', 'Docker' ), ( 'pypi', 'PyPi' ) )
 
 
 # if these are changed (or any other field length), make sure to update the sqlite db in packrat-agent

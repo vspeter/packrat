@@ -5,19 +5,12 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from cinp.orm_django import DjangoCInP as CInP
+from cinp.server_common import NotAuthorized
 
 from packrat.Attrib.models import Tag, DistroVersion
 from packrat.Repo.models import Repo
 from packrat.lib.info import infoDetect
 from packrat.fields import name_regex, USERNAME_LENGTH, FILE_TYPE_CHOICES, FILE_ARCH_CHOICES, FILE_TYPE_LENGTH, FILE_ARCH_LENGTH
-
-
-"""
-tags -
-  list of required tags
-  flag for auto happening
-  optional change control requirements
-"""
 
 cinp = CInP( 'Package', '2.0' )
 
@@ -152,9 +145,12 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     Tag package file.  If to release Type requires change control,
     change_control_id must be specified.
     """
+    if not user.has_perm( 'Package.tag_{0}'.format( tag ) ):
+      raise NotAuthorized()
+
     cur_tags = [ i.name for i in self.tag_list ]
 
-    for tag in tag.required:
+    for tag in tag.required_list:
       if tag.name not in cur_tags:
         raise ValueError( 'Required tag "{0}" missing'.format( tag.name ) )
 
@@ -231,7 +227,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
   @cinp.action( return_type={ 'type': 'Boolean' }, paramater_type_list=[ { 'type': 'String' } ] )
   @staticmethod
-  def filenameInUse( file_name ):
+  def filename_in_use( file_name ):
     """
     returns true if the file_name has allready been used.  Good Idea to call this
     before uploading files to ensure the file name is unique.
@@ -268,25 +264,19 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
       return False
 
     if method == 'CALL':
-      if action == 'deprocate' and not user.has_perm( 'Package.can_deprocate' ):
-        return False
+      if action in ( 'filename_in_use', 'distroversion_options', 'create' ) and user.has_perm( 'Package.add_packagefile' ):
+        return True
 
-      if action == 'fail' and not user.has_perm( 'Package.can_fail' ):
-        return False
+      if action == 'tag' and user.has_perm( 'Package.can_tag' ):
+        return True
 
-      if action == 'deprocate' and not user.has_perm( 'Package.can_deprocate' ):
-        return False
+      if action == 'fail' and user.has_perm( 'Package.can_fail' ):
+        return True
 
-    # promote
-    # deprocate
-    # if not user.has_perm( 'Repos.promote_packagefile' ):
-    #   raise PermissionDenied()
+      if action == 'deprocate' and user.has_perm( 'Package.can_deprocate' ):
+        return True
 
-    # create
-    # if not user.has_perm( 'Repos.create_packagefile' ):
-    #   raise PermissionDenied()
-
-    return True
+    return False
 
   def clean( self, *args, **kwargs ):
     super().clean( *args, **kwargs )
@@ -302,6 +292,8 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     unique_together = ( 'package', 'distroversion', 'version', 'type', 'arch' )
     default_permissions = ( 'add', )
     permissions = (
+                    ( 'can_tag', 'Can add Tag' ),
+                    ( 'can_untag', 'Can remove a Tag' ),
                     ( 'can_fail', 'Can Mark a Package File as Failed' ),
                     ( 'can_unfail', 'Can Un-Mark a Package File as Failed' ),
                     ( 'can_deprocate', 'Can Mark a Package File as Deprocated' ),
@@ -319,7 +311,7 @@ class PackageFileTag( models.Model ):
   the package file was tagged and by whom
   """
   package_file = models.ForeignKey( PackageFile, on_delete=models.CASCADE )
-  release_type = models.ForeignKey( Tag, on_delete=models.CASCADE )
+  tag = models.ForeignKey( Tag, on_delete=models.CASCADE )
   by = models.CharField( max_length=USERNAME_LENGTH )
   at = models.DateTimeField( editable=False, auto_now_add=True )
   change_control_id = models.CharField( max_length=50, blank=True, null=True )
@@ -330,7 +322,7 @@ class PackageFileTag( models.Model ):
     return cinp.basic_auth_check( user, method, PackageFileTag )
 
   class Meta:
-    unique_together = ( 'package_file', 'release_type' )
+    unique_together = ( 'package_file', 'tag' )
     default_permissions = ()
 
   def __str__( self ):

@@ -38,7 +38,7 @@ class Repo( models.Model ):
   - distroversion_list: list of the distro versions this repos includes
   - manager_type: what repo manager to use for this repo, ie: 'apt'
   - description: short description of the Repo, ie: 'Production Apt'
-  - tag_list: list of the tags that this repo includes
+  - tag: tag that this repo includes
   - show_only_latest: if True to only expose the highest numberd versoin of each package,
   """
   name = models.CharField( max_length=50, primary_key=True )
@@ -46,7 +46,7 @@ class Repo( models.Model ):
   filesystem_dir = models.CharField( max_length=50, unique=True )  # TODO: validate this, must be fs safe
   distroversion_list = models.ManyToManyField( DistroVersion )
   manager_type = models.CharField( max_length=MANAGER_TYPE_LENGTH, choices=MANAGER_TYPE_CHOICES )
-  tag_list = models.ManyToManyField( Tag )
+  tag = models.ForeignKey( Tag )
   show_only_latest = models.BooleanField( default=True )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
@@ -120,14 +120,12 @@ class Mirror( models.Model ):
   - name: name of the mirror. also effectivly the username for the Mirror,
     ie: 'prod'
   - description: short description of the mirror, ie: 'Production'
-  - psk: Preshared Key used for controlling mirror access
   - last_heartbeat: DateTime stamp of when the mirror last checked in.  Can
     be used to detect Mirror client that have stopped checking in. This is
     updated when the client does a full sync.
   """
   name = models.CharField( max_length=50, primary_key=True )
   description = models.CharField( max_length=200 )
-  psk = models.CharField( max_length=100 )
   repo_list = models.ManyToManyField( Repo )
   last_heartbeat = models.DateTimeField( editable=False, blank=True, null=True )
   created = models.DateTimeField( editable=False, auto_now_add=True )

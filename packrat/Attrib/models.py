@@ -6,6 +6,14 @@ from django.db.models.signals import pre_save, post_delete
 from cinp.orm_django import DjangoCInP as CInP
 from packrat.fields import name_regex, DISTRO_CHOICES, FILE_TYPE_CHOICES, DISTRO_LENGTH, FILE_TYPE_LENGTH
 
+"""
+tags -
+  list of required tags
+  flag for auto happening
+  optional change control requirements
+"""
+
+
 cinp = CInP( 'Attrib', '2.0' )
 
 
@@ -38,7 +46,7 @@ class Tag( models.Model ):
         continue
 
       visited.append( current )
-      todo += current.required_list
+      todo += current.required_list.all()
       if self in todo:
         errors[ 'required' ] = 'required tags recursivly refer back to this tag'
         break
@@ -48,6 +56,15 @@ class Tag( models.Model ):
 
     if errors:
       raise ValidationError( errors )
+
+  @cinp.action( return_type='Map' )
+  @staticmethod
+  def tag_map():
+    result = {}
+    for tag in Tag.objects.all():
+      result[ tag.name ] = { 'requred': [ i.name for i in tag.required_list ], 'change_control': tag.change_control_required }
+
+    return result
 
   @cinp.check_auth()
   @staticmethod
@@ -63,12 +80,12 @@ class Tag( models.Model ):
 
 @receiver( pre_save, sender=Tag )
 def tag_pre_save( sender, **kwargs ):
-    pass  # update permission for the Tag or ContentType ?
+  pass  # update permission for the Tag or ContentType ?
 
 
 @receiver( post_delete, sender=Tag )
 def tag_post_delete( sender, **kwargs ):
-    pass  # update permission for the Tag
+  pass  # update permission for the Tag
 
 
 @cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_set_map={ 'distro': DISTRO_CHOICES, 'file_type': FILE_TYPE_CHOICES } )
