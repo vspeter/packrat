@@ -1,7 +1,9 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_delete
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+from django.db.models.signals import post_save, post_delete
 
 from cinp.orm_django import DjangoCInP as CInP
 from packrat.fields import name_regex, DISTRO_CHOICES, FILE_TYPE_CHOICES, DISTRO_LENGTH, FILE_TYPE_LENGTH
@@ -59,7 +61,7 @@ class Tag( models.Model ):
 
   @cinp.action( return_type='Map' )
   @staticmethod
-  def tag_map():
+  def tagMap():
     result = {}
     for tag in Tag.objects.all():
       result[ tag.name ] = { 'requred': [ i.name for i in tag.required_list ], 'change_control': tag.change_control_required }
@@ -68,24 +70,36 @@ class Tag( models.Model ):
 
   @cinp.check_auth()
   @staticmethod
-  def checkAuth( user, method, id_list, action=None ):
-    return cinp.basic_auth_check( user, method, Tag )
+  def checkAuth( user, verb, id_list, action=None ):
+    return cinp.basic_auth_check( user, verb, Tag )
 
   class Meta:
     default_permissions = ()
 
   def __str__( self ):
-    return 'Tag "%s"(%s)' % ( self.description, self.name )
+    return 'Tag "{0}"'.format( self.name )
 
 
-@receiver( pre_save, sender=Tag )
-def tag_pre_save( sender, **kwargs ):
-  pass  # update permission for the Tag or ContentType ?
+@receiver( post_save, sender=Tag )
+def tagPreSave( sender, instance, created, **kwargs ):
+  if not created:
+    return
+
+  permission = Permission()
+  permission.codename = 'tag_{0}'.format( instance.name )
+  permission.name = 'Can add tag {0}'.format( instance.name )
+  permission.content_type = ContentType.objects.get_for_model( Tag )
+  permission.full_clean()
+  permission.save()
 
 
 @receiver( post_delete, sender=Tag )
-def tag_post_delete( sender, **kwargs ):
-  pass  # update permission for the Tag
+def tagPostDelete( sender, instance, **kwargs ):
+  try:
+    permission = Permission.objects.get( codename='tag_{0}'.format( instance.name ) )
+    permission.delete()
+  except Permission.DoesNotExist:
+    pass
 
 
 @cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_set_map={ 'distro': DISTRO_CHOICES, 'file_type': FILE_TYPE_CHOICES } )
@@ -111,8 +125,8 @@ class DistroVersion( models.Model ):
 
   @cinp.check_auth()
   @staticmethod
-  def checkAuth( user, method, id_list, action=None ):
-    return cinp.basic_auth_check( user, method, DistroVersion )
+  def checkAuth( user, verb, id_list, action=None ):
+    return cinp.basic_auth_check( user, verb, DistroVersion )
 
   def clean( self, *args, **kwargs ):
     super().clean( *args, **kwargs )
@@ -129,4 +143,4 @@ class DistroVersion( models.Model ):
     default_permissions = ()
 
   def __str__( self ):
-    return 'Version "%s" of "%s"' % ( self.version, self.distro )
+    return 'Version "{0}" of "{1}"'.format( self.version, self.distro )

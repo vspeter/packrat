@@ -6,13 +6,25 @@ os.environ.setdefault( "DJANGO_SETTINGS_MODULE", "packrat.settings" )
 import django
 django.setup()
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from packrat.Repo.models import Repo, Mirror
 from packrat.Attrib.models import DistroVersion, Tag
 
 
 def load_users():
   User.objects.create_superuser( username='root', email='root@none.com', password='root' )
+  u = User.objects.create_user( 'mcp', password='mcp' )
+  for name in ( 'can_tag', 'can_fail' ):
+    u.user_permissions.add( Permission.objects.get( codename=name ) )
+
+  u = User.objects.create_user( 'nullunit', password='nullunit' )
+  for name in ( 'add_packagefile', ):
+    u.user_permissions.add( Permission.objects.get( codename=name ) )
+
+  u = User.objects.create_user( 'manager', password='manager' )
+  for name in ( 'can_tag', 'can_untag', 'can_fail', 'can_unfail', 'can_deprocate', 'can_undeprocate', 'add_package', 'add_packagefile' ):
+    u.user_permissions.add( Permission.objects.get( codename=name ) )
+
   User.objects.create_user( 'mirror', password='mirrormirror' )
 
 
@@ -109,7 +121,7 @@ def load_mirrors():
   m.full_clean()
   m.save()
 
-  m = Mirror( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='stage', description='Lab' )
+  m = Mirror( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='lab', description='Lab' )
   repo_list = []
   for release in ( 'stage', 'dev' ):
     for item in ( 'apt', 'yum', 'json', 'docker', 'pypi' ):

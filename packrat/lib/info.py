@@ -68,7 +68,7 @@ class Deb( PackageInfo ):
     try:
       magic_type = magic_helper.descriptor( os.dup( target_file.file.fileno() ) )
     except Exception as e:
-      raise Exception( 'Error getting magic: %s' % e)
+      raise Exception( 'Error getting magic: "{0}"'.format( e ) )
 
     if magic_type != b'Debian binary package (format 2.0)':
       return None
@@ -105,12 +105,12 @@ class RPM( PackageInfo ):
     try:
       magic_type = magic_helper.descriptor( os.dup( target_file.file.fileno() ) )
     except Exception as e:
-      raise Exception( 'Error getting magic: %s' % e)
+      raise Exception( 'Error getting magic: "{0}"'.format( e ) )
 
     if magic_type not in ( b'RPM v3.0 bin noarch', b'RPM v3.0 bin i386/x86_64' ):
       return None
 
-    return cls( filename, package, arch, '%s-%s' % ( version, release ), 'rpm' )
+    return cls( filename, package, arch, '{0}-{1}'.format( version, release ), 'rpm' )
 
 
 PACKAGE_INFO_REGISTRY.append( RPM )
@@ -133,7 +133,7 @@ class Docker( PackageInfo ):
     try:
       magic_type = magic_helper.descriptor( os.dup( target_file.file.fileno() ) )
     except Exception as e:
-      raise Exception( 'Error getting magic: %s' % e)
+       raise Exception( 'Error getting magic: "{0}"'.format( e ) )
 
     if not magic_type.startswith( b'POSIX tar archive' ):
       return None
@@ -172,7 +172,7 @@ class Python( PackageInfo ):
     try:
       magic_type = magic_helper.descriptor( os.dup( target_file.file.fileno() ) )
     except Exception as e:
-      raise Exception( 'Error getting magic: %s' % e)
+      raise Exception( 'Error getting magic: "{0}"'.format( e ) )
 
     if not magic_type.startswith( b'gzip compressed data' ):
       return None

@@ -46,7 +46,7 @@ class Repo( models.Model ):
   filesystem_dir = models.CharField( max_length=50, unique=True )  # TODO: validate this, must be fs safe
   distroversion_list = models.ManyToManyField( DistroVersion )
   manager_type = models.CharField( max_length=MANAGER_TYPE_LENGTH, choices=MANAGER_TYPE_CHOICES )
-  tag = models.ForeignKey( Tag )
+  tag = models.ForeignKey( Tag, on_delete=models.PROTECT )
   show_only_latest = models.BooleanField( default=True )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
@@ -59,7 +59,7 @@ class Repo( models.Model ):
     returns empty array, otherwise an array of Package names that changed
     """
     cursor = connection.cursor()
-    cursor.execute( 'LISTEN "mirror_repo_%s"' % self.pk )
+    cursor.execute( 'LISTEN "mirror_repo_{0}"'.format( self.pk ) )
     conn = cursor.cursor.connection
     conn.commit()
     try:
@@ -85,14 +85,14 @@ class Repo( models.Model ):
     send the notify event to anything blocked in the poll
     """
     if package is None:
-      connection.cursor().execute( 'NOTIFY "mirror_repo_%s"' % self.pk )
+      connection.cursor().execute( 'NOTIFY "mirror_repo_{0}"'.format( self.pk ) )
     else:
-      connection.cursor().execute( 'NOTIFY "mirror_repo_%s", \'%s\'' % ( self.pk, package.pk ) )
+      connection.cursor().execute( 'NOTIFY "mirror_repo_{0}", \'{1}\''.format( self.pk, package.pk ) )
 
   @cinp.check_auth()
   @staticmethod
-  def checkAuth( user, method, id_list, action=None ):
-    return cinp.basic_auth_check( user, method, Repo )
+  def checkAuth( user, verb, id_list, action=None ):
+    return cinp.basic_auth_check( user, verb, Repo )
 
   def clean( self, *args, **kwargs ):
     super().clean( *args, **kwargs )
@@ -108,7 +108,7 @@ class Repo( models.Model ):
     default_permissions = ()
 
   def __str__( self ):
-    return 'Repo "%s"' % self.description
+    return 'Repo "{0}"'.format( self.description )
 
 
 @cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ) )
@@ -139,8 +139,8 @@ class Mirror( models.Model ):
 
   @cinp.check_auth()
   @staticmethod
-  def checkAuth( user, method, id_list, action=None ):
-    return cinp.basic_auth_check( user, method, Mirror )
+  def checkAuth( user, verb, id_list, action=None ):
+    return cinp.basic_auth_check( user, verb, Mirror )
 
   def clean( self, *args, **kwargs ):
     super().clean( *args, **kwargs )
@@ -156,4 +156,4 @@ class Mirror( models.Model ):
     default_permissions = ()
 
   def __str__( self ):
-    return 'Mirror "%s"' % self.description
+    return 'Mirror "{0}"'.format( self.description )

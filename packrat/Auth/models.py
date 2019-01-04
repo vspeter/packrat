@@ -1,73 +1,86 @@
-from django.contrib.auth import authenticate, login, logout
+from importlib import import_module
 
+from django.conf import settings
+from django.contrib import auth
 from cinp.orm_django import DjangoCInP as CInP
 
-from packrat.Attrib.models import Tag
+session_engine = import_module( settings.SESSION_ENGINE )
 
 
 def getUser( auth_id, auth_token ):
   if auth_id is None or auth_token is None:
     return None
 
-  try:
-    session = Session.objects.get( user=auth_id, token=auth_token )
-  except ( Session.DoesNotExist, User.DoesNotExist ):
+  request = Request( session_engine.SessionStore( auth_token ) )
+
+  if request.user.username != auth_id:
     return None
 
-  if not session.user.isActive:
+  if not request.user.is_active:
     return None
 
-  if not session.isActive:
-    return None
-
-  return session.user
+  return request.user
 
 
 """
 
 TODO:
   add tracking logging, or some place to send tracking info
-
 """
+
+
+class Request():
+  def __init__( self, session, user=None ):
+    self.session = session
+    if user is None:
+      self.user = auth.get_user( self )
+    else:
+      self.user = user
+    self.user._django_session = session
+    self.META = {}
 
 
 cinp = CInP( 'Auth', '2.0' )
 
 
-@cinp.staticModel( not_allowed_verb_list=[ 'LIST', 'DELETE', 'CREATE' ] )
+@cinp.staticModel( not_allowed_verb_list=[ 'LIST', 'GET', 'DELETE', 'CREATE', 'UPDATE' ] )
 class User():
-
-  @property
-  def isActive( self ):
-    return self.is_active
-
-  @property
-  def isSuperuser( self ):
-    return self.is_superuser
-
-  @property
-  def isAnonymouse( self ):
-    return self.is_anonymouse
-
-  @cinp.action( paramater_type_list=[ 'String', 'String' ] )
+  @cinp.action( return_type='String', paramater_type_list=[ 'String', 'String' ] )
   @staticmethod
   def login( username, password ):
-    user = authenticate( username=username, password=password )
+    user = auth.authenticate( username=username, password=password )
     if user is not None:
       pass
     else:
       raise ValueError( 'Invalid Login' )
 
-  @cinp.action( paramater_type_list=[ 'String' ] )
-  def set_password( self, password ):
-    self.set_password( password )
+    request = Request(session=session_engine.SessionStore( None ), user=user )
+
+    auth.login( request, user )
+    request.session.save()
+
+    return request.session.session_key
+
+  @cinp.action( paramater_type_list=[ '_USER_' ] )
+  @staticmethod
+  def logout( user ):
+    request = Request( session=user._django_session, user=user )
+    auth.logout( request )
+
+  @cinp.action( return_type='String', paramater_type_list=[ '_USER_' ] )
+  @staticmethod
+  def whoami( user ):
+    return str( user )
+
+  @cinp.action( paramater_type_list=[ '_USER_', 'String' ] )
+  @staticmethod
+  def change_password( user, password ):
+    user.set_password( password )
+    user.save()
 
   @cinp.check_auth()
   @staticmethod
-  def checkAuth( user, method, id_list, action=None ):
-    if id_list is not None and len( id_list ) >= 1 and id_list[0] != user.username:
-      return False
-
+  def checkAuth( user, verb, id_list, action=None ):
     return True
 
   def __str__( self ):

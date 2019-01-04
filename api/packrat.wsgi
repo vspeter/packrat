@@ -1,6 +1,6 @@
 import os
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "packrat.settings")
+os.environ.setdefault( 'DJANGO_SETTINGS_MODULE', 'packrat.settings' )
 
 from cinp.django_file_handler import FILE_STORAGE
 
@@ -13,4 +13,4 @@ django.setup()
 from django.conf import settings
 from packrat.app import get_app
 
-application = get_app( settings.DEBUG )
+application = get_app( False, settings.DEBUG )

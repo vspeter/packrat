@@ -49,6 +49,7 @@ class custom_build( build_py ):
           self.mkpath(os.path.dirname(target))
           self.copy_file(os.path.join(src_dir, filename), target, preserve_mode=False)
 
+
 setup( name='packrat',
        description='Packrat',
        author='Peter Howe',

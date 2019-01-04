@@ -2,7 +2,7 @@ from cinp.server_werkzeug import WerkzeugServer
 from cinp.django_file_handler import upload_handler
 
 from packrat.Auth.models import getUser
-# from packrat.files_handler import files_handler
+from packrat.files_handler import files_handler
 
 __doc__ = """
 Packrat Class Relationships
@@ -56,7 +56,7 @@ From the Package perspective::
 """
 
 
-def get_app( debug ):
+def get_app( enable_file_handler, debug ):
   app = WerkzeugServer( root_path='/api/v1/', root_version='2.0', debug=debug, get_user=getUser, cors_allow_list=[ '*' ] )
   app.root_namespace.doc == __doc__
 
@@ -66,7 +66,8 @@ def get_app( debug ):
   app.registerNamespace( '/', 'packrat.Repo' )
 
   app.registerPathHandler( '/api/upload', upload_handler )
-  # app.registerPathHandler( '/files', files_handler )  # TODO: In prod  this should be handeled by the static web server
+  if enable_file_handler:
+    app.registerPathHandler( '/files', files_handler )  # this is for when there isn't something else serving the static files
 
   app.validate()
 

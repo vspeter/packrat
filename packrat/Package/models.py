@@ -32,8 +32,8 @@ class Package( models.Model ):
 
   @cinp.check_auth()
   @staticmethod
-  def checkAuth( user, method, id_list, action=None ):
-    return cinp.basic_auth_check( user, method, Package )
+  def checkAuth( user, verb, id_list, action=None ):
+    return cinp.basic_auth_check( user, verb, Package )
 
   def clean( self, *args, **kwargs ):
     super().clean( *args, **kwargs )
@@ -46,7 +46,7 @@ class Package( models.Model ):
       raise ValidationError( errors )
 
   def __str__( self ):
-    return 'Package "%s"' % self.name
+    return 'Package "{0}"'.format( self.name )
 
 
 @cinp.model( not_allowed_verb_list=( 'CREATE', 'UPDATE', 'DELETE' ), constant_set_map={ 'type': FILE_TYPE_CHOICES, 'arch': FILE_ARCH_CHOICES }, property_list=( 'tags', ) )
@@ -75,7 +75,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
   - release_type_list: which release levels this package has been promoted to
   """
   package = models.ForeignKey( Package, editable=False, on_delete=models.CASCADE )
-  distroversion = models.ForeignKey( DistroVersion, editable=False, on_delete=models.CASCADE )
+  distroversion = models.ForeignKey( DistroVersion, editable=False, on_delete=models.PROTECT )
   version = models.CharField( max_length=50, editable=False )
   type = models.CharField( max_length=FILE_TYPE_LENGTH, editable=False, choices=FILE_TYPE_CHOICES )
   arch = models.CharField( max_length=FILE_ARCH_LENGTH, editable=False, choices=FILE_ARCH_CHOICES )
@@ -94,7 +94,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
   @property
   def tags( self ):
-    return [ i.name for i in self.tag_list ]
+    return [ i.name for i in self.tag_list.all() ]
 
   def notify( self, tag_list=None ):
     """
@@ -117,7 +117,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     try:
       package = Package.objects.get( pk=info.package )
     except Package.DoesNotExist:
-      raise ValueError( 'Unable to find package "%s"' % info.package )
+      raise ValueError( 'Unable to find package "{0}"'.format( info.package ) )
 
     if distroversion not in info.distroversion_list:
       raise ValueError( 'DistroVersion "{0}" is not an option for this file'.format( distroversion ) )
@@ -145,17 +145,17 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     Tag package file.  If to release Type requires change control,
     change_control_id must be specified.
     """
-    if not user.has_perm( 'Package.tag_{0}'.format( tag ) ):
+    if not user.has_perm( 'Attrib.tag_{0}'.format( tag ) ):
       raise NotAuthorized()
 
     cur_tags = [ i.name for i in self.tag_list ]
 
-    for tag in tag.required_list:
-      if tag.name not in cur_tags:
-        raise ValueError( 'Required tag "{0}" missing'.format( tag.name ) )
+    for item in tag.required_list:
+      if item.name not in cur_tags:
+        raise ValueError( 'Required tag "{0}" missing'.format( item.name ) )
 
     if tag.change_control_required and change_control_id is None:
-      raise ValueError( 'Change Control required to tag with "%s"(%s)' % ( tag.description, tag.name ) )
+      raise ValueError( 'Change Control required to tag with "{0}"({1})'.format( tag.description, tag.name ) )
 
     pft = PackageFileTag()
     pft.package_file = self
@@ -194,7 +194,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
   @cinp.action( return_type={ 'type': 'String', 'is_array': True }, paramater_type_list=[ { 'type': 'File', 'allowed_scheme_list': [ 'djfh' ] } ] )
   @staticmethod
-  def distroversion_options( file ):
+  def distroversionOptions( file ):
     """
     returns a list of possible DistroVersions for this filename
     """
@@ -212,28 +212,28 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     Create a new PackageFile
     """
     try:
-     PackageFile.objects.get( file='./%s' % file.name )  # TODO: Figure out where the ./ is comming from and get rid of it, make sure to update the clean up script
-     raise ValueError( 'File name "%s" allready used' % file.name )
+     PackageFile.objects.get( file='./{0}'.format( file.name ) )  # TODO: Figure out where the ./ is comming from and get rid of it, make sure to update the clean up script
+     raise ValueError( 'File name "{0}" allready used'.format( file.name ) )
     except PackageFile.DoesNotExist:
      pass
 
     result = PackageFile()
     result.justification = justification
     result.provenance = provenance
-    result.create_by = user.username
+    result.created_by = user.username
     result.loadfile( file, distroversion )
     result.full_clean()
     result.save()
 
   @cinp.action( return_type={ 'type': 'Boolean' }, paramater_type_list=[ { 'type': 'String' } ] )
   @staticmethod
-  def filename_in_use( file_name ):
+  def filenameInUse( file_name ):
     """
     returns true if the file_name has allready been used.  Good Idea to call this
     before uploading files to ensure the file name is unique.
     """
     try:
-      PackageFile.objects.get( file='./%s' % file_name )  # TODO: see ./ comment in create
+      PackageFile.objects.get( file='./{0}'.format( file_name ) )  # TODO: see ./ comment in create
       return True
     except PackageFile.DoesNotExist:
       pass
@@ -242,12 +242,12 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
   @cinp.list_filter( name='package', paramater_type_list=[ { 'type': 'Model', 'model': Package } ] )
   @staticmethod
-  def filter_package( package ):
+  def filterPackage( package ):
     return PackageFile.objects.filter( package=package )
 
   @cinp.list_filter( name='repo', paramater_type_list=[ { 'type': 'Model', 'model': Repo }, { 'type': 'String', 'is_array': True } ] )
   @staticmethod
-  def filter_repo( repo, package_list ):
+  def filterRepo( repo, package_list ):
     queryset_parms = {}
     queryset_parms[ 'distroversion__in' ] = [ i.pk for i in repo.distroversion_list.all() ]
     queryset_parms[ 'tag_list__in' ] = [ i.pk for i in repo.tag_list.all() ]
@@ -259,12 +259,12 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
   @cinp.check_auth()
   @staticmethod
-  def checkAuth( user, method, id_list, action=None ):
-    if not cinp.basic_auth_check( user, method, PackageFile ):
+  def checkAuth( user, verb, id_list, action=None ):
+    if not cinp.basic_auth_check( user, verb, PackageFile ):
       return False
 
-    if method == 'CALL':
-      if action in ( 'filename_in_use', 'distroversion_options', 'create' ) and user.has_perm( 'Package.add_packagefile' ):
+    if verb == 'CALL':
+      if action in ( 'filenameInUse', 'distroversionOptions', 'create' ) and user.has_perm( 'Package.add_packagefile' ):
         return True
 
       if action == 'tag' and user.has_perm( 'Package.can_tag' ):
@@ -275,6 +275,11 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
       if action == 'deprocate' and user.has_perm( 'Package.can_deprocate' ):
         return True
+
+      return False
+
+    else:
+      return True
 
     return False
 
@@ -301,7 +306,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     )
 
   def __str__( self ):
-    return 'PackageFile "%s"' % ( self.file.name )
+    return 'PackageFile "{0}"'.format( self.file.name )
 
 
 @cinp.model( not_allowed_verb_list=( 'CREATE', 'UPDATE', 'DELETE', 'CALL' ) )
@@ -318,12 +323,12 @@ class PackageFileTag( models.Model ):
 
   @cinp.check_auth()
   @staticmethod
-  def checkAuth( user, method, id_list, action=None ):
-    return cinp.basic_auth_check( user, method, PackageFileTag )
+  def checkAuth( user, verb, id_list, action=None ):
+    return cinp.basic_auth_check( user, verb, PackageFileTag )
 
   class Meta:
     unique_together = ( 'package_file', 'tag' )
     default_permissions = ()
 
   def __str__( self ):
-    return 'PackageFileTag for PackageFile "%s" Release Type "%s" at "%s"' % ( self.package_file, self.release_type, self.at )
+    return 'PackageFileTag for PackageFile "{0}" Release Type "{1}" at "{2}"'.format( self.package_file, self.release_type, self.at )
