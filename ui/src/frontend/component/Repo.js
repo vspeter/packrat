@@ -72,7 +72,7 @@ class Repo extends React.Component
                   <tr><th>Fieldsystem Directory</th><td>{ repo.filesystem_dir }</td></tr>
                   <tr><th>Distro Versions</th><td><ul>{ repo.distroversion_list.map( ( item, index ) => <li key={ index }><Link to={ '/distroversion/' + CInP.extractIds( item ) }>{ item }</Link></li> ) }</ul></td></tr>
                   <tr><th>Manager Type</th><td>{ repo.manager_type }</td></tr>
-                  <tr><th>Releas Types</th><td><ul>{ repo.release_type_list.map( ( item, index ) => <li key={ index }><Link to={ '/releasetype/' + CInP.extractIds( item ) }>{ item }</Link></li> ) }</ul></td></tr>
+                  <tr><th>Tag</th><td><Link to={ '/tag/' + CInP.extractIds( repo.tag ) }>{ repo.tag }</Link></td></tr>
                   <tr><th>Show Only the Latest</th><td>{ repo.show_only_latest }</td></tr>
                   <tr><th>Created</th><td>{ repo.created }</td></tr>
                   <tr><th>Updated</th><td>{ repo.updated }</td></tr>

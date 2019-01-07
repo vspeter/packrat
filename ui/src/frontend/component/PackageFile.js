@@ -1,6 +1,6 @@
 import React from 'react';
 import CInP from './cinp';
-import AddPackageDialog from './AddPackageDialog';
+import TagDialog from './TagDialog';
 import { Table, TableHead, TableRow, TableCell, Button } from 'react-toolbox';
 import { Link } from 'react-router-dom';
 
@@ -47,7 +47,11 @@ class PackageFile extends React.Component
                                      version: pkgFile.version,
                                      type: pkgFile.type,
                                      arch: pkgFile.arch,
-                                     release: pkgFile.release
+                                     tags: pkgFile.tags,
+                                     deprocated: ( pkgFile.deprocated_at == null ) ? '' : 'Deprocated',
+                                     failed: ( pkgFile.failed_at == null ) ? '' : 'Failed',
+                                     deprocated_at: pkgFile.deprocated_at,
+                                     failed_at: pkgFile.failed_at,
                                      } );
           }
           this.setState( { packageFile_list: packageFile_list } );
@@ -55,48 +59,8 @@ class PackageFile extends React.Component
     }
   }
 
-  promote = ( id, cur_release ) =>
+  deprocate = ( id ) =>
   {
-    var rc;
-    if( cur_release == 'new' )
-    {
-      rc = this.props.packrat.promote( id, 'dev' );
-    }
-    else if( cur_release == 'dev' )
-    {
-      rc = this.props.packrat.promote( id, 'stage' );
-    }
-    else if( cur_release == 'stage' )
-    {
-      var cc_id = window.prompt( 'Please enter the Change Control Number' );
-      if( !cc_id )
-        return;
-
-      rc = this.props.packrat.promote( id, 'prod', cc_id );
-    }
-    else
-    {
-      return
-    }
-    rc.then(
-      ( data ) =>
-      {
-        this.update( this.props );
-      },
-      ( err ) =>
-      {
-        alert( 'Error Promoting: ' + JSON.stringify( err ) );
-      }
-    )
-  }
-
-  deprocate = ( id, cur_release ) =>
-  {
-    if( cur_release == 'depr' )
-    {
-      return;
-    }
-
     this.props.packrat.deprocate( id ).
     then( ( data ) =>
     {
@@ -105,6 +69,20 @@ class PackageFile extends React.Component
     ( err ) =>
     {
       alert( 'Error Deprocating: ' + JSON.stringify( err ) );
+    }
+   );
+  }
+
+  fail = ( id ) =>
+  {
+    this.props.packrat.fail( id ).
+    then( ( data ) =>
+    {
+      this.update( this.props );
+    },
+    ( err ) =>
+    {
+      alert( 'Error Failing: ' + JSON.stringify( err ) );
     }
    );
   }
@@ -119,8 +97,9 @@ class PackageFile extends React.Component
           <h3>PackageFile Detail</h3>
           { packageFile !== null &&
             <div>
-              <Button onClick={ () => this.promote( this.props.id, this.state.packageFile.release ) }>Promote</Button>
-              <Button onClick={ () => this.deprocate( this.props.id, this.state.packageFile.release ) }>Deprocate</Button>
+              <TagDialog disabled={ packageFile.failed_at != null || packageFile.deprocated_at != null } id={ this.props.id } packrat={ this.props.packrat } update={ () => { this.update( this.props ) } }/>
+              <Button disabled={ packageFile.failed_at != null || packageFile.deprocated_at != null } onClick={ () => this.deprocate( this.props.id ) }>Deprocate</Button>
+              <Button disabled={ packageFile.failed_at != null || packageFile.deprocated_at != null } onClick={ () => this.fail( this.props.id ) }>Fail</Button>
               <table>
                 <thead/>
                 <tbody>
@@ -133,8 +112,13 @@ class PackageFile extends React.Component
                   <tr><th>Provenance</th><td>{ packageFile.provenance }</td></tr>
                   <tr><th>file</th><td><a href={ packageFile.file }>{ packageFile.file }</a></td></tr>
                   <tr><th>SHA256</th><td>{ packageFile.sha256 }</td></tr>
-                  <tr><th>Release Type</th><td><ul>{ packageFile.release_type_list.map( ( item, index ) => <li key={ index }><Link to={ '/releasetype/' + CInP.extractIds( item ) }>{ item }</Link></li> ) }</ul></td></tr>
-                  <tr><th>Release</th><td>{ packageFile.release }</td></tr>
+                  <tr><th>Tags</th><td>{ packageFile.tags }</td></tr>
+                  <tr><th>Tag List</th><td><ul>{ packageFile.tag_list.map( ( item, index ) => <li key={ index }><Link to={ '/tag/' + CInP.extractIds( item ) }>{ item }</Link></li> ) }</ul></td></tr>
+                  <tr><th>Created By</th><td>{ packageFile.created_by }</td></tr>
+                  <tr><th>Deprocated By</th><td>{ packageFile.deprocated_by }</td></tr>
+                  <tr><th>Deprocated At</th><td>{ packageFile.deprocated_at }</td></tr>
+                  <tr><th>Failed By</th><td>{ packageFile.failed_by }</td></tr>
+                  <tr><th>Failed At</th><td>{ packageFile.failed_at }</td></tr>
                   <tr><th>Created</th><td>{ packageFile.created }</td></tr>
                   <tr><th>Updated</th><td>{ packageFile.updated }</td></tr>
                 </tbody>
@@ -150,19 +134,25 @@ class PackageFile extends React.Component
           <TableHead>
             <TableCell>Id</TableCell>
             <TableCell>Version</TableCell>
-            <TableCell>Release</TableCell>
+            <TableCell>Tags</TableCell>
             <TableCell>Type</TableCell>
             <TableCell>Arch</TableCell>
+            <TableCell>Flags</TableCell>
             <TableCell>Actions</TableCell>
           </TableHead>
           { this.state.packageFile_list.map( ( item ) => (
             <TableRow key={ item.id } >
               <TableCell><Link to={ '/packagefile/' + item.id }>{ item.id }</Link></TableCell>
               <TableCell>{ item.version }</TableCell>
-              <TableCell>{ item.release }</TableCell>
+              <TableCell>{ item.tags }</TableCell>
               <TableCell>{ item.type }</TableCell>
               <TableCell>{ item.arch }</TableCell>
-              <TableCell><Button onClick={ () => this.promote( item.id, item.release ) }>Promote</Button><Button onClick={ () => this.deprocate( item.id, item.release ) }>Deprocate</Button></TableCell>
+              <TableCell>{ item.failed } { item.deprocated }</TableCell>
+              <TableCell>
+                <TagDialog disabled={ item.failed_at != null || item.deprocated_at != null } id={ item.id } packrat={ this.props.packrat } update={ () => { this.update( this.props ) } }/>
+                <Button disabled={ item.failed_at != null || item.deprocated_at != null } onClick={ () => this.deprocate( item.id ) }>Deprocate</Button>
+                <Button disabled={ item.failed_at != null || item.deprocated_at != null } onClick={ () => this.fail( item.id ) }>Fail</Button>
+              </TableCell>
             </TableRow>
           ) ) }
         </Table>

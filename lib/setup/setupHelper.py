@@ -29,9 +29,9 @@ def load_users():
 
 
 def load_tags():
-  type_list = ( ( 'dev', [], False ), ( 'stage', [ 'dev' ], False ), ( 'prod', [ 'stage' ], True ) )
+  tag_list = [ ( 'dev', [], False ), ( 'stage', [ 'dev' ], False ), ( 'prod', [ 'stage' ], True ) ]
 
-  for name, required_list, cc in type_list:
+  for name, required_list, cc in tag_list:
     t = Tag( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=name, change_control_required=cc )
     t.full_clean()
     t.save()
@@ -133,11 +133,15 @@ def load_mirrors():
 
 print( 'Creating Users...' )
 load_users()
+
 print( 'Creating Tags...' )
 load_tags()
+
 print( 'Creating Distro Versions...' )
 load_distro_versions()
+
 print( 'Creating Repos...' )
 load_repos()
+
 print( 'Creating Mirrors...' )
 load_mirrors()

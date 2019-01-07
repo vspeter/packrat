@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
                 ('change_control_required', models.BooleanField(default=False)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
-                ('required_list', models.ManyToManyField(related_name='_tag_required_list_+', to='Attrib.Tag')),
+                ('required_list', models.ManyToManyField(related_name='_tag_required_list_+', to='Attrib.Tag', symmetrical=False)),
             ],
             options={
                 'default_permissions': (),

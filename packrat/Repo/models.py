@@ -3,6 +3,7 @@ import errno
 import time
 from datetime import datetime, timezone
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, connection
 
@@ -84,7 +85,10 @@ class Repo( models.Model ):
     """
     send the notify event to anything blocked in the poll
     """
-    if package is None:
+    if settings.DATABASES[ 'default' ][ 'ENGINE' ] != 'django.db.backends.postgresql_psycopg2':
+      return
+
+    if package is None:  # this only works for Postgres
       connection.cursor().execute( 'NOTIFY "mirror_repo_{0}"'.format( self.pk ) )
     else:
       connection.cursor().execute( 'NOTIFY "mirror_repo_{0}", \'{1}\''.format( self.pk, package.pk ) )

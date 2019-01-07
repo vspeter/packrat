@@ -57,7 +57,7 @@ From the Package perspective::
 
 
 def get_app( enable_file_handler, debug ):
-  app = WerkzeugServer( root_path='/api/v1/', root_version='2.0', debug=debug, get_user=getUser, cors_allow_list=[ '*' ] )
+  app = WerkzeugServer( root_path='/api/v2/', root_version='2.0', debug=debug, get_user=getUser, cors_allow_list=[ '*' ] )
   app.root_namespace.doc == __doc__
 
   app.registerNamespace( '/', 'packrat.Auth' )

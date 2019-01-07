@@ -45,6 +45,6 @@
     "build": "node_modules/.bin/cross-env NODE_ENV=production UV_THREADPOOL_SIZE=100 webpack --config webpack.config.js",
     "deploy": "gh-pages -d build"
   },
-  "author": "Peter Howe peter.howe@emc.com",
+  "author": "Peter Howe peter.howe@virtustream.com",
   "license": "Apache-2.0"
 }

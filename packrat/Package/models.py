@@ -83,7 +83,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
   provenance = models.TextField()
   file = models.FileField( editable=False )
   sha256 = models.CharField( max_length=64, editable=False )
-  tag_list = models.ManyToManyField( Tag, through='PackageFileTag' )
+  tag_list = models.ManyToManyField( Tag, through='PackageFileTag', related_name='+' )
   failed_at = models.DateTimeField( blank=True, null=True )
   failed_by = models.CharField( max_length=USERNAME_LENGTH, blank=True, null=True )
   deprocated_at = models.DateTimeField( blank=True, null=True )
@@ -94,16 +94,16 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
   @property
   def tags( self ):
-    return [ i.name for i in self.tag_list.all() ]
+    return ', '.join( [ i.name for i in self.tag_list.all() ] )
 
   def notify( self, tag_list=None ):
     """
     notify repos that hold this tag
     """
     if tag_list is None:
-      tag_list = self.tag_list
+      tag_list = self.tag_list.all()
 
-    repo_list = Repo.objects.filter( tag_list__in=tag_list, distroversion_list=self.distroversion )
+    repo_list = Repo.objects.filter( tag__in=tag_list, distroversion_list=self.distroversion )
 
     for repo in repo_list:
       repo.notify( self.package )
@@ -148,14 +148,17 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     if not user.has_perm( 'Attrib.tag_{0}'.format( tag ) ):
       raise NotAuthorized()
 
-    cur_tags = [ i.name for i in self.tag_list ]
+    if self.deprocated_at is not None or self.failed_at is not None:
+      raise ValueError( 'Can not tag when deprocated or failed' )
 
-    for item in tag.required_list:
+    cur_tags = [ i.name for i in self.tag_list.all() ]
+
+    for item in tag.required_list.all():
       if item.name not in cur_tags:
         raise ValueError( 'Required tag "{0}" missing'.format( item.name ) )
 
     if tag.change_control_required and change_control_id is None:
-      raise ValueError( 'Change Control required to tag with "{0}"({1})'.format( tag.description, tag.name ) )
+      raise ValueError( 'Change Control required to tag with "{0}"'.format( tag.name ) )
 
     pft = PackageFileTag()
     pft.package_file = self
@@ -173,6 +176,12 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     """
     Deprocate package file.
     """
+    if self.failed_at is not None:
+      raise ValueError( 'Can not deprocate when failed' )
+
+    if self.deprocated_at is not None:
+      return
+
     self.deprocated_at = datetime.now( timezone.utc )
     self.deprocated_by = user.username
     self.full_clean()
@@ -185,6 +194,12 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     """
     Fail package file.
     """
+    if self.deprocated_at is not None:
+      raise ValueError( 'Can not fail when deprocated' )
+
+    if self.failed_at is not None:
+      return
+
     self.failed_at = datetime.now( timezone.utc )
     self.failed_by = user.username
     self.full_clean()
@@ -316,7 +331,7 @@ class PackageFileTag( models.Model ):
   the package file was tagged and by whom
   """
   package_file = models.ForeignKey( PackageFile, on_delete=models.CASCADE )
-  tag = models.ForeignKey( Tag, on_delete=models.CASCADE )
+  tag = models.ForeignKey( Tag, on_delete=models.CASCADE, related_name='+' )
   by = models.CharField( max_length=USERNAME_LENGTH )
   at = models.DateTimeField( editable=False, auto_now_add=True )
   change_control_id = models.CharField( max_length=50, blank=True, null=True )

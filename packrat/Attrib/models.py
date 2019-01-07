@@ -31,7 +31,7 @@ class Tag( models.Model ):
     promote to this level.
   """
   name = models.CharField( max_length=10, primary_key=True )
-  required_list = models.ManyToManyField( 'self', related_name='+' )
+  required_list = models.ManyToManyField( 'self', symmetrical=False, related_name='+' )
   change_control_required = models.BooleanField( default=False )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )
