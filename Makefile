@@ -23,7 +23,7 @@ clean: clean-ui
 	$(RM) -r build
 	$(RM) dpkg
 	$(RM) -r docs/build
-	dh_clean
+	dh_clean || true
 
 .PHONY:: all install clean full-clean
 
@@ -49,7 +49,7 @@ clean-ui:
 .PHONY::
 
 test-distros:
-	echo xenial
+	echo ubuntu-xenial
 
 test-requires:
 	echo python3 python3-django python3-psycopg2 python3-dateutil python3-magic postgresql-client postgresql python3-pip python3-pytest python3-pytest-cov python3-pytest-django python3-cinp
@@ -65,7 +65,7 @@ test:
 .PHONY:: test-distros test-requires test-setup test
 
 dpkg-distros:
-	echo xenial
+	echo ubuntu-xenial
 
 dpkg-requires:
 	echo dpkg-dev debhelper cdbs python3-dev python3-setuptools
@@ -80,7 +80,7 @@ dpkg-file:
 .PHONY:: dpkg-distroy dpkg-requires dpkg-file
 
 docs-distros:
-	echo xenial
+	echo ubuntu-xenial
 
 docs-requires:
 	echo python3-sphinx texlive-latex-base texlive-latex-extra python3-django python3-magic python3-psycopg2

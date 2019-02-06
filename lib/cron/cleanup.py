@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import os
 
-os.environ.setdefault( "DJANGO_SETTINGS_MODULE", "packrat.settings" )
+os.environ.setdefault( 'DJANGO_SETTINGS_MODULE', 'packrat.settings' )
 
 import django
 django.setup()

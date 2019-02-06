@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save, post_delete
 
 from cinp.orm_django import DjangoCInP as CInP
-from packrat.fields import name_regex, DISTRO_CHOICES, FILE_TYPE_CHOICES, DISTRO_LENGTH, FILE_TYPE_LENGTH
+from packrat.fields import name_regex, DISTRO_CHOICES, DISTRO_LENGTH, FILE_TYPE_LENGTH
 
 """
 tags -
@@ -64,7 +64,7 @@ class Tag( models.Model ):
   def tagMap():
     result = {}
     for tag in Tag.objects.all():
-      result[ tag.name ] = { 'requred': [ i.name for i in tag.required_list ], 'change_control': tag.change_control_required }
+      result[ tag.name ] = { 'requred': [ i.name for i in tag.required_list.all() ], 'change_control': tag.change_control_required }
 
     return result
 
@@ -102,7 +102,7 @@ def tagPostDelete( sender, instance, **kwargs ):
     pass
 
 
-@cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_set_map={ 'distro': DISTRO_CHOICES, 'file_type': FILE_TYPE_CHOICES } )
+@cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_set_map={ 'distro': DISTRO_CHOICES } )
 class DistroVersion( models.Model ):
   """
   This is a type of Distro, ie Centos 6 or Ubuntu 14.04(Trusty)
@@ -118,7 +118,7 @@ class DistroVersion( models.Model ):
   name = models.CharField( max_length=20, primary_key=True )
   distro = models.CharField( max_length=DISTRO_LENGTH, choices=DISTRO_CHOICES )  # TODO: convert into another model
   version = models.CharField( max_length=10, null=True, blank=True )
-  file_type = models.CharField( max_length=FILE_TYPE_LENGTH, choices=FILE_TYPE_CHOICES )
+  file_type = models.CharField( max_length=FILE_TYPE_LENGTH )
   release_names = models.CharField( max_length=100, blank=True, help_text='tab delimited list of things like el5, trusty, something that is in filename that tells what version it belongs to' )
   created = models.DateTimeField( editable=False, auto_now_add=True )
   updated = models.DateTimeField( editable=False, auto_now=True )

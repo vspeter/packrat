@@ -10,7 +10,7 @@ from cinp.server_common import NotAuthorized
 from packrat.Attrib.models import Tag, DistroVersion
 from packrat.Repo.models import Repo
 from packrat.lib.info import infoDetect
-from packrat.fields import name_regex, USERNAME_LENGTH, FILE_TYPE_CHOICES, FILE_ARCH_CHOICES, FILE_TYPE_LENGTH, FILE_ARCH_LENGTH
+from packrat.fields import name_regex, filename_regex, USERNAME_LENGTH, FILE_ARCH_CHOICES, FILE_TYPE_LENGTH, FILE_ARCH_LENGTH
 
 cinp = CInP( 'Package', '2.0' )
 
@@ -49,7 +49,7 @@ class Package( models.Model ):
     return 'Package "{0}"'.format( self.name )
 
 
-@cinp.model( not_allowed_verb_list=( 'CREATE', 'UPDATE', 'DELETE' ), constant_set_map={ 'type': FILE_TYPE_CHOICES, 'arch': FILE_ARCH_CHOICES }, property_list=( 'tags', ) )
+@cinp.model( not_allowed_verb_list=( 'CREATE', 'UPDATE', 'DELETE' ), constant_set_map={ 'arch': FILE_ARCH_CHOICES }, property_list=( 'tags', ) )
 class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, django no longer does this for us
   """
   This is the Individual package "file", they can indivdually belong to any
@@ -77,7 +77,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
   package = models.ForeignKey( Package, editable=False, on_delete=models.CASCADE )
   distroversion = models.ForeignKey( DistroVersion, editable=False, on_delete=models.PROTECT )
   version = models.CharField( max_length=50, editable=False )
-  type = models.CharField( max_length=FILE_TYPE_LENGTH, editable=False, choices=FILE_TYPE_CHOICES )
+  type = models.CharField( max_length=FILE_TYPE_LENGTH, editable=False )
   arch = models.CharField( max_length=FILE_ARCH_LENGTH, editable=False, choices=FILE_ARCH_CHOICES )
   justification = models.TextField()
   provenance = models.TextField()
@@ -94,7 +94,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
   @property
   def tags( self ):
-    return ', '.join( [ i.name for i in self.tag_list.all() ] )
+    return ', '.join( [ i.name for i in self.tag_list.all().order_by( 'name' ) ] )
 
   def notify( self, tag_list=None ):
     """
@@ -108,8 +108,11 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     for repo in repo_list:
       repo.notify( self.package )
 
-  def loadfile( self, target_file, distroversion ):
-    info = infoDetect( target_file )
+  def loadfile( self, target_file, distroversion, type ):
+    if type is not None and not name_regex.match( type ):
+      raise ValueError( 'Invalid type' )
+
+    info = infoDetect( target_file, type )
 
     if info is None:
       raise ValueError( 'Unable to Determine File Type' )
@@ -145,7 +148,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     Tag package file.  If to release Type requires change control,
     change_control_id must be specified.
     """
-    if not user.has_perm( 'Attrib.tag_{0}'.format( tag ) ):
+    if not user.has_perm( 'Attrib.tag_{0}'.format( tag.name ) ):
       raise NotAuthorized()
 
     if self.deprocated_at is not None or self.failed_at is not None:
@@ -207,36 +210,44 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
     self.notify()
 
-  @cinp.action( return_type={ 'type': 'String', 'is_array': True }, paramater_type_list=[ { 'type': 'File', 'allowed_scheme_list': [ 'djfh' ] } ] )
+  @cinp.action( return_type={ 'type': 'String', 'is_array': True },
+                paramater_type_list=[ { 'type': 'File', 'allowed_scheme_list': [ 'djfh' ] }, { 'type': 'String' } ] )
   @staticmethod
-  def distroversionOptions( file ):
+  def distroversionOptions( file, type=None ):
     """
     returns a list of possible DistroVersions for this filename
     """
-    info = infoDetect( file )
+    if not filename_regex.match( file.name ):
+      raise ValueError( 'Invalid filename' )
 
+    info = infoDetect( file, type )
+    print( info.filename, info.package, info.arch, info.version, info.type, info.distroversion_list )
     if info is None:
       raise ValueError( 'Unable to Determine File Type' )
 
     return info.distroversion_list
 
-  @cinp.action( paramater_type_list=[ { 'type': '_USER_' }, { 'type': 'File', 'allowed_scheme_list': [ 'djfh' ] }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ] )
+  @cinp.action( paramater_type_list=[ { 'type': '_USER_' }, { 'type': 'File', 'allowed_scheme_list': [ 'djfh' ] },
+                                      { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' }, { 'type': 'String' } ] )
   @staticmethod
-  def create( user, file, justification, provenance, distroversion ):
+  def create( user, file, justification, provenance, distroversion, type=None ):
     """
     Create a new PackageFile
     """
+    if not filename_regex.match( file.name ):
+      raise ValueError( 'Invalid filename' )
+
     try:
-     PackageFile.objects.get( file='./{0}'.format( file.name ) )  # TODO: Figure out where the ./ is comming from and get rid of it, make sure to update the clean up script
-     raise ValueError( 'File name "{0}" allready used'.format( file.name ) )
+      PackageFile.objects.get( file='./{0}'.format( file.name ) )  # TODO: Figure out where the ./ is comming from and get rid of it, make sure to update the clean up script
+      raise ValueError( 'File name "{0}" allready used'.format( file.name ) )
     except PackageFile.DoesNotExist:
-     pass
+      pass
 
     result = PackageFile()
     result.justification = justification
     result.provenance = provenance
     result.created_by = user.username
-    result.loadfile( file, distroversion )
+    result.loadfile( file, distroversion, type )
     result.full_clean()
     result.save()
 
@@ -260,12 +271,13 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
   def filterPackage( package ):
     return PackageFile.objects.filter( package=package )
 
-  @cinp.list_filter( name='repo', paramater_type_list=[ { 'type': 'Model', 'model': Repo }, { 'type': 'String', 'is_array': True } ] )
+  @cinp.list_filter( name='repo', paramater_type_list=[ { 'type': 'Model', 'model': Repo },
+                                                        { 'type': 'String', 'is_array': True } ] )
   @staticmethod
   def filterRepo( repo, package_list ):
     queryset_parms = {}
     queryset_parms[ 'distroversion__in' ] = [ i.pk for i in repo.distroversion_list.all() ]
-    queryset_parms[ 'tag_list__in' ] = [ i.pk for i in repo.tag_list.all() ]
+    queryset_parms[ 'tag_list' ] = repo.tag
 
     if package_list:  # not None, and not and empty string or empty list
       queryset_parms[ 'package_id__in' ] = package_list

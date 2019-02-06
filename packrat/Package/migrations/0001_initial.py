@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('version', models.CharField(editable=False, max_length=50)),
-                ('type', models.CharField(choices=[('deb', 'deb'), ('rpm', 'RPM'), ('rsc', 'Resource'), ('ova', 'OVA'), ('docker', 'Docker'), ('python', 'Python')], editable=False, max_length=6)),
+                ('type', models.CharField(editable=False, max_length=20)),
                 ('arch', models.CharField(choices=[('x86_64', 'x86_64'), ('i386', 'i386'), ('arm64', 'ARM64'), ('all', 'All')], editable=False, max_length=6)),
                 ('justification', models.TextField()),
                 ('provenance', models.TextField()),

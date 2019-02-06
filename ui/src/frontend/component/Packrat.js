@@ -167,12 +167,12 @@ class Packrat
 
   distroversionOptions = ( file_handle ) =>
   {
-    return this.cinp.call( '/api/v2/Pakcage/PackageFile(distroversion_options)', { file: file_handle } );
+    return this.cinp.call( '/api/v2/Package/PackageFile(distroversionOptions)', { file: file_handle } );
   };
 
   createPackageFile = ( file_handle, justification, provenance, distroversion ) =>
   {
-    return this.cinp.call( '/api/v2/Repo/PackageFile(create)', { file: file_handle, justification: justification, provenance: provenance, distroversion: distroversion } );
+    return this.cinp.call( '/api/v2/Package/PackageFile(create)', { file: file_handle, justification: justification, provenance: provenance, distroversion: distroversion } );
   };
 
   tag = ( id, tag_id, change_control_id ) =>

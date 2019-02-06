@@ -1,31 +1,16 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import os
 
-os.environ.setdefault( "DJANGO_SETTINGS_MODULE", "packrat.settings" )
+if __name__ == '__main__':
+  os.environ.setdefault( 'DJANGO_SETTINGS_MODULE', 'packrat.settings' )
 
-import django
-django.setup()
+  import django
+  django.setup()
 
 from django.contrib.auth.models import User, Permission
 from packrat.Repo.models import Repo, Mirror
 from packrat.Attrib.models import DistroVersion, Tag
-
-
-def load_users():
-  User.objects.create_superuser( username='root', email='root@none.com', password='root' )
-  u = User.objects.create_user( 'mcp', password='mcp' )
-  for name in ( 'can_tag', 'can_fail' ):
-    u.user_permissions.add( Permission.objects.get( codename=name ) )
-
-  u = User.objects.create_user( 'nullunit', password='nullunit' )
-  for name in ( 'add_packagefile', ):
-    u.user_permissions.add( Permission.objects.get( codename=name ) )
-
-  u = User.objects.create_user( 'manager', password='manager' )
-  for name in ( 'can_tag', 'can_untag', 'can_fail', 'can_unfail', 'can_deprocate', 'can_undeprocate', 'add_package', 'add_packagefile' ):
-    u.user_permissions.add( Permission.objects.get( codename=name ) )
-
-  User.objects.create_user( 'mirror', password='mirrormirror' )
+from packrat.lib.info import OTHER_TYPE_LIST
 
 
 def load_tags():
@@ -37,6 +22,23 @@ def load_tags():
     t.save()
     for required in required_list:
       t.required_list.add( Tag.objects.get( name=required ) )
+
+
+def load_users():
+  User.objects.create_superuser( username='root', email='root@none.com', password='root' )
+  u = User.objects.create_user( 'mcp', password='mcp' )
+  for name in ( 'can_tag', 'can_fail', 'tag_dev', 'tag_stage' ):
+    u.user_permissions.add( Permission.objects.get( codename=name ) )
+
+  u = User.objects.create_user( 'nullunit', password='nullunit' )
+  for name in ( 'add_packagefile', ):
+    u.user_permissions.add( Permission.objects.get( codename=name ) )
+
+  u = User.objects.create_user( 'manager', password='manager' )
+  for name in ( 'can_tag', 'can_untag', 'can_fail', 'can_unfail', 'can_deprocate', 'can_undeprocate', 'add_package', 'add_packagefile', 'tag_dev', 'tag_stage', 'tag_prod' ):
+    u.user_permissions.add( Permission.objects.get( codename=name ) )
+
+  User.objects.create_user( 'mirror', password='mirrormirror' )
 
 
 def load_distro_versions():
@@ -55,10 +57,6 @@ def load_distro_versions():
     d.full_clean()
     d.save()
 
-  d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='resource', file_type='rsc', distro='none' )
-  d.full_clean()
-  d.save()
-
   d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='docker', file_type='docker', distro='none' )
   d.full_clean()
   d.save()
@@ -67,9 +65,10 @@ def load_distro_versions():
   d.full_clean()
   d.save()
 
-  d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name='ova', file_type='ova', distro='none' )
-  d.full_clean()
-  d.save()
+  for type in list( OTHER_TYPE_LIST ) + [ 'resource', 'ova', 'respkg' ]:
+    d = DistroVersion( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', name=type, file_type=type, distro='none' )
+    d.full_clean()
+    d.save()
 
 
 def load_repos():
@@ -90,13 +89,6 @@ def load_repos():
     r.save()
 
   for release, tag in release_list:
-    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='JSON - {0}'.format( release.title() ), manager_type='json', name='json-{0}'.format( release ), filesystem_dir='json-{0}'.format( release ), show_only_latest=False )
-    r.distroversion_list = [ 'resource', 'ova' ]
-    r.tag_id = tag
-    r.full_clean()
-    r.save()
-
-  for release, tag in release_list:
     r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='Docker - {0}'.format( release.title() ), manager_type='docker', name='docker-{0}'.format( release ), filesystem_dir='docker-{0}'.format( release ), show_only_latest=False )
     r.distroversion_list = [ 'docker' ]
     r.tag_id = tag
@@ -106,6 +98,13 @@ def load_repos():
   for release, tag in release_list:
     r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='PYPI - {0}'.format( release.title() ), manager_type='pypi', name='pypi-{0}'.format( release ), filesystem_dir='pypi-{0}'.format( release ), show_only_latest=False )
     r.distroversion_list = [ 'pypi' ]
+    r.tag_id = tag
+    r.full_clean()
+    r.save()
+
+  for release, tag in release_list:
+    r = Repo( updated='2010-01-01T00:00:00.000Z', created='2010-01-01T00:00:00.000Z', description='JSON - {0}'.format( release.title() ), manager_type='json', name='json-{0}'.format( release ), filesystem_dir='json-{0}'.format( release ), show_only_latest=False )
+    r.distroversion_list = list( OTHER_TYPE_LIST ) + [ 'resource', 'ova', 'respkg' ]
     r.tag_id = tag
     r.full_clean()
     r.save()
@@ -131,17 +130,22 @@ def load_mirrors():
   m.save()
 
 
-print( 'Creating Users...' )
-load_users()
+def load():
+  print( 'Creating Tags...' )
+  load_tags()
 
-print( 'Creating Tags...' )
-load_tags()
+  print( 'Creating Users...' )
+  load_users()
 
-print( 'Creating Distro Versions...' )
-load_distro_versions()
+  print( 'Creating Distro Versions...' )
+  load_distro_versions()
 
-print( 'Creating Repos...' )
-load_repos()
+  print( 'Creating Repos...' )
+  load_repos()
 
-print( 'Creating Mirrors...' )
-load_mirrors()
+  print( 'Creating Mirrors...' )
+  load_mirrors()
+
+
+if __name__ == '__main__':
+  load()

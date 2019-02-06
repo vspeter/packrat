@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=20, primary_key=True, serialize=False)),
                 ('distro', models.CharField(choices=[('debian', 'Debian'), ('rhel', 'RHEL'), ('sles', 'SLES'), ('none', 'None')], max_length=6)),
                 ('version', models.CharField(blank=True, max_length=10, null=True)),
-                ('file_type', models.CharField(choices=[('deb', 'deb'), ('rpm', 'RPM'), ('rsc', 'Resource'), ('ova', 'OVA'), ('docker', 'Docker'), ('python', 'Python')], max_length=6)),
+                ('file_type', models.CharField(max_length=20)),
                 ('release_names', models.CharField(blank=True, help_text='tab delimited list of things like el5, trusty, something that is in filename that tells what version it belongs to', max_length=100)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),

@@ -27,7 +27,7 @@ class TagDialog extends React.Component
     this.props.packrat.tag( this.props.id, this.state.name ).then(
       ( data ) =>
       {
-        alert( 'Package Created' );
+        alert( 'Package File Tagged' );
         this.close();
         this.props.update();
       }, ( err ) =>
