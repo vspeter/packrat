@@ -221,7 +221,6 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
       raise ValueError( 'Invalid filename' )
 
     info = infoDetect( file, type )
-    print( info.filename, info.package, info.arch, info.version, info.type, info.distroversion_list )
     if info is None:
       raise ValueError( 'Unable to Determine File Type' )
 

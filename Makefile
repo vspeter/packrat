@@ -1,3 +1,5 @@
+VERSION := $(shell head -n 1 debian/changelog | awk '{match( $$0, /\(.+?\)/); print substr( $$0, RSTART+1, RLENGTH-2 ) }' | cut -d- -f1 )
+
 all: build-ui
 	./setup.py build
 
@@ -18,6 +20,9 @@ install: install-ui
 
 	./setup.py install --root $(DESTDIR) --install-purelib=/usr/lib/python3/dist-packages/ --prefix=/usr --no-compile -O0
 
+version:
+	echo $(VERSION)
+
 clean: clean-ui
 	./setup.py clean
 	$(RM) -r build
@@ -25,7 +30,9 @@ clean: clean-ui
 	$(RM) -r docs/build
 	dh_clean || true
 
-.PHONY:: all install clean full-clean
+dist-clean: clean
+
+.PHONY:: all install version clean dist-clean
 
 ui_files := $(foreach file,$(wildcard ui/src/www/*),ui/build/$(notdir $(file)))
 
