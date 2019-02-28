@@ -52,9 +52,5 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 MEDIA_URL = '/files/'
-# MEDIA_ROOT = '/var/www/packrat/api/files'
-MEDIA_ROOT = os.path.join( BASE_DIR, 'www/files' )  # for Dev work
-
-# STATIC_URL = '/static/'
-# STATIC_ROOT = '/var/www/packrat/static'
-# STATIC_ROOT = os.path.join(BASE_DIR, 'www/static')  # for Dev work
+MEDIA_ROOT = '/var/www/packrat/api/files'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'www/files') # for Dev work
