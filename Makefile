@@ -59,7 +59,7 @@ test-distros:
 	echo ubuntu-xenial
 
 test-requires:
-	echo python3 python3-django python3-psycopg2 python3-dateutil python3-magic postgresql-client postgresql python3-pip python3-pytest python3-pytest-cov python3-pytest-django python3-cinp
+	echo python3 python3-django python3-psycopg2 python3-dateutil python3-magic postgresql-client postgresql python3-pip python3-pytest python3-pytest-cov python3-pytest-django python3-pytest-mock python3-cinp
 
 test-setup:
 	pip3 install -e .

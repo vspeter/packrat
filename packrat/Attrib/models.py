@@ -64,7 +64,7 @@ class Tag( models.Model ):
   def tagMap():
     result = {}
     for tag in Tag.objects.all():
-      result[ tag.name ] = { 'requred': [ i.name for i in tag.required_list.all() ], 'change_control': tag.change_control_required }
+      result[ tag.name ] = { 'requred': [ i.name for i in tag.required_list.all().order_by( 'name' ) ], 'change_control': tag.change_control_required }
 
     return result
 

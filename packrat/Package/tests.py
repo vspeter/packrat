@@ -1,5 +1,6 @@
 import pytest
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files import File
 from django.core.files.storage import Storage
@@ -8,7 +9,7 @@ from django.core.exceptions import ValidationError
 from cinp.server_common import NotAuthorized
 
 from packrat.Package.models import Package, PackageFile
-from packrat.Attrib.models import Tag, DistroVersion
+from packrat.Attrib.models import Tag
 from packrat.lib.info_test import FakeFile, load_resources, infoDetect
 
 
@@ -17,6 +18,7 @@ def load_test_package( mocker, user, filename, dv, type=None ):
   file_mock = mocker.MagicMock( spec=File, name='FileMock' )
   file_mock.name = f.name
   file_mock.file = f.file
+  file_mock.read = lambda x: ''
   storage_mock = mocker.MagicMock( spec=Storage, name='StorageMock' )
   storage_mock.url = mocker.MagicMock( name='url' )
   storage_mock.url.return_value = f.filepath
@@ -51,6 +53,7 @@ def test_distroversion_list( mocker ):
 
 @pytest.mark.django_db
 def test_load_file( mocker ):
+  settings.MEDIA_ROOT = '/tmp/packrat_test_files'  # TODO: newer version of pytest has tmp_path
   load_resources()
 
   root = User.objects.get( username='root' )

@@ -12,21 +12,24 @@ PACKAGE_INFO_REGISTRY = []
 TYPE_INFO_MAP = {}
 
 
-def infoDetect( target_file, type ):
+def infoDetect( target_file, requested_type ):
   magic_helper = magic.open( 0 )
   magic_helper.load()
 
   try:
-    magic_type = magic_helper.descriptor( os.dup( target_file.file.fileno() ) )
+    magic_type = magic_helper.descriptor( os.dup( target_file.file.fileno() ) )  # getting a extra file handler so we don't mess up the file pointer for the later pull into resulting filesystem location
   except Exception as e:
     raise Exception( 'Error getting magic: "{0}"'.format( e ) )
 
-  if type is not None:
-    if type in TYPE_INFO_MAP:
-      return TYPE_INFO_MAP[ type ].detect( target_file, magic_type )
+  if isinstance( magic_type, bytes ):  # some versions of magic return bytes for type, others do string
+    magic_type = magic_type.decode()
+
+  if requested_type is not None:
+    if requested_type in TYPE_INFO_MAP:
+      return TYPE_INFO_MAP[ requested_type ].detect( target_file, magic_type )
 
     else:
-      return Other.detect( target_file, magic_type, type )
+      return Other.detect( target_file, magic_type, requested_type )
 
   for info in PACKAGE_INFO_REGISTRY:
     result = info.detect( target_file, magic_type )
