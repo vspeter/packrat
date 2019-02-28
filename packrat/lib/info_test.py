@@ -31,6 +31,7 @@ def test_detect( mocker ):
   assert info_dump( infoDetect( FakeFile( 'package1_1.2.3.tar.gz' ), None ) ) == ( 'package1_1.2.3', 'package1', 'all', '1.2.3', 'tar' )
   assert info_dump( infoDetect( FakeFile( 'pytest-0.0.0.tar.gz' ), None ) ) == ( 'pytest-0.0.0', 'pytest', 'all', '0.0.0', 'python' )
   assert info_dump( infoDetect( FakeFile( 'bob_1.1.respkg' ), None ) ) == ( 'bob_1.1', 'bob', 'all', '1.1', 'respkg' )
+  assert info_dump( infoDetect( FakeFile( 'jane_0.9.appimage' ), None ) ) == ( 'jane_0.9', 'jane', 'all', '0.9', 'appimage' )
 
   assert info_dump( infoDetect( FakeFile( 'test_0.1-2_all.deb' ), 'deb' ) ) == ( 'test_0.1-2_all', 'test', 'all', '0.1-2', 'deb' )
   assert info_dump( infoDetect( FakeFile( 'docker-test_0.0.tar' ), 'docker' ) ) == ( 'docker-test_0.0', 'docker-test', 'all', '0.0', 'docker' )
@@ -38,6 +39,10 @@ def test_detect( mocker ):
   assert info_dump( infoDetect( FakeFile( 'package1_1.2.3.tar.gz' ), 'tar' ) ) == ( 'package1_1.2.3', 'package1', 'all', '1.2.3', 'tar' )
   assert info_dump( infoDetect( FakeFile( 'pytest-0.0.0.tar.gz' ), 'python' ) ) == ( 'pytest-0.0.0', 'pytest', 'all', '0.0.0', 'python' )
   assert info_dump( infoDetect( FakeFile( 'bob_1.1.respkg' ), 'respkg' ) ) == ( 'bob_1.1', 'bob', 'all', '1.1', 'respkg' )
+  assert info_dump( infoDetect( FakeFile( 'jane_0.9.appimage' ), 'appimage' ) ) == ( 'jane_0.9', 'jane', 'all', '0.9', 'appimage' )
+
+  assert info_dump( infoDetect( FakeFile( 'jane_0.9.AppImage' ), None ) ) == ( 'jane_0.9', 'jane', 'all', '0.9', 'appimage' )
+  assert info_dump( infoDetect( FakeFile( 'jane_0.9.AppImage' ), 'appimage' ) ) == ( 'jane_0.9', 'jane', 'all', '0.9', 'appimage' )
 
   assert info_dump( infoDetect( FakeFile( 'package1_1.2.3.tar.gz' ), 'bob' ) ) == ( 'package1_1.2.3', 'package1', 'all', '1.2.3', 'bob' )
 

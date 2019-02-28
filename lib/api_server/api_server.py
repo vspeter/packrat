@@ -43,8 +43,8 @@ if __name__ == '__main__':
   app = get_app( True, DEBUG )
 
   logger.info( 'Starting Server...' )
-  GunicornApp( app, { 'bind': '0.0.0.0:8888', 'loglevel': 'info', 'workers': 3 } ).run()
-  #GunicornApp( app, { 'bind': '127.0.0.1:8888', 'loglevel': 'info', 'workers': 3 } ).run()
+  GunicornApp( app, { 'bind': '0.0.0.0:8888', 'loglevel': 'info', 'workers': 15 } ).run()
+  #GunicornApp( app, { 'bind': '127.0.0.1:8888', 'loglevel': 'info', 'workers': 10 } ).run()
   logger.info( 'Server Done...' )
   logger.info( 'Shutting Down...' )
   logger.info( 'Done!' )

@@ -3,7 +3,6 @@ import errno
 import time
 from datetime import datetime, timezone
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, connection
 
@@ -59,6 +58,13 @@ class Repo( models.Model ):
     that PackageFile change that affects this Repo.  If not change happend
     returns empty array, otherwise an array of Package names that changed
     """
+    if timeout < 10:
+      timeout = 10
+
+    if connection.vendor != 'postgresql':
+      time.sleep( timeout )
+      return []
+
     cursor = connection.cursor()
     cursor.execute( 'LISTEN "mirror_repo_{0}"'.format( self.pk ) )
     conn = cursor.cursor.connection
@@ -85,7 +91,7 @@ class Repo( models.Model ):
     """
     send the notify event to anything blocked in the poll
     """
-    if settings.DATABASES[ 'default' ][ 'ENGINE' ] != 'django.db.backends.postgresql_psycopg2':
+    if connection.vendor != 'postgresql':
       return
 
     if package is None:  # this only works for Postgres

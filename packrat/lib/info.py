@@ -268,6 +268,8 @@ class Other( PackageInfo ):  # This will take *anything* that has one (and only 
     except ValueError:
       return None
 
+    type = type.lower()
+
     if requested_type is not None:
       if not name_regex.match( requested_type ):
         raise ValueError( 'Invalid type' )
