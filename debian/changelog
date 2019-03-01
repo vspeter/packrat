@@ -1,3 +1,9 @@
+packrat (2.1-1) xenial; urgency=medium
+
+  * Errors with codes
+
+ -- Peter Howe <peter.howe@virtustream.com>  Wed, 27 Feb 2019 20:50:58 -0700
+
 packrat (2.0-1) xenial; urgency=medium
 
   * protocol version 2

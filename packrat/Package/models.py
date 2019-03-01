@@ -15,6 +15,20 @@ from packrat.fields import name_regex, filename_regex, USERNAME_LENGTH, FILE_ARC
 cinp = CInP( 'Package', '2.0' )
 
 
+class PackageException( ValueError ):
+  def __init__( self, code, message ):
+    super().__init__( message )
+    self.message = message
+    self.code = code
+
+  @property
+  def response_data( self ):
+    return { 'class': 'PackageException', 'error': self.code, 'message': self.message }
+
+  def __str__( self ):
+    return 'PackageException ({0}): {1}'.format( self.code, self.message )
+
+
 @cinp.model( not_allowed_verb_list=( 'DELETE', 'CALL' ) )
 class Package( models.Model ):
   """
@@ -110,20 +124,20 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
 
   def loadfile( self, target_file, distroversion, type ):
     if type is not None and not name_regex.match( type ):
-      raise ValueError( 'Invalid type' )
+      raise PackageException( 'INVALID_TYPE', 'Invalid type' )
 
     info = infoDetect( target_file, type )
 
     if info is None:
-      raise ValueError( 'Unable to Determine File Type' )
+      raise PackageException( 'UNKNOWN_TYPE', 'Unable to Determine File Type' )
 
     try:
       package = Package.objects.get( pk=info.package )
     except Package.DoesNotExist:
-      raise ValueError( 'Unable to find package "{0}"'.format( info.package ) )
+      raise PackageException( 'NO_PACKAGE', 'Unable to find package "{0}"'.format( info.package ) )
 
     if distroversion not in info.distroversion_list:
-      raise ValueError( 'DistroVersion "{0}" is not an option for this file'.format( distroversion ) )
+      raise PackageException( 'INVALID_DISTROVERSION', 'DistroVersion "{0}" is not an option for this file'.format( distroversion ) )
 
     target_file.file.seek( 0 )
     sha256 = hashlib.sha256()
@@ -152,16 +166,16 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
       raise NotAuthorized()
 
     if self.deprocated_at is not None or self.failed_at is not None:
-      raise ValueError( 'Can not tag when deprocated or failed' )
+      raise PackageException( 'DEPROCATED/FAILED', 'Can not tag when deprocated or failed' )
 
     cur_tags = [ i.name for i in self.tag_list.all() ]
 
     for item in tag.required_list.all():
       if item.name not in cur_tags:
-        raise ValueError( 'Required tag "{0}" missing'.format( item.name ) )
+        raise PackageException( 'TAG_REQUIRED', 'Required tag "{0}" missing'.format( item.name ) )
 
     if tag.change_control_required and change_control_id is None:
-      raise ValueError( 'Change Control required to tag with "{0}"'.format( tag.name ) )
+      raise PackageException( 'CHANGECONTROL_REQUIRED', 'Change Control required to tag with "{0}"'.format( tag.name ) )
 
     pft = PackageFileTag()
     pft.package_file = self
@@ -180,7 +194,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     Deprocate package file.
     """
     if self.failed_at is not None:
-      raise ValueError( 'Can not deprocate when failed' )
+      raise PackageException( 'FAILED', 'Can not deprocate when failed' )
 
     if self.deprocated_at is not None:
       return
@@ -198,7 +212,7 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     Fail package file.
     """
     if self.deprocated_at is not None:
-      raise ValueError( 'Can not fail when deprocated' )
+      raise PackageException( 'DEPROCATED', 'Can not fail when deprocated' )
 
     if self.failed_at is not None:
       return
@@ -218,11 +232,11 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     returns a list of possible DistroVersions for this filename
     """
     if not filename_regex.match( file.name ):
-      raise ValueError( 'Invalid filename' )
+      raise PackageException( 'INVALID_FILENAME', 'Invalid filename' )
 
     info = infoDetect( file, type )
     if info is None:
-      raise ValueError( 'Unable to Determine File Type' )
+      raise PackageException( 'UNKNOWN_TYPE', 'Unable to Determine File Type' )
 
     return info.distroversion_list
 
@@ -234,11 +248,11 @@ class PackageFile( models.Model ):  # TODO: add delete to cleanup the file, djan
     Create a new PackageFile
     """
     if not filename_regex.match( file.name ):
-      raise ValueError( 'Invalid filename' )
+      raise PackageException( 'INVALID_FILENAME', 'Invalid filename' )
 
     try:
       PackageFile.objects.get( file='./{0}'.format( file.name ) )  # TODO: Figure out where the ./ is comming from and get rid of it, make sure to update the clean up script
-      raise ValueError( 'File name "{0}" allready used'.format( file.name ) )
+      raise PackageException( 'FILENAME_USED', 'File name "{0}" allready used'.format( file.name ) )
     except PackageFile.DoesNotExist:
       pass
 
