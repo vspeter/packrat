@@ -1,10 +1,11 @@
 import React from 'react';
 import { Dialog, Input, Button } from 'react-toolbox';
 
-class AddPackageDialog extends React.Component
+class TagDialog extends React.Component
 {
   state = {
       active: false,
+      disabled: false,
       name: ''
   };
 
@@ -22,11 +23,11 @@ class AddPackageDialog extends React.Component
     this.setState( { ...this.state, [name]: value } );
   };
 
-  save = () => {
-    this.props.packrat.createPackage( this.state.name ).then(
+  tag = () => {
+    this.props.packrat.tag( this.props.id, this.state.name ).then(
       ( data ) =>
       {
-        alert( 'Package Created' );
+        alert( 'Package File Tagged' );
         this.close();
         this.props.update();
       }, ( err ) =>
@@ -56,15 +57,15 @@ class AddPackageDialog extends React.Component
           active={ this.state.active }
           onEscKeyDown={ this.close }
           onOverlayClick={ this.close }
-          title='Add Package'
+          title='Tag'
         >
-        <Input type='text' label='Name' name='name' value={ this.state.name } onChange={ this.handleChange.bind( this, 'name' ) } maxLength={ 200 } />
-        <Button onClick={ this.save }>Create</Button>
+        <Input type='text' label='Tag Name' name='name' value={ this.state.name } onChange={ this.handleChange.bind( this, 'name' ) } maxLength={ 10 } />
+        <Button onClick={ this.tag }>Tag</Button>
         </Dialog>
-        <Button onClick={ this.show }>Create Package</Button>
+        <Button disabled={ this.props.disabled } onClick={ this.show }>Tag</Button>
       </div>
 );
   }
 };
 
-export default AddPackageDialog;
+export default TagDialog;

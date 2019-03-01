@@ -67,9 +67,6 @@ fi
 echo "Populating db..."
 /usr/lib/packrat/util/manage.py migrate
 
-echo "Creating super user..."
-/usr/lib/packrat/util/manage.py createsuperuser --noinput --username=root --email=test@test.com
-
 echo "Creating basic objects..."
 /usr/lib/packrat/setup/setupHelper.py
 

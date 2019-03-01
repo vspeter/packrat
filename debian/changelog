@@ -1,3 +1,12 @@
+packrat (2.0-1) xenial; urgency=medium
+
+  * protocol version 2
+  * now we tag instead of promote
+  * more types, with and user specifiable types
+  * user django's auth
+
+ -- Peter Howe <peter.howe@virtustream.com>  Wed, 27 Feb 2019 20:50:58 -0700
+
 packrat (0.6-1) xenial; urgency=medium
 
   * Updated to publically available CInP

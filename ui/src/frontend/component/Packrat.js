@@ -7,87 +7,113 @@ class Packrat
     this.cinp = new CInP( host );
   };
 
-  login = () =>
+  login = ( username, password ) =>
   {
-    this.cinp.call( '/api/v1/User/Session(login)', { 'username': username, 'password': password } )
-      .then(
-        function( result )
+    return new Promise( ( resolve, reject ) =>
+    {
+      this.cinp.call( '/api/v2/Auth/User(login)', { 'username': username, 'password': password } ).then(
+        ( response ) =>
         {
-          resolve( result.data );
+          this.cinp.setAuth( username, response.data );
+          resolve();
         },
-        function( reason )
+        ( error ) =>
         {
-          reject( reason );
+          reject( error );
         }
-      );
+      ).catch( ( error ) =>
+        {
+          reject(  error );
+        } );
+    } );
   };
 
-  logout = () => {};
+  logout = () =>
+  {
+    return new Promise( ( resolve, reject ) =>
+    {
+      this.cinp.call( '/api/v2/Auth/User(logout)', {} ).then(
+        ( response ) =>
+        {
+          this.cinp.setAuth();
+          resolve();
+        },
+        ( error ) =>
+        {
+          reject( error );
+        }
+      ).catch( ( error ) =>
+        {
+          reject(  error );
+        } );
+    } );
+  };
+
   keepalive = () => {};
 
   getPackageList = () =>
   {
-    return this.cinp.getFilteredObjects( '/api/v1/Repo/Package' );
+    return this.cinp.getFilteredObjects( '/api/v2/Package/Package' );
   };
 
   getPackageFileList = ( _package ) =>
   {
-    return this.cinp.getFilteredObjects( '/api/v1/Repo/PackageFile', 'package', { package: '/api/v1/Repo/Package:' + _package + ':' } );
+    return this.cinp.getFilteredObjects( '/api/v2/Package/PackageFile', 'package', { package: '/api/v2/Package/Package:' + _package + ':' } );
   };
 
   getRepoList = () =>
   {
-    return this.cinp.getFilteredObjects( '/api/v1/Repo/Repo' );
+    return this.cinp.getFilteredObjects( '/api/v2/Repo/Repo' );
   };
 
   getMirrorList = () =>
   {
-    return this.cinp.getFilteredObjects( '/api/v1/Repo/Mirror' );
+    return this.cinp.getFilteredObjects( '/api/v2/Repo/Mirror' );
   };
 
   getDistroVersionList = () =>
   {
-    return this.cinp.getFilteredObjects( '/api/v1/Repo/DistroVersion' );
+    return this.cinp.getFilteredObjects( '/api/v2/Attrib/DistroVersion' );
   };
 
-  getReleaseTypeList = () =>
+  getTagList = () =>
   {
-    return this.cinp.getFilteredObjects( '/api/v1/Repo/ReleaseType' );
+    return this.cinp.getFilteredObjects( '/api/v2/Attrib/Tag' );
   };
 
   getPackage = ( id ) =>
   {
-    return this.cinp.get( '/api/v1/Repo/Package:' + id + ':' );
+    return this.cinp.get( '/api/v2/Package/Package:' + id + ':' );
   };
 
   getPackageFile = ( id ) =>
   {
-    return this.cinp.get( '/api/v1/Repo/PackageFile:' + id + ':' );
+    return this.cinp.get( '/api/v2/Package/PackageFile:' + id + ':' );
   };
 
   getRepo = ( id ) =>
   {
-    return this.cinp.get( '/api/v1/Repo/Repo:' + id + ':' );
+    return this.cinp.get( '/api/v2/Repo/Repo:' + id + ':' );
   };
 
   getMirror = ( id ) =>
   {
-    return this.cinp.get( '/api/v1/Repo/Mirror:' + id + ':' );
+    return this.cinp.get( '/api/v2/Repo/Mirror:' + id + ':' );
   };
 
   getDistroVersion = ( id ) =>
   {
-    return this.cinp.get( '/api/v1/Repo/DistroVersion:' + id + ':' );
+    return this.cinp.get( '/api/v2/Attrib/DistroVersion:' + id + ':' );
   };
 
-  getReleaseType = ( id ) =>
+  getTag = ( id ) =>
   {
-    return this.cinp.get( '/api/v1/Repo/ReleaseType:' + id + ':' );
+    return this.cinp.get( '/api/v2/Attrib/Tag:' + id + ':' );
   };
 
-  createPackage = ( name, deprocated_count ) =>
+  createPackage = ( name ) =>
   {
-    return this.cinp.create( '/api/v1/Repo/Package', { 'name': name, 'deprocated_count': deprocated_count } );
+    return this.cinp.create( '/api/v2/Package/Package', { 'name': name } );
   };
 
   uploadFile = ( file ) =>
@@ -141,24 +167,28 @@ class Packrat
 
   distroversionOptions = ( file_handle ) =>
   {
-    return this.cinp.call( '/api/v1/Repo/PackageFile(distroversion_options)', { file: file_handle } );
+    return this.cinp.call( '/api/v2/Package/PackageFile(distroversionOptions)', { file: file_handle } );
   };
 
   createPackageFile = ( file_handle, justification, provenance, distroversion ) =>
   {
-    return this.cinp.call( '/api/v1/Repo/PackageFile(create)', { file: file_handle, justification: justification, provenance: provenance, distroversion: distroversion } );
+    return this.cinp.call( '/api/v2/Package/PackageFile(create)', { file: file_handle, justification: justification, provenance: provenance, distroversion: distroversion } );
   };
 
-  promote = ( id, to, change_control_id ) =>
+  tag = ( id, tag_id, change_control_id ) =>
   {
-    return this.cinp.call( '/api/v1/Repo/PackageFile:' + id + ':(promote)', { to: '/api/v1/Repo/ReleaseType:' + to + ':', change_control_id: change_control_id } );
+    return this.cinp.call( '/api/v2/Package/PackageFile:' + id + ':(tag)', { tag: '/api/v2/Attrib/Tag:' + tag_id + ':', change_control_id: change_control_id } );
   };
 
   deprocate = ( id ) =>
   {
-    return this.cinp.call( '/api/v1/Repo/PackageFile:' + id + ':(deprocate)' );
+    return this.cinp.call( '/api/v2/Package/PackageFile:' + id + ':(deprocate)' );
   };
 
+  fail = ( id ) =>
+  {
+    return this.cinp.call( '/api/v2/Package/PackageFile:' + id + ':(fail)' );
+  };
 }
 
 export default Packrat;

@@ -1,3 +1,5 @@
+VERSION := $(shell head -n 1 debian/changelog | awk '{match( $$0, /\(.+?\)/); print substr( $$0, RSTART+1, RLENGTH-2 ) }' | cut -d- -f1 )
+
 all: build-ui
 	./setup.py build
 
@@ -18,21 +20,25 @@ install: install-ui
 
 	./setup.py install --root $(DESTDIR) --install-purelib=/usr/lib/python3/dist-packages/ --prefix=/usr --no-compile -O0
 
+version:
+	echo $(VERSION)
+
 clean: clean-ui
 	./setup.py clean
 	$(RM) -r build
 	$(RM) dpkg
 	$(RM) -r docs/build
-	dh_clean
+	dh_clean || true
 
-.PHONY:: all install clean full-clean
+dist-clean: clean
+
+.PHONY:: all install version clean dist-clean
 
 ui_files := $(foreach file,$(wildcard ui/src/www/*),ui/build/$(notdir $(file)))
 
 build-ui: ui/build/bundle.js $(ui_files)
 
 ui/build/bundle.js: $(wildcard ui/src/frontend/component/*) ui/src/frontend/index.js
-	# cd ui ; npm install
 	cd ui && npm run build
 
 ui/build/%:
@@ -49,10 +55,10 @@ clean-ui:
 .PHONY::
 
 test-distros:
-	echo xenial
+	echo ubuntu-xenial
 
 test-requires:
-	echo python3 python3-django python3-psycopg2 python3-dateutil python3-magic postgresql-client postgresql python3-pip python3-pytest python3-pytest-cov python3-pytest-django python3-cinp
+	echo python3 python3-django python3-psycopg2 python3-dateutil python3-magic postgresql-client postgresql python3-pip python3-pytest python3-pytest-cov python3-pytest-django python3-pytest-mock python3-cinp
 
 test-setup:
 	pip3 install -e .
@@ -65,10 +71,15 @@ test:
 .PHONY:: test-distros test-requires test-setup test
 
 dpkg-distros:
-	echo xenial
+	echo ubuntu-xenial
 
 dpkg-requires:
-	echo dpkg-dev debhelper cdbs python3-dev python3-setuptools
+	echo dpkg-dev debhelper cdbs python3-dev python3-setuptools npm nodejs-legacy
+
+dpkg-setup:
+	cd ui && npm install
+	sed s/"export Ripple from '.\/ripple';"/"export { default as Ripple } from '.\/ripple';"/ -i ui/node_modules/react-toolbox/components/index.js
+	sed s/"export Tooltip from '.\/tooltip';"/"export { default as Tooltip } from '.\/tooltip';"/ -i ui/node_modules/react-toolbox/components/index.js
 
 dpkg:
 	dpkg-buildpackage -b -us -uc
@@ -80,7 +91,7 @@ dpkg-file:
 .PHONY:: dpkg-distroy dpkg-requires dpkg-file
 
 docs-distros:
-	echo xenial
+	echo ubuntu-xenial
 
 docs-requires:
 	echo python3-sphinx texlive-latex-base texlive-latex-extra python3-django python3-magic python3-psycopg2

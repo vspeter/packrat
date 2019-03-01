@@ -12,38 +12,26 @@ TEMPLATE_DIRS = (
 # Application definition
 
 INSTALLED_APPS = (
-    'django.contrib.admin',
-    'django.contrib.auth',
+    'packrat.Attrib',
+    'packrat.Repo',
+    'packrat.Package',
+    'packrat.Auth',
     'django.contrib.contenttypes',
+    'django.contrib.auth',
     'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'packrat.User',
-    'packrat.Repos',
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'packrat.urls'
+ROOT_URLCONF = ''
 
 WSGI_APPLICATION = 'packrat.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'packrat',
-        'USER': 'packrat',
-        'PASSWORD': 'packrat',
-        'HOST': '127.0.0.1',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': '/opt/packrat/db.sqlite3',
     }
 }
 
@@ -64,9 +52,5 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 MEDIA_URL = '/files/'
-# MEDIA_ROOT = '/var/www/packrat/api/files'
-MEDIA_ROOT = os.path.join( BASE_DIR, 'www/files' )  # for Dev work
-
-# STATIC_URL = '/static/'
-# STATIC_ROOT = '/var/www/packrat/static'
-# STATIC_ROOT = os.path.join(BASE_DIR, 'www/static')  # for Dev work
+MEDIA_ROOT = '/var/www/packrat/api/files'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'www/files') # for Dev work
