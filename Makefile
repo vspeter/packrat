@@ -39,7 +39,6 @@ ui_files := $(foreach file,$(wildcard ui/src/www/*),ui/build/$(notdir $(file)))
 build-ui: ui/build/bundle.js $(ui_files)
 
 ui/build/bundle.js: $(wildcard ui/src/frontend/component/*) ui/src/frontend/index.js
-	# cd ui ; npm install
 	cd ui && npm run build
 
 ui/build/%:
@@ -75,7 +74,12 @@ dpkg-distros:
 	echo ubuntu-xenial
 
 dpkg-requires:
-	echo dpkg-dev debhelper cdbs python3-dev python3-setuptools
+	echo dpkg-dev debhelper cdbs python3-dev python3-setuptools npm nodejs-legacy
+
+dpkg-setup:
+	cd ui && npm install
+	sed s/"export Ripple from '.\/ripple';"/"export { default as Ripple } from '.\/ripple';"/ -i ui/node_modules/react-toolbox/components/index.js
+	sed s/"export Tooltip from '.\/tooltip';"/"export { default as Tooltip } from '.\/tooltip';"/ -i ui/node_modules/react-toolbox/components/index.js
 
 dpkg:
 	dpkg-buildpackage -b -us -uc
