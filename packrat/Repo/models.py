@@ -22,6 +22,20 @@ snapshots:
 cinp = CInP( 'Repo', '2.0' )
 
 
+class RepoException( ValueError ):
+  def __init__( self, code, message ):
+    super().__init__( message )
+    self.message = message
+    self.code = code
+
+  @property
+  def response_data( self ):
+    return { 'class': 'RepoException', 'error': self.code, 'message': self.message }
+
+  def __str__( self ):
+    return 'RepoException ({0}): {1}'.format( self.code, self.message )
+
+
 @cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ), constant_set_map={ 'manager_type': MANAGER_TYPE_CHOICES } )
 class Repo( models.Model ):
   """
