@@ -19,6 +19,20 @@ tags -
 cinp = CInP( 'Attrib', '2.0' )
 
 
+class AttribException( ValueError ):
+  def __init__( self, code, message ):
+    super().__init__( message )
+    self.message = message
+    self.code = code
+
+  @property
+  def response_data( self ):
+    return { 'class': 'AttribException', 'error': self.code, 'message': self.message }
+
+  def __str__( self ):
+    return 'AttribException ({0}): {1}'.format( self.code, self.message )
+
+
 @cinp.model( not_allowed_verb_list=( 'CREATE', 'DELETE', 'UPDATE' ) )
 class Tag( models.Model ):
   """
