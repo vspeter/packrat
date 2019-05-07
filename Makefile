@@ -28,6 +28,7 @@ clean: clean-ui
 	$(RM) -r build
 	$(RM) dpkg
 	$(RM) -r docs/build
+	$(RM) -r htmlcov
 	dh_clean || true
 
 dist-clean: clean
